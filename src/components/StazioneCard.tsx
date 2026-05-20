@@ -460,27 +460,6 @@ export default function StazioneCard({
 
       </div>
 
-      {/* FORM ATTIVITA */}
-      {showAddForm && (
-
-        <div className="p-4 border-t border-gray-100 bg-gray-50">
-
-          <ContributoAttivitaForm
-
-            stazionePredefinitaId={
-              liveStazione.id
-            }
-
-            onBack={() =>
-              setShowAddForm(
-                false
-              )
-            }
-          />
-
-        </div>
-      )}
-
       {/* EXPANDED */}
       {expanded && (
 
@@ -488,11 +467,19 @@ export default function StazioneCard({
 
           {/* ADD */}
           <button
-            onClick={() =>
+            type="button"
+            onClick={(e) => {
+
+              e.stopPropagation();
+
+              console.log(
+                'OPEN FORM'
+              );
+
               setShowAddForm(
                 !showAddForm
-              )
-            }
+              );
+            }}
             className="px-4 py-3 rounded-2xl bg-white border border-gray-200 text-gray-700 flex items-center justify-center gap-2 text-sm font-medium shadow-sm hover:bg-gray-50 transition-colors"
           >
 
@@ -503,6 +490,27 @@ export default function StazioneCard({
               : 'Aggiungi attività'}
 
           </button>
+
+          {/* FORM */}
+          {showAddForm && (
+
+            <div className="bg-white border border-gray-200 rounded-2xl p-4">
+
+              <ContributoAttivitaForm
+
+                stazionePredefinitaId={
+                  liveStazione.id
+                }
+
+                onBack={() =>
+                  setShowAddForm(
+                    false
+                  )
+                }
+              />
+
+            </div>
+          )}
 
           {/* NOTE */}
           {liveStazione.note && (
@@ -571,7 +579,6 @@ export default function StazioneCard({
                     className="bg-white border border-gray-200 rounded-2xl p-4 flex flex-col gap-3"
                   >
 
-                    {/* TOP */}
                     <div className="flex items-start justify-between gap-3">
 
                       <div>
@@ -614,7 +621,6 @@ export default function StazioneCard({
 
                     </div>
 
-                    {/* UBICAZIONE */}
                     {locale.ubicazione && (
 
                       <div className="text-xs text-gray-500">
@@ -624,7 +630,6 @@ export default function StazioneCard({
                       </div>
                     )}
 
-                    {/* FASCE */}
                     {Array.isArray(
                       locale.fasce_orarie
                     ) &&
@@ -674,7 +679,6 @@ export default function StazioneCard({
                       </div>
                     )}
 
-                    {/* NOTE */}
                     {locale.note && (
 
                       <div className="text-xs text-gray-400 italic">
@@ -684,7 +688,6 @@ export default function StazioneCard({
                       </div>
                     )}
 
-                    {/* MAPS */}
                     <a
                       href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
                         locale.maps_query ||
