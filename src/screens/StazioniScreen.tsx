@@ -12,7 +12,6 @@ import {
   ChevronDown,
   ChevronUp,
   Plus,
-  RefreshCw,
 } from 'lucide-react';
 
 import toast from 'react-hot-toast';
@@ -84,9 +83,6 @@ export default function StazioniScreen({
 
   const [loading, setLoading] =
     useState(true);
-
-  const [refreshing, setRefreshing] =
-    useState(false);
 
   const [search, setSearch] =
     useState('');
@@ -288,24 +284,7 @@ export default function StazioniScreen({
     } finally {
 
       setLoading(false);
-
-      setRefreshing(false);
     }
-  }
-
-  // =========================
-  // MANUAL REFRESH
-  // =========================
-
-  async function handleRefresh() {
-
-    setRefreshing(true);
-
-    await load();
-
-    toast.success(
-      'Dati aggiornati'
-    );
   }
 
   // =========================
@@ -784,43 +763,22 @@ export default function StazioniScreen({
     <>
       <div className="flex flex-col gap-4">
 
-        {/* SEARCH + REFRESH */}
-        <div className="flex gap-2">
+        {/* SEARCH */}
+        <div className="relative">
 
-          <div className="relative flex-1">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
 
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-
-            <input
-              type="text"
-              placeholder="Cerca stazione..."
-              value={search}
-              onChange={(e) =>
-                setSearch(
-                  e.target.value
-                )
-              }
-              className="w-full bg-white border border-gray-200 rounded-2xl pl-10 pr-4 py-3 text-sm"
-            />
-
-          </div>
-
-          {/* REFRESH */}
-          <button
-            onClick={handleRefresh}
-            disabled={refreshing}
-            className="w-12 h-12 rounded-2xl bg-white border border-gray-200 flex items-center justify-center shadow-sm"
-          >
-
-            <RefreshCw
-              className={`w-5 h-5 text-gray-600 ${
-                refreshing
-                  ? 'animate-spin'
-                  : ''
-              }`}
-            />
-
-          </button>
+          <input
+            type="text"
+            placeholder="Cerca stazione..."
+            value={search}
+            onChange={(e) =>
+              setSearch(
+                e.target.value
+              )
+            }
+            className="w-full bg-white border border-gray-200 rounded-2xl pl-10 pr-4 py-3 text-sm"
+          />
 
         </div>
 
