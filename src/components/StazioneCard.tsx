@@ -13,7 +13,7 @@ import {
 import { supabase } from '../lib/supabase';
 
 import type {
-  StazioneWithSalette
+  StazioneWithSalette,
 } from '../lib/database.types';
 
 import SalettaCard from './SalettaCard';
@@ -71,17 +71,20 @@ export default function StazioneCard({
 
     async function reloadStation() {
 
+      // =====================
+      // STAZIONE + SALETTE
+      // =====================
+
       const {
-        data,
-        error,
+        data: stationData,
+        error: stationError,
       } = await supabase
 
         .from('stazioni')
 
         .select(`
           *,
-          salette (*),
-          attivita_stazione (*)
+          salette (*)
         `)
 
         .eq(
@@ -91,22 +94,60 @@ export default function StazioneCard({
 
         .single();
 
-      if (error) {
+      if (stationError) {
 
         console.error(
-          error
+          stationError
         );
 
         return;
       }
 
-      if (data) {
+      // =====================
+      // ATTIVITA
+      // =====================
 
-        setLiveStazione(
-          data as StazioneWithSalette
+      const {
+        data: attivitaData,
+        error: attivitaError,
+      } = await supabase
+
+        .from(
+          'attivita_stazione'
+        )
+
+        .select('*')
+
+        .eq(
+          'stazione_id',
+          stazione.id
+        );
+
+      if (attivitaError) {
+
+        console.error(
+          attivitaError
         );
       }
+
+      // =====================
+      // MERGE
+      // =====================
+
+      setLiveStazione({
+
+        ...stationData,
+
+        salette:
+          stationData?.salette || [],
+
+        attivita_stazione:
+          attivitaData || [],
+      });
     }
+
+    // primo load reale
+    reloadStation();
 
     const channel =
       supabase
