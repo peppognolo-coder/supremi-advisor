@@ -202,6 +202,8 @@ export default function SegnalazioniScreen() {
 
     setSelected(null);
 
+    setEditedData({});
+
     load();
   }
 
@@ -217,6 +219,11 @@ export default function SegnalazioniScreen() {
 
       const dati =
         contributo.dati;
+
+      console.log(
+        'FINAL DATA',
+        dati
+      );
 
       // =====================
       // STAZIONE
@@ -401,11 +408,6 @@ export default function SegnalazioniScreen() {
         'attivita'
       ) {
 
-        console.log(
-          'DATI ATTIVITA',
-          dati
-        );
-
         const {
           error:
             attivitaError,
@@ -507,6 +509,8 @@ export default function SegnalazioniScreen() {
 
       setSelected(null);
 
+      setEditedData({});
+
       load();
 
     } catch (err) {
@@ -557,6 +561,8 @@ export default function SegnalazioniScreen() {
     );
 
     setSelected(null);
+
+    setEditedData({});
 
     load();
   }
@@ -796,21 +802,32 @@ export default function SegnalazioniScreen() {
                   </button>
 
                   <button
-                    onClick={() =>
+                    onClick={() => {
+
+                      const finalData =
+
+                        selected?.id === c.id &&
+
+                        Object.keys(
+                          editedData || {}
+                        ).length > 0
+
+                          ? editedData
+
+                          : c.dati;
+
+                      console.log(
+                        'FINAL DATA',
+                        finalData
+                      );
+
                       approveContributo({
 
                         ...c,
 
-                        dati:
-                          Object.keys(
-                            editedData || {}
-                          ).length > 0
-
-                            ? editedData
-
-                            : c.dati,
-                      })
-                    }
+                        dati: finalData,
+                      });
+                    }}
                     className="flex-1 flex items-center justify-center gap-2 bg-emerald-500 text-white rounded-xl py-2.5 text-sm font-semibold"
                   >
 
