@@ -34,7 +34,22 @@ interface GroupedSaletta {
   distanza?: number;
 }
 
-export default function SaletteScreen() {
+interface StazioneCoordinates {
+
+  nome: string;
+
+  lat: number;
+
+  lng: number;
+}
+
+interface Props {
+  refreshKey?: number;
+}
+
+export default function SaletteScreen({
+  refreshKey = 0,
+}: Props) {
 
   const [salette, setSalette] =
     useState<GroupedSaletta[]>([]);
@@ -85,10 +100,28 @@ export default function SaletteScreen() {
 
       setLoading(true);
 
-      const { data, error } =
-        await supabase
-          .from('salette')
-          .select('*');
+      // =====================
+      // SALETTE
+      // =====================
+
+      const {
+        data,
+        error,
+      } = await supabase
+        .from('salette')
+        .select('*');
+
+      // =====================
+      // STAZIONI
+      // =====================
+
+      const {
+        data: stazioniData,
+      } = await supabase
+        .from('stazioni')
+        .select(
+          'nome, lat, lng'
+        );
 
       if (error) {
 
@@ -103,6 +136,24 @@ export default function SaletteScreen() {
         return;
       }
 
+      // =====================
+      // MAP STAZIONI
+      // =====================
+
+      const stazioniCoordinates:
+        StazioneCoordinates[] =
+        (
+          stazioniData ?? []
+        ).filter(
+          (s) =>
+            s.lat &&
+            s.lng
+        );
+
+      // =====================
+      // GROUP
+      // =====================
+
       const groupedMap =
         new Map<
           string,
@@ -112,7 +163,6 @@ export default function SaletteScreen() {
       (data ?? []).forEach(
         (saletta) => {
 
-          // NORMALIZE
           const normalizedKey =
             saletta.stazione
               ?.trim()
@@ -146,7 +196,10 @@ export default function SaletteScreen() {
         }
       );
 
+      // =====================
       // ARRAY
+      // =====================
+
       let grouped =
         Array.from(
           groupedMap.values()
@@ -161,7 +214,6 @@ export default function SaletteScreen() {
         grouped = grouped.map(
           (group) => {
 
-            // cerca coordinate
             const first =
               group.salette[0];
 
@@ -170,9 +222,56 @@ export default function SaletteScreen() {
               | undefined =
               undefined;
 
+            // =================
+            // COORDINATE
+            // =================
+
+            let lat =
+              first?.lat;
+
+            let lng =
+              first?.lng;
+
+            // =================
+            // FALLBACK STAZIONE
+            // =================
+
             if (
-              first?.lat &&
-              first?.lng
+              (!lat ||
+                !lng) &&
+              first?.stazione
+            ) {
+
+              const stazioneMatch =
+                stazioniCoordinates.find(
+                  (s) =>
+                    s.nome
+                      ?.trim()
+                      .toLowerCase() ===
+                    first.stazione
+                      ?.trim()
+                      .toLowerCase()
+                );
+
+              if (
+                stazioneMatch
+              ) {
+
+                lat =
+                  stazioneMatch.lat;
+
+                lng =
+                  stazioneMatch.lng;
+              }
+            }
+
+            // =================
+            // DISTANCE
+            // =================
+
+            if (
+              lat &&
+              lng
             ) {
 
               distanza =
@@ -181,13 +280,9 @@ export default function SaletteScreen() {
                   userLocation.lat,
                   userLocation.lng,
 
-                  Number(
-                    first.lat
-                  ),
+                  Number(lat),
 
-                  Number(
-                    first.lng
-                  )
+                  Number(lng)
                 );
             }
 
@@ -197,6 +292,10 @@ export default function SaletteScreen() {
             };
           }
         );
+
+        // ===================
+        // SORT
+        // ===================
 
         grouped.sort(
           (a, b) => {
@@ -213,6 +312,27 @@ export default function SaletteScreen() {
                 a.distanza -
                 b.distanza
               );
+            }
+
+            // no coords
+            if (
+              a.distanza ==
+                null &&
+              b.distanza !=
+                null
+            ) {
+
+              return 1;
+            }
+
+            if (
+              a.distanza !=
+                null &&
+              b.distanza ==
+                null
+            ) {
+
+              return -1;
             }
 
             // fallback alpha
@@ -241,7 +361,10 @@ export default function SaletteScreen() {
 
     load();
 
-  }, [userLocation]);
+  }, [
+    userLocation,
+    refreshKey,
+  ]);
 
   // =========================
   // SEARCH
@@ -349,7 +472,9 @@ export default function SaletteScreen() {
             >
 
               {/* NEAREST */}
-              {index === 0 && (
+              {index === 0 &&
+                group.distanza !=
+                  null && (
 
                 <div className="mb-2 inline-flex items-center gap-2 px-3 py-1 rounded-full bg-trenord-green/10 text-trenord-green text-xs font-semibold">
 
@@ -357,19 +482,15 @@ export default function SaletteScreen() {
 
                   Saletta più vicina
 
-                  {group.distanza !=
-                    null && (
+                  <span>
 
-                    <span>
+                    •{' '}
+                    {group.distanza.toFixed(
+                      1
+                    )}{' '}
+                    km
 
-                      •{' '}
-                      {group.distanza.toFixed(
-                        1
-                      )}{' '}
-                      km
-
-                    </span>
-                  )}
+                  </span>
 
                 </div>
               )}
