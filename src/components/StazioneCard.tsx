@@ -8,6 +8,8 @@ import {
   Navigation,
   Star,
   Plus,
+  Store,
+  Clock3,
 } from 'lucide-react';
 
 import { supabase } from '../lib/supabase';
@@ -59,98 +61,104 @@ export default function StazioneCard({
     );
 
   // =========================
-  // REALTIME REFRESH
+  // RELOAD
+  // =========================
+
+  async function reloadStation() {
+
+    // =====================
+    // STAZIONE
+    // =====================
+
+    const {
+      data: stationData,
+      error: stationError,
+    } = await supabase
+
+      .from('stazioni')
+
+      .select(`
+        *,
+        salette (*)
+      `)
+
+      .eq(
+        'id',
+        stazione.id
+      )
+
+      .single();
+
+    if (stationError) {
+
+      console.error(
+        stationError
+      );
+
+      return;
+    }
+
+    // =====================
+    // ATTIVITA
+    // =====================
+
+    const {
+      data: attivitaData,
+      error: attivitaError,
+    } = await supabase
+
+      .from(
+        'attivita_stazione'
+      )
+
+      .select('*')
+
+      .eq(
+        'stazione_nome',
+        stazione.nome
+      );
+
+    if (attivitaError) {
+
+      console.error(
+        attivitaError
+      );
+    }
+
+    console.log(
+      'ATTIVITA TROVATE',
+      attivitaData
+    );
+
+    // =====================
+    // MERGE
+    // =====================
+
+    setLiveStazione({
+
+      ...stationData,
+
+      salette:
+        Array.isArray(
+          stationData?.salette
+        )
+          ? stationData.salette
+          : [],
+
+      attivita_stazione:
+        Array.isArray(
+          attivitaData
+        )
+          ? attivitaData
+          : [],
+    });
+  }
+
+  // =========================
+  // REALTIME
   // =========================
 
   useEffect(() => {
-
-    async function reloadStation() {
-
-      // =====================
-      // STAZIONE + SALETTE
-      // =====================
-
-      const {
-        data: stationData,
-        error: stationError,
-      } = await supabase
-
-        .from('stazioni')
-
-        .select(`
-          *,
-          salette (*)
-        `)
-
-        .eq(
-          'id',
-          stazione.id
-        )
-
-        .single();
-
-      if (stationError) {
-
-        console.error(
-          stationError
-        );
-
-        return;
-      }
-
-      // =====================
-      // ATTIVITA
-      // =====================
-
-      const {
-        data: attivitaData,
-        error: attivitaError,
-      } = await supabase
-
-        .from(
-          'attivita_stazione'
-        )
-
-        .select('*')
-
-        .eq(
-          'stazione_id',
-          String(
-            stazione.id
-          )
-        );
-
-      if (attivitaError) {
-
-        console.error(
-          attivitaError
-        );
-      }
-
-      console.log(
-        'ATTIVITA TROVATE',
-        attivitaData
-      );
-
-      // =====================
-      // MERGE
-      // =====================
-
-      setLiveStazione({
-
-        ...stationData,
-
-        salette:
-          stationData?.salette || [],
-
-        attivita_stazione:
-          Array.isArray(
-            attivitaData
-          )
-            ? attivitaData
-            : [],
-      });
-    }
 
     reloadStation();
 
@@ -160,10 +168,6 @@ export default function StazioneCard({
         .channel(
           `station-${stazione.id}`
         )
-
-        // =====================
-        // ATTIVITA
-        // =====================
 
         .on(
           'postgres_changes',
@@ -181,17 +185,14 @@ export default function StazioneCard({
           }
         )
 
-        // =====================
-        // SALETTE
-        // =====================
-
         .on(
           'postgres_changes',
 
           {
             event: '*',
             schema: 'public',
-            table: 'salette',
+            table:
+              'salette',
           },
 
           () => {
@@ -272,7 +273,7 @@ export default function StazioneCard({
   }
 
   // =========================
-  // FORM MODE
+  // FORM
   // =========================
 
   if (showAddForm) {
@@ -374,6 +375,7 @@ export default function StazioneCard({
               {/* INFO */}
               <div className="flex items-center gap-3 mt-3 flex-wrap">
 
+                {/* SALETTE */}
                 <div className="flex items-center gap-1 text-gray-500">
 
                   <DoorOpen className="w-3.5 h-3.5" />
@@ -389,6 +391,7 @@ export default function StazioneCard({
 
                 </div>
 
+                {/* APERTE */}
                 {salette.length > 0 && (
 
                   <span
@@ -404,6 +407,7 @@ export default function StazioneCard({
                   </span>
                 )}
 
+                {/* LOCALI */}
                 {locali.length > 0 && (
 
                   <span className="text-xs font-medium text-trenord-green">
@@ -539,8 +543,7 @@ export default function StazioneCard({
           )}
 
           {/* LOCALI */}
-          {Array.isArray(locali) &&
-            locali.length > 0 && (
+          {locali.length > 0 && (
 
             <div className="flex flex-col gap-3 mt-2">
 
@@ -565,30 +568,44 @@ export default function StazioneCard({
 
                   <div
                     key={locale.id}
-                    className="bg-white border border-gray-200 rounded-2xl p-4"
+                    className="bg-white border border-gray-200 rounded-2xl p-4 flex flex-col gap-3"
                   >
 
-                    <div className="flex items-center justify-between gap-3">
+                    {/* TOP */}
+                    <div className="flex items-start justify-between gap-3">
 
                       <div>
 
-                        <h5 className="font-semibold text-gray-900">
+                        <div className="flex items-center gap-2 flex-wrap">
 
-                          {locale.nome}
+                          <h5 className="font-semibold text-gray-900">
 
-                        </h5>
+                            {locale.nome}
 
-                        <p className="text-sm text-gray-500 mt-1">
+                          </h5>
 
-                          {locale.categoria}
+                          <span className="text-xs px-2 py-1 rounded-full bg-gray-100 text-gray-600">
 
-                        </p>
+                            {locale.categoria}
+
+                          </span>
+
+                        </div>
+
+                        {locale.indirizzo && (
+
+                          <p className="text-sm text-gray-500 mt-1">
+
+                            {locale.indirizzo}
+
+                          </p>
+                        )}
 
                       </div>
 
                       {locale.convenzionato && (
 
-                        <div className="px-2 py-1 rounded-full bg-trenord-green/10 text-trenord-green text-xs font-semibold">
+                        <div className="px-2 py-1 rounded-full bg-trenord-green/10 text-trenord-green text-xs font-semibold whitespace-nowrap">
 
                           Convenzionato
 
@@ -597,22 +614,23 @@ export default function StazioneCard({
 
                     </div>
 
+                    {/* UBICAZIONE */}
                     {locale.ubicazione && (
 
-                      <p className="text-xs text-gray-400 mt-3">
+                      <div className="text-xs text-gray-500">
 
                         📍 {locale.ubicazione}
 
-                      </p>
+                      </div>
                     )}
 
+                    {/* FASCE */}
                     {Array.isArray(
                       locale.fasce_orarie
                     ) &&
-                      locale.fasce_orarie
-                        .length > 0 && (
+                      locale.fasce_orarie.length > 0 && (
 
-                      <div className="mt-3 flex flex-col gap-2">
+                      <div className="flex flex-col gap-2">
 
                         {locale.fasce_orarie.map(
                           (
@@ -622,8 +640,20 @@ export default function StazioneCard({
 
                             <div
                               key={index}
-                              className="text-xs text-gray-500 bg-gray-50 rounded-xl px-3 py-2"
+                              className="bg-gray-50 rounded-xl p-3 text-xs text-gray-600"
                             >
+
+                              <div className="flex items-center gap-2 mb-1">
+
+                                <Clock3 className="w-3.5 h-3.5" />
+
+                                <span className="font-medium">
+
+                                  {fascia.apertura} - {fascia.chiusura}
+
+                                </span>
+
+                              </div>
 
                               <div>
 
@@ -637,12 +667,6 @@ export default function StazioneCard({
 
                               </div>
 
-                              <div className="font-medium text-gray-700 mt-1">
-
-                                {fascia.apertura} - {fascia.chiusura}
-
-                              </div>
-
                             </div>
                           )
                         )}
@@ -650,14 +674,32 @@ export default function StazioneCard({
                       </div>
                     )}
 
+                    {/* NOTE */}
                     {locale.note && (
 
-                      <p className="text-xs text-gray-400 italic mt-3">
+                      <div className="text-xs text-gray-400 italic">
 
                         {locale.note}
 
-                      </p>
+                      </div>
                     )}
+
+                    {/* MAPS */}
+                    <a
+                      href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
+                        locale.maps_query ||
+                        locale.nome
+                      )}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="mt-1 px-4 py-2 rounded-xl bg-trenord-green text-white text-sm font-medium flex items-center justify-center gap-2 hover:opacity-90 transition-opacity"
+                    >
+
+                      <Store className="w-4 h-4" />
+
+                      Apri su Maps
+
+                    </a>
 
                   </div>
                 )
