@@ -403,7 +403,7 @@ export default function SegnalazioniScreen() {
       // ATTIVITA
       // =====================
 
-      if (
+            if (
         contributo.tipo ===
         'attivita'
       ) {
@@ -420,7 +420,9 @@ export default function SegnalazioniScreen() {
           .insert({
 
             stazione_id:
-              dati.stazione_id,
+              String(
+                dati.stazione_id
+              ),
 
             nome:
               dati.nome,
