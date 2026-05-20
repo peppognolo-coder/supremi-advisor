@@ -420,12 +420,7 @@ export default function SegnalazioniScreen() {
           .insert({
 
             stazione_id:
-              String(
-                dati.stazione_id
-              ),
-
-            stazione_nome:
-              dati.stazione_nome,
+              dati.stazione_id,
 
             nome:
               dati.nome,
@@ -787,78 +782,6 @@ export default function SegnalazioniScreen() {
                 )}
 
               </div>
-
-              {c.stato ===
-                'pending' && (
-
-                <div className="flex gap-2 flex-wrap">
-
-                  <button
-                    onClick={() =>
-                      openEdit(c)
-                    }
-                    className="flex-1 flex items-center justify-center gap-2 bg-gray-100 text-gray-700 rounded-xl py-2.5 text-sm font-semibold"
-                  >
-
-                    <Pencil className="w-4 h-4" />
-
-                    Modifica
-
-                  </button>
-
-                  <button
-                    onClick={() => {
-
-                      const finalData =
-
-                        selected?.id === c.id &&
-
-                        Object.keys(
-                          editedData || {}
-                        ).length > 0
-
-                          ? editedData
-
-                          : c.dati;
-
-                      console.log(
-                        'FINAL DATA',
-                        finalData
-                      );
-
-                      approveContributo({
-
-                        ...c,
-
-                        dati: finalData,
-                      });
-                    }}
-                    className="flex-1 flex items-center justify-center gap-2 bg-emerald-500 text-white rounded-xl py-2.5 text-sm font-semibold"
-                  >
-
-                    <Check className="w-4 h-4" />
-
-                    Approva
-
-                  </button>
-
-                  <button
-                    onClick={() =>
-                      rejectContributo(
-                        c.id
-                      )
-                    }
-                    className="flex-1 flex items-center justify-center gap-2 bg-red-500 text-white rounded-xl py-2.5 text-sm font-semibold"
-                  >
-
-                    <X className="w-4 h-4" />
-
-                    Rifiuta
-
-                  </button>
-
-                </div>
-              )}
 
             </div>
           )
