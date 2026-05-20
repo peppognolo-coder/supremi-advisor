@@ -226,6 +226,10 @@ export default function ContributoAttivitaForm({
 
   async function submit() {
 
+    console.log(
+      'SUBMIT START'
+    );
+
     if (!stazioneId) {
 
       toast.error(
@@ -275,6 +279,11 @@ export default function ContributoAttivitaForm({
         fasce_orarie:
           fasceOrarie,
       };
+
+      console.log(
+        'PAYLOAD ATTIVITA',
+        payload
+      );
 
       alert(
         JSON.stringify(
@@ -337,6 +346,7 @@ export default function ContributoAttivitaForm({
 
       {/* BACK */}
       <button
+        type="button"
         onClick={onBack}
         className="self-start px-3 py-2 rounded-xl bg-white border border-gray-200 text-sm"
       >
@@ -649,7 +659,15 @@ export default function ContributoAttivitaForm({
 
         {/* SUBMIT */}
         <button
-          onClick={submit}
+          type="button"
+          onClick={() => {
+
+            console.log(
+              'CLICK SUBMIT'
+            );
+
+            submit();
+          }}
           disabled={loading}
           className="bg-trenord-green text-white rounded-xl py-3 font-medium"
         >
