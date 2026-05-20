@@ -69,6 +69,7 @@ function getCategoriaIcon(
 }
 
 interface Props {
+
   refreshKey?: number;
 }
 
@@ -110,6 +111,9 @@ export default function StazioniScreen({
       lng: number;
     } | null>(null);
 
+  const [locationReady, setLocationReady] =
+    useState(false);
+
   // =========================
   // LOAD
   // =========================
@@ -147,6 +151,13 @@ export default function StazioniScreen({
 
       const merged =
         (stazioniData ?? [])
+
+          // rimuovi stazioni senza coordinate
+          .filter(
+            (s: any) =>
+              s.lat &&
+              s.lng
+          )
 
           .map(
             (stazione: any) => {
@@ -259,7 +270,8 @@ export default function StazioniScreen({
 
             // ALPHABETIC
             return a.nome.localeCompare(
-              b.nome
+              b.nome,
+              'it'
             );
           });
 
@@ -297,7 +309,7 @@ export default function StazioniScreen({
   }
 
   // =========================
-  // INIT
+  // INIT GEOLOCATION
   // =========================
 
   useEffect(() => {
@@ -307,21 +319,32 @@ export default function StazioniScreen({
 
     setFavorites(favs);
 
-    getCurrentLocation()
+    async function initLocation() {
 
-      .then((location) => {
+      try {
+
+        const location =
+          await getCurrentLocation();
 
         setUserLocation(
           location
         );
-      })
 
-      .catch(() => {
+      } catch {
 
         console.log(
           'Geolocalizzazione non disponibile'
         );
-      });
+
+      } finally {
+
+        setLocationReady(
+          true
+        );
+      }
+    }
+
+    initLocation();
 
   }, []);
 
@@ -331,11 +354,16 @@ export default function StazioniScreen({
 
   useEffect(() => {
 
+    // aspetta geolocalizzazione
+    if (!locationReady)
+      return;
+
     load();
 
   }, [
     favorites,
     userLocation,
+    locationReady,
     refreshKey,
   ]);
 
@@ -797,7 +825,8 @@ export default function StazioniScreen({
         </div>
 
         {/* LOADING */}
-        {loading && (
+        {(loading ||
+          !locationReady) && (
 
           <div className="flex flex-col gap-3">
 
