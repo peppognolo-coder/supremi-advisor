@@ -15,7 +15,10 @@ import toast from 'react-hot-toast';
 import { supabase } from '../../lib/supabase';
 
 interface Props {
+
   onBack: () => void;
+
+  stazionePredefinitaId?: string;
 }
 
 const categorie = [
@@ -42,6 +45,7 @@ const giorni = [
 
 export default function ContributoAttivitaForm({
   onBack,
+  stazionePredefinitaId,
 }: Props) {
 
   // =========================
@@ -52,7 +56,9 @@ export default function ContributoAttivitaForm({
     useState<any[]>([]);
 
   const [stazioneId, setStazioneId] =
-    useState('');
+    useState(
+      stazionePredefinitaId || ''
+    );
 
   const [nome, setNome] =
     useState('');
@@ -100,6 +106,7 @@ export default function ContributoAttivitaForm({
 
       const {
         data,
+        error,
       } = await supabase
 
         .from('stazioni')
@@ -109,6 +116,17 @@ export default function ContributoAttivitaForm({
         .order('nome', {
           ascending: true,
         });
+
+      if (error) {
+
+        console.error(error);
+
+        toast.error(
+          'Errore caricamento stazioni'
+        );
+
+        return;
+      }
 
       setStazioni(
         data ?? []
@@ -177,24 +195,48 @@ export default function ContributoAttivitaForm({
 
     try {
 
+      // =====================
+      // STAZIONE INFO
+      // =====================
+
+      const stazione =
+        stazioni.find(
+          (s) =>
+            s.id ===
+            stazioneId
+        );
+
+      // =====================
+      // PAYLOAD
+      // =====================
+
       const payload = {
 
         stazione_id:
           stazioneId,
 
-        nome,
+        stazione_nome:
+          stazione?.nome || '',
+
+        nome:
+          nome.trim(),
 
         categoria,
 
-        indirizzo,
+        indirizzo:
+          indirizzo.trim(),
 
-        convenzione,
+        convenzione:
+          convenzione.trim(),
 
-        sconto,
+        sconto:
+          sconto.trim(),
 
-        telefono,
+        telefono:
+          telefono.trim(),
 
-        sito,
+        sito:
+          sito.trim(),
 
         apertura,
 
@@ -203,17 +245,19 @@ export default function ContributoAttivitaForm({
         giorni:
           giorniAttivi,
 
-        note,
+        note:
+          note.trim(),
       };
 
-      console.log(
-        'PAYLOAD:',
-        payload
-      );
+      // =====================
+      // INSERT
+      // =====================
 
-      const response =
+      const { error } =
         await supabase
+
           .from('contributi')
+
           .insert({
 
             tipo: 'attivita',
@@ -223,23 +267,11 @@ export default function ContributoAttivitaForm({
             stato: 'pending',
           });
 
-      console.log(
-        'SUPABASE RESPONSE:',
-        response
-      );
-
-      const error =
-        response.error;
-
       if (error) {
 
-        console.error(
-          'SUPABASE ERROR:',
-          error
-        );
+        console.error(error);
 
         toast.error(
-          error.message ||
           'Errore invio contributo'
         );
 
@@ -248,23 +280,23 @@ export default function ContributoAttivitaForm({
         return;
       }
 
+      // =====================
+      // SUCCESS
+      // =====================
+
       toast.success(
-        'Contributo inviato con successo'
+        'Contributo inviato'
       );
 
       setLoading(false);
 
       onBack();
 
-    } catch (err: any) {
+    } catch (err) {
 
-      console.error(
-        'CATCH ERROR:',
-        err
-      );
+      console.error(err);
 
       toast.error(
-        err?.message ||
         'Errore imprevisto'
       );
 
