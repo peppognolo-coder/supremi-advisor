@@ -571,15 +571,29 @@ export default function StazioneCard({
               </div>
 
               {locali.map(
-                (locale) => (
+  (locale) => (
 
-                  <LocaleCard
-                    key={locale.id}
-                    locale={locale}
-                  />
+    <div
+      key={locale.id}
+      className="bg-white border rounded-2xl p-3"
+    >
 
-                )
-              )}
+      <div className="font-bold">
+
+        {locale.nome}
+
+      </div>
+
+      <div className="text-sm text-gray-500">
+
+        {locale.categoria}
+
+      </div>
+
+    </div>
+
+  )
+)}
 
             </div>
           )}
