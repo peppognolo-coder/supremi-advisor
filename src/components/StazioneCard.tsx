@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 import {
   MapPin,
@@ -9,6 +9,8 @@ import {
   Star,
   Plus,
 } from 'lucide-react';
+
+import { supabase } from '../lib/supabase';
 
 import type {
   StazioneWithSalette
@@ -48,11 +50,110 @@ export default function StazioneCard({
       getFavorites()
     );
 
+  // =========================
+  // LIVE DATA
+  // =========================
+
+  const [
+    liveStazione,
+    setLiveStazione,
+  ] =
+    useState(stazione);
+
+  // =========================
+  // REALTIME REFRESH
+  // =========================
+
+  useEffect(() => {
+
+    async function reloadStation() {
+
+      const {
+        data,
+        error,
+      } = await supabase
+
+        .from('stazioni')
+
+        .select(`
+          *,
+          salette (*),
+          locali:attivita_stazione (*)
+        `)
+
+        .eq(
+          'id',
+          stazione.id
+        )
+
+        .single();
+
+      if (!error && data) {
+
+        setLiveStazione(
+          data as StazioneWithSalette
+        );
+      }
+    }
+
+    const channel =
+      supabase
+
+        .channel(
+          `station-${stazione.id}`
+        )
+
+        .on(
+          'postgres_changes',
+
+          {
+            event: '*',
+            schema: 'public',
+            table:
+              'attivita_stazione',
+          },
+
+          () => {
+
+            reloadStation();
+          }
+        )
+
+        .on(
+          'postgres_changes',
+
+          {
+            event: '*',
+            schema: 'public',
+            table: 'salette',
+          },
+
+          () => {
+
+            reloadStation();
+          }
+        )
+
+        .subscribe();
+
+    return () => {
+
+      supabase.removeChannel(
+        channel
+      );
+    };
+
+  }, [stazione.id]);
+
+  // =========================
+  // DATA
+  // =========================
+
   const salette =
-    stazione.salette ?? [];
+    liveStazione.salette ?? [];
 
   const locali =
-    stazione.locali ?? [];
+    liveStazione.locali ?? [];
 
   const aperte =
     salette.filter(
@@ -63,8 +164,12 @@ export default function StazioneCard({
 
   const isFavorite =
     favorites.includes(
-      stazione.id
+      liveStazione.id
     );
+
+  // =========================
+  // FAVORITE
+  // =========================
 
   function handleFavorite(
     e: React.MouseEvent
@@ -74,11 +179,15 @@ export default function StazioneCard({
 
     const updated =
       toggleFavorite(
-        stazione.id
+        liveStazione.id
       );
 
     setFavorites(updated);
   }
+
+  // =========================
+  // EXPAND
+  // =========================
 
   function handleExpand() {
 
@@ -95,7 +204,7 @@ export default function StazioneCard({
         className={`bg-white rounded-3xl shadow-sm border transition-all duration-200 hover:shadow-md overflow-hidden ${
           isNearest
             ? 'border-trenord-green ring-2 ring-trenord-green/20'
-            : stazione.attiva
+            : liveStazione.attiva
             ? 'border-gray-100'
             : 'border-dashed border-gray-200 opacity-60'
         }`}
@@ -116,7 +225,7 @@ export default function StazioneCard({
               {/* ICON */}
               <div
                 className={`flex-shrink-0 mt-0.5 w-10 h-10 rounded-2xl flex items-center justify-center ${
-                  stazione.attiva
+                  liveStazione.attiva
                     ? 'bg-trenord-green/10'
                     : 'bg-gray-100'
                 }`}
@@ -124,7 +233,7 @@ export default function StazioneCard({
 
                 <MapPin
                   className={`w-5 h-5 ${
-                    stazione.attiva
+                    liveStazione.attiva
                       ? 'text-trenord-green'
                       : 'text-gray-400'
                   }`}
@@ -139,13 +248,13 @@ export default function StazioneCard({
 
                   <h2 className="font-bold text-gray-900 text-lg leading-tight">
 
-                    {stazione.nome}
+                    {liveStazione.nome}
 
                   </h2>
 
                   <span className="text-[10px] font-mono text-gray-400 bg-gray-100 px-1.5 py-0.5 rounded">
 
-                    {stazione.codice}
+                    {liveStazione.codice}
 
                   </span>
 
@@ -153,7 +262,7 @@ export default function StazioneCard({
 
                 <p className="text-sm text-gray-400 mt-1">
 
-                  {stazione.provincia}, {stazione.regione}
+                  {liveStazione.provincia}, {liveStazione.regione}
 
                 </p>
 
@@ -212,16 +321,6 @@ export default function StazioneCard({
                     </span>
                   )}
 
-                  {/* INATTIVA */}
-                  {!stazione.attiva && (
-
-                    <span className="text-[10px] font-semibold uppercase tracking-wide text-gray-400 bg-gray-100 px-1.5 py-0.5 rounded-full">
-
-                      Inattiva
-
-                    </span>
-                  )}
-
                 </div>
 
               </div>
@@ -245,7 +344,7 @@ export default function StazioneCard({
 
           </div>
 
-          {/* QUICK ACTIONS */}
+          {/* ACTIONS */}
           <div className="flex items-center gap-2 flex-wrap">
 
             {/* FAVORITE */}
@@ -267,8 +366,8 @@ export default function StazioneCard({
             {/* MAPS */}
             <a
               href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
-                stazione.maps_query ||
-                stazione.nome
+                liveStazione.maps_query ||
+                liveStazione.nome
               )}`}
               target="_blank"
               rel="noopener noreferrer"
@@ -310,11 +409,11 @@ export default function StazioneCard({
             </button>
 
             {/* NOTE */}
-            {stazione.note && (
+            {liveStazione.note && (
 
               <p className="text-xs text-gray-400 italic">
 
-                {stazione.note}
+                {liveStazione.note}
 
               </p>
             )}
@@ -392,7 +491,7 @@ export default function StazioneCard({
 
         <AddAttivitaModal
           stazioneId={
-            stazione.id
+            liveStazione.id
           }
           onClose={() =>
             setShowAddModal(
