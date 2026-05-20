@@ -58,7 +58,9 @@ export default function StazioneCard({
     liveStazione,
     setLiveStazione,
   ] =
-    useState(stazione);
+    useState<StazioneWithSalette>(
+      stazione
+    );
 
   // =========================
   // REALTIME REFRESH
@@ -78,7 +80,7 @@ export default function StazioneCard({
         .select(`
           *,
           salette (*),
-          locali:attivita_stazione (*)
+          attivita_stazione (*)
         `)
 
         .eq(
@@ -88,7 +90,16 @@ export default function StazioneCard({
 
         .single();
 
-      if (!error && data) {
+      if (error) {
+
+        console.error(
+          error
+        );
+
+        return;
+      }
+
+      if (data) {
 
         setLiveStazione(
           data as StazioneWithSalette
@@ -96,12 +107,20 @@ export default function StazioneCard({
       }
     }
 
+    // =====================
+    // CHANNEL
+    // =====================
+
     const channel =
       supabase
 
         .channel(
           `station-${stazione.id}`
         )
+
+        // =====================
+        // ATTIVITA
+        // =====================
 
         .on(
           'postgres_changes',
@@ -113,11 +132,24 @@ export default function StazioneCard({
               'attivita_stazione',
           },
 
-          () => {
+          (payload) => {
 
-            reloadStation();
+            const row =
+              payload.new as any;
+
+            if (
+              row?.stazione_id ===
+              stazione.id
+            ) {
+
+              reloadStation();
+            }
           }
         )
+
+        // =====================
+        // SALETTE
+        // =====================
 
         .on(
           'postgres_changes',
@@ -128,9 +160,18 @@ export default function StazioneCard({
             table: 'salette',
           },
 
-          () => {
+          (payload) => {
 
-            reloadStation();
+            const row =
+              payload.new as any;
+
+            if (
+              row?.stazione_id ===
+              stazione.id
+            ) {
+
+              reloadStation();
+            }
           }
         )
 
@@ -150,10 +191,13 @@ export default function StazioneCard({
   // =========================
 
   const salette =
-    liveStazione.salette ?? [];
+    liveStazione.salette ??
+    [];
 
   const locali =
-    liveStazione.locali ?? [];
+    liveStazione
+      .attivita_stazione ??
+    [];
 
   const aperte =
     salette.filter(
@@ -266,7 +310,7 @@ export default function StazioneCard({
 
                 </p>
 
-                {/* NEAREST BADGE */}
+                {/* NEAREST */}
                 {isNearest && (
 
                   <div className="mt-2 inline-flex items-center gap-2 px-2 py-1 rounded-full bg-trenord-green/10 text-trenord-green text-xs font-semibold">
@@ -327,7 +371,7 @@ export default function StazioneCard({
 
             </div>
 
-            {/* EXPAND ICON */}
+            {/* EXPAND */}
             <div className="w-10 h-10 rounded-2xl bg-gray-50 border border-gray-100 flex items-center justify-center flex-shrink-0">
 
               {expanded ? (
@@ -392,7 +436,7 @@ export default function StazioneCard({
 
           <div className="border-t border-gray-100 p-5 flex flex-col gap-4 bg-gray-50 animate-in slide-in-from-top-1 duration-150">
 
-            {/* ADD ATTIVITA */}
+            {/* ADD */}
             <button
               onClick={() =>
                 setShowAddModal(
