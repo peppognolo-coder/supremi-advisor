@@ -123,6 +123,8 @@ export default function ContributoAttivitaForm({
 
       if (error) {
 
+        console.error(error);
+
         toast.error(
           'Errore caricamento stazioni'
         );
@@ -251,25 +253,10 @@ export default function ContributoAttivitaForm({
 
     try {
 
-      const stazione =
-        stazioni.find(
-          (s) =>
-            s.id ===
-            stazioneId
-        );
-
-      console.log({
-        stazione_id:
-          stazioneId,
-      });
-
       const payload = {
 
         stazione_id:
           stazioneId,
-
-        stazione_nome:
-          stazione?.nome || '',
 
         nome:
           nome.trim(),
@@ -293,6 +280,11 @@ export default function ContributoAttivitaForm({
         fasce_orarie:
           fasceOrarie,
       };
+
+      console.log(
+        'PAYLOAD ATTIVITA',
+        payload
+      );
 
       const { error } =
         await supabase
@@ -382,6 +374,9 @@ export default function ContributoAttivitaForm({
             setStazioneId(
               e.target.value
             )
+          }
+          disabled={
+            !!stazionePredefinitaId
           }
           className="border border-gray-200 rounded-xl px-3 py-2"
         >
@@ -549,15 +544,12 @@ export default function ContributoAttivitaForm({
 
                   </h4>
 
-                  {fasceOrarie.length >
-                    1 && (
+                  {fasceOrarie.length > 1 && (
 
                     <button
                       type="button"
                       onClick={() =>
-                        removeFascia(
-                          index
-                        )
+                        removeFascia(index)
                       }
                     >
 
