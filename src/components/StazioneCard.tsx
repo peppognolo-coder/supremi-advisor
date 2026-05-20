@@ -18,7 +18,8 @@ import type {
 
 import SalettaCard from './SalettaCard';
 import LocaleCard from './LocaleCard';
-import AddAttivitaModal from './AddAttivitaModal';
+
+import ContributoAttivitaForm from '../screens/contributi/ContributoAttivitaForm';
 
 import {
   getFavorites,
@@ -41,8 +42,8 @@ export default function StazioneCard({
     useState(false);
 
   const [
-    showAddModal,
-    setShowAddModal,
+    showAddForm,
+    setShowAddForm,
   ] = useState(false);
 
   const [favorites, setFavorites] =
@@ -106,10 +107,6 @@ export default function StazioneCard({
         );
       }
     }
-
-    // =====================
-    // CHANNEL
-    // =====================
 
     const channel =
       supabase
@@ -240,313 +237,315 @@ export default function StazioneCard({
     );
   }
 
+  // =========================
+  // FORM MODE
+  // =========================
+
+  if (showAddForm) {
+
+    return (
+
+      <ContributoAttivitaForm
+
+        stazionePredefinitaId={
+          liveStazione.id
+        }
+
+        onBack={() =>
+          setShowAddForm(
+            false
+          )
+        }
+      />
+    );
+  }
+
   return (
 
-    <>
+    <div
+      className={`bg-white rounded-3xl shadow-sm border transition-all duration-200 hover:shadow-md overflow-hidden ${
+        isNearest
+          ? 'border-trenord-green ring-2 ring-trenord-green/20'
+          : liveStazione.attiva
+          ? 'border-gray-100'
+          : 'border-dashed border-gray-200 opacity-60'
+      }`}
+    >
 
-      <div
-        className={`bg-white rounded-3xl shadow-sm border transition-all duration-200 hover:shadow-md overflow-hidden ${
-          isNearest
-            ? 'border-trenord-green ring-2 ring-trenord-green/20'
-            : liveStazione.attiva
-            ? 'border-gray-100'
-            : 'border-dashed border-gray-200 opacity-60'
-        }`}
-      >
+      {/* HEADER */}
+      <div className="p-5 flex flex-col gap-4">
 
-        {/* HEADER */}
-        <div className="p-5 flex flex-col gap-4">
+        {/* TOP */}
+        <div
+          onClick={handleExpand}
+          className="flex items-start justify-between gap-3 cursor-pointer"
+        >
 
-          {/* TOP */}
-          <div
-            onClick={handleExpand}
-            className="flex items-start justify-between gap-3 cursor-pointer"
-          >
+          {/* LEFT */}
+          <div className="flex items-start gap-3 flex-1 min-w-0">
 
-            {/* LEFT */}
-            <div className="flex items-start gap-3 flex-1 min-w-0">
+            {/* ICON */}
+            <div
+              className={`flex-shrink-0 mt-0.5 w-10 h-10 rounded-2xl flex items-center justify-center ${
+                liveStazione.attiva
+                  ? 'bg-trenord-green/10'
+                  : 'bg-gray-100'
+              }`}
+            >
 
-              {/* ICON */}
-              <div
-                className={`flex-shrink-0 mt-0.5 w-10 h-10 rounded-2xl flex items-center justify-center ${
+              <MapPin
+                className={`w-5 h-5 ${
                   liveStazione.attiva
-                    ? 'bg-trenord-green/10'
-                    : 'bg-gray-100'
+                    ? 'text-trenord-green'
+                    : 'text-gray-400'
                 }`}
-              >
+              />
 
-                <MapPin
-                  className={`w-5 h-5 ${
-                    liveStazione.attiva
-                      ? 'text-trenord-green'
-                      : 'text-gray-400'
-                  }`}
-                />
+            </div>
+
+            {/* CONTENT */}
+            <div className="flex-1 min-w-0">
+
+              <div className="flex items-center gap-2 flex-wrap">
+
+                <h2 className="font-bold text-gray-900 text-lg leading-tight">
+
+                  {liveStazione.nome}
+
+                </h2>
+
+                <span className="text-[10px] font-mono text-gray-400 bg-gray-100 px-1.5 py-0.5 rounded">
+
+                  {liveStazione.codice}
+
+                </span>
 
               </div>
 
-              {/* CONTENT */}
-              <div className="flex-1 min-w-0">
+              <p className="text-sm text-gray-400 mt-1">
 
-                <div className="flex items-center gap-2 flex-wrap">
+                {liveStazione.provincia}, {liveStazione.regione}
 
-                  <h2 className="font-bold text-gray-900 text-lg leading-tight">
+              </p>
 
-                    {liveStazione.nome}
+              {/* NEAREST */}
+              {isNearest && (
 
-                  </h2>
+                <div className="mt-2 inline-flex items-center gap-2 px-2 py-1 rounded-full bg-trenord-green/10 text-trenord-green text-xs font-semibold">
 
-                  <span className="text-[10px] font-mono text-gray-400 bg-gray-100 px-1.5 py-0.5 rounded">
+                  📍 Più vicina
 
-                    {liveStazione.codice}
+                </div>
+              )}
+
+              {/* INFO */}
+              <div className="flex items-center gap-3 mt-3 flex-wrap">
+
+                {/* SALETTE */}
+                <div className="flex items-center gap-1 text-gray-500">
+
+                  <DoorOpen className="w-3.5 h-3.5" />
+
+                  <span className="text-xs">
+
+                    {salette.length}{' '}
+                    {salette.length === 1
+                      ? 'saletta'
+                      : 'salette'}
 
                   </span>
 
                 </div>
 
-                <p className="text-sm text-gray-400 mt-1">
+                {/* APERTE */}
+                {salette.length > 0 && (
 
-                  {liveStazione.provincia}, {liveStazione.regione}
+                  <span
+                    className={`text-xs font-medium ${
+                      aperte > 0
+                        ? 'text-emerald-600'
+                        : 'text-red-500'
+                    }`}
+                  >
 
-                </p>
+                    {aperte} aperte
 
-                {/* NEAREST */}
-                {isNearest && (
-
-                  <div className="mt-2 inline-flex items-center gap-2 px-2 py-1 rounded-full bg-trenord-green/10 text-trenord-green text-xs font-semibold">
-
-                    📍 Più vicina
-
-                  </div>
+                  </span>
                 )}
 
-                {/* INFO */}
-                <div className="flex items-center gap-3 mt-3 flex-wrap">
+                {/* LOCALI */}
+                {locali.length > 0 && (
 
-                  {/* SALETTE */}
-                  <div className="flex items-center gap-1 text-gray-500">
+                  <span className="text-xs font-medium text-trenord-green">
 
-                    <DoorOpen className="w-3.5 h-3.5" />
+                    {locali.length} locali
 
-                    <span className="text-xs">
-
-                      {salette.length}{' '}
-                      {salette.length === 1
-                        ? 'saletta'
-                        : 'salette'}
-
-                    </span>
-
-                  </div>
-
-                  {/* APERTE */}
-                  {salette.length > 0 && (
-
-                    <span
-                      className={`text-xs font-medium ${
-                        aperte > 0
-                          ? 'text-emerald-600'
-                          : 'text-red-500'
-                      }`}
-                    >
-
-                      {aperte} aperte
-
-                    </span>
-                  )}
-
-                  {/* LOCALI */}
-                  {locali.length > 0 && (
-
-                    <span className="text-xs font-medium text-trenord-green">
-
-                      {locali.length} locali
-
-                    </span>
-                  )}
-
-                </div>
+                  </span>
+                )}
 
               </div>
 
             </div>
 
-            {/* EXPAND */}
-            <div className="w-10 h-10 rounded-2xl bg-gray-50 border border-gray-100 flex items-center justify-center flex-shrink-0">
-
-              {expanded ? (
-
-                <ChevronUp className="w-5 h-5 text-gray-400" />
-
-              ) : (
-
-                <ChevronDown className="w-5 h-5 text-gray-400" />
-
-              )}
-
-            </div>
-
           </div>
 
-          {/* ACTIONS */}
-          <div className="flex items-center gap-2 flex-wrap">
+          {/* EXPAND */}
+          <div className="w-10 h-10 rounded-2xl bg-gray-50 border border-gray-100 flex items-center justify-center flex-shrink-0">
 
-            {/* FAVORITE */}
-            <button
-              onClick={handleFavorite}
-              className="w-10 h-10 rounded-2xl bg-yellow-50 flex items-center justify-center"
-            >
+            {expanded ? (
 
-              <Star
-                className={`w-5 h-5 ${
-                  isFavorite
-                    ? 'fill-yellow-400 text-yellow-400'
-                    : 'text-yellow-400'
-                }`}
-              />
+              <ChevronUp className="w-5 h-5 text-gray-400" />
 
-            </button>
+            ) : (
 
-            {/* MAPS */}
-            <a
-              href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
-                liveStazione.maps_query ||
-                liveStazione.nome
-              )}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              onClick={(e) =>
-                e.stopPropagation()
-              }
-              className="px-4 h-10 rounded-2xl bg-trenord-green text-white flex items-center gap-2 text-sm font-medium shadow-sm hover:opacity-90 transition-opacity"
-            >
+              <ChevronDown className="w-5 h-5 text-gray-400" />
 
-              <Navigation className="w-4 h-4" />
-
-              Portami qui
-
-            </a>
+            )}
 
           </div>
 
         </div>
 
-        {/* EXPANDED */}
-        {expanded && (
+        {/* ACTIONS */}
+        <div className="flex items-center gap-2 flex-wrap">
 
-          <div className="border-t border-gray-100 p-5 flex flex-col gap-4 bg-gray-50 animate-in slide-in-from-top-1 duration-150">
+          {/* FAVORITE */}
+          <button
+            onClick={handleFavorite}
+            className="w-10 h-10 rounded-2xl bg-yellow-50 flex items-center justify-center"
+          >
 
-            {/* ADD */}
-            <button
-              onClick={() =>
-                setShowAddModal(
-                  true
-                )
-              }
-              className="px-4 py-3 rounded-2xl bg-white border border-gray-200 text-gray-700 flex items-center justify-center gap-2 text-sm font-medium shadow-sm hover:bg-gray-50 transition-colors"
-            >
+            <Star
+              className={`w-5 h-5 ${
+                isFavorite
+                  ? 'fill-yellow-400 text-yellow-400'
+                  : 'text-yellow-400'
+              }`}
+            />
 
-              <Plus className="w-4 h-4" />
+          </button>
 
-              Aggiungi attività
+          {/* MAPS */}
+          <a
+            href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
+              liveStazione.maps_query ||
+              liveStazione.nome
+            )}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={(e) =>
+              e.stopPropagation()
+            }
+            className="px-4 h-10 rounded-2xl bg-trenord-green text-white flex items-center gap-2 text-sm font-medium shadow-sm hover:opacity-90 transition-opacity"
+          >
 
-            </button>
+            <Navigation className="w-4 h-4" />
 
-            {/* NOTE */}
-            {liveStazione.note && (
+            Portami qui
 
-              <p className="text-xs text-gray-400 italic">
+          </a>
 
-                {liveStazione.note}
-
-              </p>
-            )}
-
-            {/* SALETTE */}
-            {salette.length === 0 ? (
-
-              <p className="text-sm text-gray-400 text-center py-3">
-
-                Nessuna saletta registrata
-
-              </p>
-
-            ) : (
-
-              <div className="flex flex-col gap-3">
-
-                {salette.map(
-                  (saletta) => (
-
-                    <SalettaCard
-                      key={saletta.id}
-                      saletta={saletta}
-                    />
-
-                  )
-                )}
-
-              </div>
-
-            )}
-
-            {/* LOCALI */}
-            {locali.length > 0 && (
-
-              <div className="flex flex-col gap-3 mt-2">
-
-                <div className="flex items-center justify-between">
-
-                  <h4 className="text-sm font-semibold text-gray-800">
-
-                    Locali nelle vicinanze
-
-                  </h4>
-
-                  <span className="text-xs text-gray-400">
-
-                    {locali.length} locali
-
-                  </span>
-
-                </div>
-
-                {locali.map(
-                  (locale) => (
-
-                    <LocaleCard
-                      key={locale.id}
-                      locale={locale}
-                    />
-
-                  )
-                )}
-
-              </div>
-            )}
-
-          </div>
-        )}
+        </div>
 
       </div>
 
-      {/* MODAL */}
-      {showAddModal && (
+      {/* EXPANDED */}
+      {expanded && (
 
-        <AddAttivitaModal
-          stazioneId={
-            liveStazione.id
-          }
-          onClose={() =>
-            setShowAddModal(
-              false
-            )
-          }
-        />
+        <div className="border-t border-gray-100 p-5 flex flex-col gap-4 bg-gray-50 animate-in slide-in-from-top-1 duration-150">
 
+          {/* ADD */}
+          <button
+            onClick={() =>
+              setShowAddForm(
+                true
+              )
+            }
+            className="px-4 py-3 rounded-2xl bg-white border border-gray-200 text-gray-700 flex items-center justify-center gap-2 text-sm font-medium shadow-sm hover:bg-gray-50 transition-colors"
+          >
+
+            <Plus className="w-4 h-4" />
+
+            Aggiungi attività
+
+          </button>
+
+          {/* NOTE */}
+          {liveStazione.note && (
+
+            <p className="text-xs text-gray-400 italic">
+
+              {liveStazione.note}
+
+            </p>
+          )}
+
+          {/* SALETTE */}
+          {salette.length === 0 ? (
+
+            <p className="text-sm text-gray-400 text-center py-3">
+
+              Nessuna saletta registrata
+
+            </p>
+
+          ) : (
+
+            <div className="flex flex-col gap-3">
+
+              {salette.map(
+                (saletta) => (
+
+                  <SalettaCard
+                    key={saletta.id}
+                    saletta={saletta}
+                  />
+
+                )
+              )}
+
+            </div>
+
+          )}
+
+          {/* LOCALI */}
+          {locali.length > 0 && (
+
+            <div className="flex flex-col gap-3 mt-2">
+
+              <div className="flex items-center justify-between">
+
+                <h4 className="text-sm font-semibold text-gray-800">
+
+                  Locali nelle vicinanze
+
+                </h4>
+
+                <span className="text-xs text-gray-400">
+
+                  {locali.length} locali
+
+                </span>
+
+              </div>
+
+              {locali.map(
+                (locale) => (
+
+                  <LocaleCard
+                    key={locale.id}
+                    locale={locale}
+                  />
+
+                )
+              )}
+
+            </div>
+          )}
+
+        </div>
       )}
 
-    </>
-
+    </div>
   );
 }
