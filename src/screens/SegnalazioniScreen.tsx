@@ -12,40 +12,33 @@ import {
   Pencil,
   Save,
   Clock3,
+  Train,
 } from 'lucide-react';
 
 import toast from 'react-hot-toast';
 
 import { supabase } from '../lib/supabase';
 
-type SegnalazioneStazione = {
+interface Contributo {
 
   id: string;
 
   tipo: string;
 
-  stazione_nome: string | null;
-
-  saletta_nome: string | null;
-
-  attivita_nome: string | null;
-
-  categoria: string | null;
-
-  nota: string | null;
+  dati: any;
 
   stato: string;
 
   created_at: string;
-};
+}
 
 export default function SegnalazioniScreen() {
 
   const [
-    segnalazioni,
-    setSegnalazioni,
+    contributi,
+    setContributi,
   ] = useState<
-    SegnalazioneStazione[]
+    Contributo[]
   >([]);
 
   const [loading, setLoading] =
@@ -54,7 +47,7 @@ export default function SegnalazioniScreen() {
   const [
     selected,
     setSelected,
-  ] = useState<SegnalazioneStazione | null>(
+  ] = useState<Contributo | null>(
     null
   );
 
@@ -76,9 +69,7 @@ export default function SegnalazioniScreen() {
       error,
     } = await supabase
 
-      .from(
-        'segnalazioni_stazioni'
-      )
+      .from('contributi')
 
       .select('*')
 
@@ -94,7 +85,7 @@ export default function SegnalazioniScreen() {
       console.error(error);
 
       toast.error(
-        'Errore caricamento segnalazioni'
+        'Errore caricamento contributi'
       );
 
       setLoading(false);
@@ -102,11 +93,9 @@ export default function SegnalazioniScreen() {
       return;
     }
 
-    setSegnalazioni(
-      (
-        data as
-          SegnalazioneStazione[]
-      ) ?? []
+    setContributi(
+      (data as Contributo[]) ??
+        []
     );
 
     setLoading(false);
@@ -124,7 +113,7 @@ export default function SegnalazioniScreen() {
       supabase
 
         .channel(
-          'realtime-segnalazioni'
+          'realtime-contributi'
         )
 
         .on(
@@ -134,7 +123,7 @@ export default function SegnalazioniScreen() {
             event: '*',
             schema: 'public',
             table:
-              'segnalazioni_stazioni',
+              'contributi',
           },
 
           () => {
@@ -159,15 +148,16 @@ export default function SegnalazioniScreen() {
   // =========================
 
   function openEdit(
-    segnalazione: SegnalazioneStazione
+    contributo: Contributo
   ) {
 
     setSelected(
-      segnalazione
+      contributo
     );
 
     setEditedData({
-      ...segnalazione,
+      ...(contributo.dati ||
+        {}),
     });
   }
 
@@ -183,26 +173,12 @@ export default function SegnalazioniScreen() {
     const { error } =
       await supabase
 
-        .from(
-          'segnalazioni_stazioni'
-        )
+        .from('contributi')
 
         .update({
 
-          stazione_nome:
-            editedData.stazione_nome,
-
-          saletta_nome:
-            editedData.saletta_nome,
-
-          attivita_nome:
-            editedData.attivita_nome,
-
-          categoria:
-            editedData.categoria,
-
-          nota:
-            editedData.nota,
+          dati:
+            editedData,
         })
 
         .eq(
@@ -235,17 +211,20 @@ export default function SegnalazioniScreen() {
   // =========================
 
   async function approveContributo(
-    segnalazione: SegnalazioneStazione
+    contributo: Contributo
   ) {
 
     try {
+
+      const dati =
+        contributo.dati;
 
       // =====================
       // STAZIONE
       // =====================
 
       if (
-        segnalazione.tipo ===
+        contributo.tipo ===
         'stazione'
       ) {
 
@@ -256,20 +235,36 @@ export default function SegnalazioniScreen() {
           .insert({
 
             nome:
-              segnalazione.stazione_nome,
+              dati.nome,
 
             codice:
-              'NEW',
+              dati.codice,
 
-            regione: '',
+            regione:
+              dati.regione,
 
-            provincia: '',
+            provincia:
+              dati.provincia,
 
-            attiva: true,
+            indirizzo:
+              dati.indirizzo,
+
+            maps_query:
+              dati.maps_query,
+
+            lat:
+              dati.lat || null,
+
+            lng:
+              dati.lng || null,
+
+            plus_code:
+              dati.plus_code,
 
             note:
-              segnalazione.nota ??
-              '',
+              dati.note,
+
+            attiva: true,
           });
       }
 
@@ -278,7 +273,7 @@ export default function SegnalazioniScreen() {
       // =====================
 
       if (
-        segnalazione.tipo ===
+        contributo.tipo ===
         'saletta'
       ) {
 
@@ -289,20 +284,42 @@ export default function SegnalazioniScreen() {
           .insert({
 
             stazione:
-              segnalazione.stazione_nome,
-
-            nome:
-              segnalazione.saletta_nome,
+              dati.stazione,
 
             tipo:
-              segnalazione.saletta_nome,
+              dati.tipo,
+
+            codice_accesso:
+              dati.codice_accesso,
+
+            ubicazione:
+              dati.ubicazione,
 
             stato:
-              'aperta',
+              dati.stato,
 
             note:
-              segnalazione.nota ??
-              '',
+              dati.note,
+
+            microonde:
+              dati.servizi
+                ?.microonde ??
+              false,
+
+            distributori:
+              dati.servizi
+                ?.distributori ??
+              false,
+
+            acqua:
+              dati.servizi
+                ?.acqua ??
+              false,
+
+            climatizzata:
+              dati.servizi
+                ?.climatizzata ??
+              false,
           });
       }
 
@@ -311,49 +328,54 @@ export default function SegnalazioniScreen() {
       // =====================
 
       if (
-        segnalazione.tipo ===
+        contributo.tipo ===
         'attivita'
       ) {
 
-        const { data: stazione } =
-          await supabase
+        await supabase
 
-            .from('stazioni')
+          .from(
+            'attivita_stazione'
+          )
 
-            .select('id')
+          .insert({
 
-            .eq(
-              'nome',
-              segnalazione.stazione_nome
-            )
+            stazione_id:
+              dati.stazione_id,
 
-            .single();
+            nome:
+              dati.nome,
 
-        if (stazione) {
+            categoria:
+              dati.categoria,
 
-          await supabase
+            indirizzo:
+              dati.indirizzo,
 
-            .from(
-              'attivita_stazione'
-            )
+            convenzione:
+              dati.convenzione,
 
-            .insert({
+            sconto:
+              dati.sconto,
 
-              stazione_id:
-                stazione.id,
+            telefono:
+              dati.telefono,
 
-              nome:
-                segnalazione.attivita_nome,
+            sito:
+              dati.sito,
 
-              categoria:
-                segnalazione.categoria ??
-                'altro',
+            apertura:
+              dati.apertura,
 
-              note:
-                segnalazione.nota ??
-                '',
-            });
-        }
+            chiusura:
+              dati.chiusura,
+
+            giorni:
+              dati.giorni,
+
+            note:
+              dati.note,
+          });
       }
 
       // =====================
@@ -362,9 +384,7 @@ export default function SegnalazioniScreen() {
 
       await supabase
 
-        .from(
-          'segnalazioni_stazioni'
-        )
+        .from('contributi')
 
         .update({
 
@@ -374,7 +394,7 @@ export default function SegnalazioniScreen() {
 
         .eq(
           'id',
-          segnalazione.id
+          contributo.id
         );
 
       toast.success(
@@ -403,22 +423,30 @@ export default function SegnalazioniScreen() {
     id: string
   ) {
 
-    await supabase
+    const { error } =
+      await supabase
 
-      .from(
-        'segnalazioni_stazioni'
-      )
+        .from('contributi')
 
-      .update({
+        .update({
 
-        stato:
-          'rejected',
-      })
+          stato:
+            'rejected',
+        })
 
-      .eq(
-        'id',
-        id
+        .eq(
+          'id',
+          id
+        );
+
+    if (error) {
+
+      toast.error(
+        'Errore rifiuto contributo'
       );
+
+      return;
+    }
 
     toast.success(
       'Contributo rifiutato'
@@ -443,7 +471,7 @@ export default function SegnalazioniScreen() {
     ) {
 
       return (
-        <Building2 className="w-5 h-5 text-trenord-green" />
+        <Train className="w-5 h-5 text-trenord-green" />
       );
     }
 
@@ -457,9 +485,66 @@ export default function SegnalazioniScreen() {
       );
     }
 
+    if (
+      tipo ===
+      'attivita'
+    ) {
+
+      return (
+        <Store className="w-5 h-5 text-trenord-green" />
+      );
+    }
+
     return (
-      <Store className="w-5 h-5 text-trenord-green" />
+      <Building2 className="w-5 h-5 text-trenord-green" />
     );
+  }
+
+  // =========================
+  // RENDER LABEL
+  // =========================
+
+  function getTitle(
+    contributo: Contributo
+  ) {
+
+    const dati =
+      contributo.dati;
+
+    if (
+      contributo.tipo ===
+      'stazione'
+    ) {
+
+      return (
+        dati.nome ||
+        'Nuova stazione'
+      );
+    }
+
+    if (
+      contributo.tipo ===
+      'saletta'
+    ) {
+
+      return (
+        dati.stazione ||
+        'Saletta'
+      );
+    }
+
+    if (
+      contributo.tipo ===
+      'attivita'
+    ) {
+
+      return (
+        dati.nome ||
+        'Attività'
+      );
+    }
+
+    return 'Contributo';
   }
 
   return (
@@ -495,7 +580,7 @@ export default function SegnalazioniScreen() {
 
       {/* EMPTY */}
       {!loading &&
-        segnalazioni.length ===
+        contributi.length ===
           0 && (
 
         <div className="bg-white rounded-2xl border border-gray-100 p-6 text-sm text-gray-500 text-center">
@@ -508,11 +593,11 @@ export default function SegnalazioniScreen() {
       {/* LIST */}
       <div className="flex flex-col gap-3">
 
-        {segnalazioni.map(
-          (s) => (
+        {contributi.map(
+          (c) => (
 
             <div
-              key={s.id}
+              key={c.id}
               className="bg-white rounded-2xl border border-gray-100 p-4 shadow-sm flex flex-col gap-4"
             >
 
@@ -522,7 +607,7 @@ export default function SegnalazioniScreen() {
                 <div className="w-10 h-10 rounded-2xl bg-trenord-green/10 flex items-center justify-center flex-shrink-0">
 
                   {renderIcon(
-                    s.tipo
+                    c.tipo
                   )}
 
                 </div>
@@ -533,23 +618,23 @@ export default function SegnalazioniScreen() {
 
                     <span className="text-xs uppercase tracking-wide text-gray-400 font-semibold">
 
-                      {s.tipo}
+                      {c.tipo}
 
                     </span>
 
                     <span
                       className={`text-[10px] px-2 py-1 rounded-full uppercase tracking-wide font-bold ${
-                        s.stato ===
+                        c.stato ===
                         'approved'
                           ? 'bg-emerald-100 text-emerald-700'
-                          : s.stato ===
+                          : c.stato ===
                             'rejected'
                           ? 'bg-red-100 text-red-700'
                           : 'bg-amber-100 text-amber-700'
                       }`}
                     >
 
-                      {s.stato}
+                      {c.stato}
 
                     </span>
 
@@ -557,50 +642,30 @@ export default function SegnalazioniScreen() {
 
                   <h2 className="font-semibold text-gray-900 mt-1">
 
-                    {s.stazione_nome}
+                    {getTitle(
+                      c
+                    )}
 
                   </h2>
-
-                  {s.saletta_nome && (
-
-                    <p className="text-sm text-gray-500 mt-1">
-
-                      {s.saletta_nome}
-
-                    </p>
-                  )}
-
-                  {s.attivita_nome && (
-
-                    <p className="text-sm text-gray-500 mt-1">
-
-                      {s.attivita_nome}
-
-                    </p>
-                  )}
-
-                  {s.categoria && (
-
-                    <p className="text-xs text-trenord-green mt-2 font-semibold uppercase tracking-wide">
-
-                      {s.categoria}
-
-                    </p>
-                  )}
 
                 </div>
 
               </div>
 
-              {/* NOTE */}
-              {s.nota && (
+              {/* JSON PREVIEW */}
+              <div className="bg-gray-50 rounded-xl p-3 text-xs text-gray-600 overflow-x-auto">
 
-                <div className="bg-gray-50 rounded-xl p-3 text-sm text-gray-600">
+                <pre>
 
-                  {s.nota}
+                  {JSON.stringify(
+                    c.dati,
+                    null,
+                    2
+                  )}
 
-                </div>
-              )}
+                </pre>
+
+              </div>
 
               {/* DATE */}
               <div className="flex items-center gap-2 text-xs text-gray-400">
@@ -608,7 +673,7 @@ export default function SegnalazioniScreen() {
                 <Clock3 className="w-4 h-4" />
 
                 {new Date(
-                  s.created_at
+                  c.created_at
                 ).toLocaleString(
                   'it-IT'
                 )}
@@ -616,7 +681,7 @@ export default function SegnalazioniScreen() {
               </div>
 
               {/* ACTIONS */}
-              {s.stato ===
+              {c.stato ===
                 'pending' && (
 
                 <div className="flex gap-2 flex-wrap">
@@ -624,7 +689,7 @@ export default function SegnalazioniScreen() {
                   {/* EDIT */}
                   <button
                     onClick={() =>
-                      openEdit(s)
+                      openEdit(c)
                     }
                     className="flex-1 flex items-center justify-center gap-2 bg-gray-100 text-gray-700 rounded-xl py-2.5 text-sm font-semibold"
                   >
@@ -639,7 +704,12 @@ export default function SegnalazioniScreen() {
                   <button
                     onClick={() =>
                       approveContributo(
-                        s
+                        {
+                          ...c,
+
+                          dati:
+                            editedData,
+                        }
                       )
                     }
                     className="flex-1 flex items-center justify-center gap-2 bg-emerald-500 text-white rounded-xl py-2.5 text-sm font-semibold"
@@ -655,7 +725,7 @@ export default function SegnalazioniScreen() {
                   <button
                     onClick={() =>
                       rejectContributo(
-                        s.id
+                        c.id
                       )
                     }
                     className="flex-1 flex items-center justify-center gap-2 bg-red-500 text-white rounded-xl py-2.5 text-sm font-semibold"
@@ -690,7 +760,7 @@ export default function SegnalazioniScreen() {
 
                 <h2 className="text-xl font-bold text-gray-900">
 
-                  Modifica segnalazione
+                  Modifica contributo
 
                 </h2>
 
@@ -720,106 +790,52 @@ export default function SegnalazioniScreen() {
             {/* FORM */}
             <div className="flex flex-col gap-3">
 
-              <input
-                value={
-                  editedData.stazione_nome ??
-                  ''
-                }
-                onChange={(e) =>
-                  setEditedData({
+              {Object.entries(
+                editedData || {}
+              ).map(
+                ([key, value]) => (
 
-                    ...editedData,
+                  <div
+                    key={key}
+                    className="flex flex-col gap-1"
+                  >
 
-                    stazione_nome:
-                      e.target.value,
-                  })
-                }
-                placeholder="Stazione"
-                className="border border-gray-200 rounded-xl px-3 py-2 text-sm"
-              />
+                    <label className="text-xs font-semibold uppercase text-gray-400">
 
-              {selected.tipo ===
-                'saletta' && (
+                      {key}
 
-                <input
-                  value={
-                    editedData.saletta_nome ??
-                    ''
-                  }
-                  onChange={(e) =>
-                    setEditedData({
+                    </label>
 
-                      ...editedData,
+                    <textarea
+                      value={
+                        typeof value ===
+                        'object'
+                          ? JSON.stringify(
+                              value,
+                              null,
+                              2
+                            )
+                          : String(
+                              value ??
+                                ''
+                            )
+                      }
+                      onChange={(e) =>
+                        setEditedData({
 
-                      saletta_nome:
-                        e.target.value,
-                    })
-                  }
-                  placeholder="Nome saletta"
-                  className="border border-gray-200 rounded-xl px-3 py-2 text-sm"
-                />
+                          ...editedData,
+
+                          [key]:
+                            e.target.value,
+                        })
+                      }
+                      rows={4}
+                      className="border border-gray-200 rounded-xl px-3 py-2 text-sm resize-none"
+                    />
+
+                  </div>
+                )
               )}
-
-              {selected.tipo ===
-                'attivita' && (
-
-                <>
-                  <input
-                    value={
-                      editedData.attivita_nome ??
-                      ''
-                    }
-                    onChange={(e) =>
-                      setEditedData({
-
-                        ...editedData,
-
-                        attivita_nome:
-                          e.target.value,
-                      })
-                    }
-                    placeholder="Nome attività"
-                    className="border border-gray-200 rounded-xl px-3 py-2 text-sm"
-                  />
-
-                  <input
-                    value={
-                      editedData.categoria ??
-                      ''
-                    }
-                    onChange={(e) =>
-                      setEditedData({
-
-                        ...editedData,
-
-                        categoria:
-                          e.target.value,
-                      })
-                    }
-                    placeholder="Categoria"
-                    className="border border-gray-200 rounded-xl px-3 py-2 text-sm"
-                  />
-                </>
-              )}
-
-              <textarea
-                value={
-                  editedData.nota ??
-                  ''
-                }
-                onChange={(e) =>
-                  setEditedData({
-
-                    ...editedData,
-
-                    nota:
-                      e.target.value,
-                  })
-                }
-                placeholder="Note"
-                rows={5}
-                className="border border-gray-200 rounded-xl px-3 py-2 text-sm resize-none"
-              />
 
             </div>
 
@@ -845,7 +861,8 @@ export default function SegnalazioniScreen() {
 
                     ...selected,
 
-                    ...editedData,
+                    dati:
+                      editedData,
                   })
                 }
                 className="flex-1 bg-emerald-600 text-white rounded-2xl py-3 font-semibold"
