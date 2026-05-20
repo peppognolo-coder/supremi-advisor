@@ -17,7 +17,6 @@ import type {
 } from '../lib/database.types';
 
 import SalettaCard from './SalettaCard';
-import LocaleCard from './LocaleCard';
 
 import ContributoAttivitaForm from '../screens/contributi/ContributoAttivitaForm';
 
@@ -50,10 +49,6 @@ export default function StazioneCard({
     useState<string[]>(
       getFavorites()
     );
-
-  // =========================
-  // LIVE DATA
-  // =========================
 
   const [
     liveStazione,
@@ -88,11 +83,9 @@ export default function StazioneCard({
         `)
 
         .eq(
-  'stazione_id',
-  String(
-    stazione.id
-  )
-)
+          'id',
+          stazione.id
+        )
 
         .single();
 
@@ -122,7 +115,9 @@ export default function StazioneCard({
 
         .eq(
           'stazione_id',
-          stazione.id
+          String(
+            stazione.id
+          )
         );
 
       if (attivitaError) {
@@ -131,6 +126,11 @@ export default function StazioneCard({
           attivitaError
         );
       }
+
+      console.log(
+        'ATTIVITA TROVATE',
+        attivitaData
+      );
 
       // =====================
       // MERGE
@@ -144,11 +144,14 @@ export default function StazioneCard({
           stationData?.salette || [],
 
         attivita_stazione:
-          attivitaData || [],
+          Array.isArray(
+            attivitaData
+          )
+            ? attivitaData
+            : [],
       });
     }
 
-    // primo load reale
     reloadStation();
 
     const channel =
@@ -172,18 +175,9 @@ export default function StazioneCard({
               'attivita_stazione',
           },
 
-          (payload) => {
+          () => {
 
-            const row =
-              payload.new as any;
-
-            if (
-              row?.stazione_id ===
-              stazione.id
-            ) {
-
-              reloadStation();
-            }
+            reloadStation();
           }
         )
 
@@ -200,18 +194,9 @@ export default function StazioneCard({
             table: 'salette',
           },
 
-          (payload) => {
+          () => {
 
-            const row =
-              payload.new as any;
-
-            if (
-              row?.stazione_id ===
-              stazione.id
-            ) {
-
-              reloadStation();
-            }
+            reloadStation();
           }
         )
 
@@ -231,13 +216,19 @@ export default function StazioneCard({
   // =========================
 
   const salette =
-    liveStazione.salette ??
-    [];
+    Array.isArray(
+      liveStazione?.salette
+    )
+      ? liveStazione.salette
+      : [];
 
   const locali =
-    liveStazione
-      .attivita_stazione ??
-    [];
+    Array.isArray(
+      liveStazione?.attivita_stazione
+    )
+      ? liveStazione
+          .attivita_stazione
+      : [];
 
   const aperte =
     salette.filter(
@@ -371,7 +362,6 @@ export default function StazioneCard({
 
               </p>
 
-              {/* NEAREST */}
               {isNearest && (
 
                 <div className="mt-2 inline-flex items-center gap-2 px-2 py-1 rounded-full bg-trenord-green/10 text-trenord-green text-xs font-semibold">
@@ -384,7 +374,6 @@ export default function StazioneCard({
               {/* INFO */}
               <div className="flex items-center gap-3 mt-3 flex-wrap">
 
-                {/* SALETTE */}
                 <div className="flex items-center gap-1 text-gray-500">
 
                   <DoorOpen className="w-3.5 h-3.5" />
@@ -400,7 +389,6 @@ export default function StazioneCard({
 
                 </div>
 
-                {/* APERTE */}
                 {salette.length > 0 && (
 
                   <span
@@ -416,7 +404,6 @@ export default function StazioneCard({
                   </span>
                 )}
 
-                {/* LOCALI */}
                 {locali.length > 0 && (
 
                   <span className="text-xs font-medium text-trenord-green">
@@ -552,7 +539,8 @@ export default function StazioneCard({
           )}
 
           {/* LOCALI */}
-          {locali.length > 0 && (
+          {Array.isArray(locali) &&
+            locali.length > 0 && (
 
             <div className="flex flex-col gap-3 mt-2">
 
@@ -573,29 +561,107 @@ export default function StazioneCard({
               </div>
 
               {locali.map(
-  (locale) => (
+                (locale: any) => (
 
-    <div
-      key={locale.id}
-      className="bg-white border rounded-2xl p-3"
-    >
+                  <div
+                    key={locale.id}
+                    className="bg-white border border-gray-200 rounded-2xl p-4"
+                  >
 
-      <div className="font-bold">
+                    <div className="flex items-center justify-between gap-3">
 
-        {locale.nome}
+                      <div>
 
-      </div>
+                        <h5 className="font-semibold text-gray-900">
 
-      <div className="text-sm text-gray-500">
+                          {locale.nome}
 
-        {locale.categoria}
+                        </h5>
 
-      </div>
+                        <p className="text-sm text-gray-500 mt-1">
 
-    </div>
+                          {locale.categoria}
 
-  )
-)}
+                        </p>
+
+                      </div>
+
+                      {locale.convenzionato && (
+
+                        <div className="px-2 py-1 rounded-full bg-trenord-green/10 text-trenord-green text-xs font-semibold">
+
+                          Convenzionato
+
+                        </div>
+                      )}
+
+                    </div>
+
+                    {locale.ubicazione && (
+
+                      <p className="text-xs text-gray-400 mt-3">
+
+                        📍 {locale.ubicazione}
+
+                      </p>
+                    )}
+
+                    {Array.isArray(
+                      locale.fasce_orarie
+                    ) &&
+                      locale.fasce_orarie
+                        .length > 0 && (
+
+                      <div className="mt-3 flex flex-col gap-2">
+
+                        {locale.fasce_orarie.map(
+                          (
+                            fascia: any,
+                            index: number
+                          ) => (
+
+                            <div
+                              key={index}
+                              className="text-xs text-gray-500 bg-gray-50 rounded-xl px-3 py-2"
+                            >
+
+                              <div>
+
+                                {Array.isArray(
+                                  fascia.giorni
+                                )
+                                  ? fascia.giorni.join(
+                                      ', '
+                                    )
+                                  : ''}
+
+                              </div>
+
+                              <div className="font-medium text-gray-700 mt-1">
+
+                                {fascia.apertura} - {fascia.chiusura}
+
+                              </div>
+
+                            </div>
+                          )
+                        )}
+
+                      </div>
+                    )}
+
+                    {locale.note && (
+
+                      <p className="text-xs text-gray-400 italic mt-3">
+
+                        {locale.note}
+
+                      </p>
+                    )}
+
+                  </div>
+                )
+              )}
 
             </div>
           )}
