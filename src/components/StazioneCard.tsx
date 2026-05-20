@@ -272,29 +272,6 @@ export default function StazioneCard({
     );
   }
 
-  // =========================
-  // FORM
-  // =========================
-
-  if (showAddForm) {
-
-    return (
-
-      <ContributoAttivitaForm
-
-        stazionePredefinitaId={
-          liveStazione.id
-        }
-
-        onBack={() =>
-          setShowAddForm(
-            false
-          )
-        }
-      />
-    );
-  }
-
   return (
 
     <div
@@ -483,6 +460,27 @@ export default function StazioneCard({
 
       </div>
 
+      {/* FORM ATTIVITA */}
+      {showAddForm && (
+
+        <div className="p-4 border-t border-gray-100 bg-gray-50">
+
+          <ContributoAttivitaForm
+
+            stazionePredefinitaId={
+              liveStazione.id
+            }
+
+            onBack={() =>
+              setShowAddForm(
+                false
+              )
+            }
+          />
+
+        </div>
+      )}
+
       {/* EXPANDED */}
       {expanded && (
 
@@ -492,7 +490,7 @@ export default function StazioneCard({
           <button
             onClick={() =>
               setShowAddForm(
-                true
+                !showAddForm
               )
             }
             className="px-4 py-3 rounded-2xl bg-white border border-gray-200 text-gray-700 flex items-center justify-center gap-2 text-sm font-medium shadow-sm hover:bg-gray-50 transition-colors"
@@ -500,7 +498,9 @@ export default function StazioneCard({
 
             <Plus className="w-4 h-4" />
 
-            Aggiungi attività
+            {showAddForm
+              ? 'Chiudi form'
+              : 'Aggiungi attività'}
 
           </button>
 
