@@ -1,20 +1,23 @@
+const DEVICE_KEY =
+  'trenord_device_id';
+
 export function getDeviceId() {
 
-  let id =
+  let deviceId =
     localStorage.getItem(
-      'device_id'
+      DEVICE_KEY
     );
 
-  if (!id) {
+  if (!deviceId) {
 
-    id =
+    deviceId =
       crypto.randomUUID();
 
     localStorage.setItem(
-      'device_id',
-      id
+      DEVICE_KEY,
+      deviceId
     );
   }
 
-  return id;
+  return deviceId;
 }
