@@ -8,6 +8,7 @@ import {
   Building2,
   MapPin,
   Eye,
+  Save,
 } from 'lucide-react';
 
 import toast from 'react-hot-toast';
@@ -76,11 +77,95 @@ export default function AdminSegnalazioni() {
     setLoading(false);
   }
 
+  // =========================
+  // REALTIME
+  // =========================
+
   useEffect(() => {
 
     load();
 
+    const channel =
+      supabase
+
+        .channel(
+          'realtime-contributi'
+        )
+
+        .on(
+          'postgres_changes',
+
+          {
+            event: '*',
+            schema: 'public',
+            table: 'contributi',
+          },
+
+          () => {
+
+            load();
+          }
+        )
+
+        .subscribe();
+
+    return () => {
+
+      supabase.removeChannel(
+        channel
+      );
+    };
+
   }, []);
+
+  // =========================
+  // SAVE EDITS
+  // =========================
+
+  async function saveEdits() {
+
+    if (!selected)
+      return;
+
+    const { error } =
+      await supabase
+
+        .from('contributi')
+
+        .update({
+
+          dati:
+            editedData,
+        })
+
+        .eq(
+          'id',
+          selected.id
+        );
+
+    if (error) {
+
+      toast.error(
+        'Errore salvataggio'
+      );
+
+      return;
+    }
+
+    toast.success(
+      'Modifiche salvate'
+    );
+
+    setSelected({
+
+      ...selected,
+
+      dati:
+        editedData,
+    });
+
+    load();
+  }
 
   // =========================
   // APPROVE
@@ -104,10 +189,7 @@ export default function AdminSegnalazioni() {
         'attivita'
       ) {
 
-        const {
-          error:
-            insertError,
-        } = await supabase
+        await supabase
 
           .from(
             'attivita_stazione'
@@ -140,36 +222,18 @@ export default function AdminSegnalazioni() {
               dati.indirizzo,
 
             giorni_apertura:
-              dati.giorni_apertura ??
-              dati.giorni,
+              dati.giorni_apertura,
 
             orario_apertura:
-              dati.orario_apertura ??
-              dati.apertura,
+              dati.orario_apertura,
 
             orario_chiusura:
-              dati.orario_chiusura ??
-              dati.chiusura,
+              dati.orario_chiusura,
           });
-
-        if (
-          insertError
-        ) {
-
-          console.error(
-            insertError
-          );
-
-          toast.error(
-            'Errore approvazione attività'
-          );
-
-          return;
-        }
       }
 
       // =====================
-      // SALETTE
+      // SALETTA
       // =====================
 
       if (
@@ -177,10 +241,7 @@ export default function AdminSegnalazioni() {
         'saletta'
       ) {
 
-        const {
-          error:
-            insertError,
-        } = await supabase
+        await supabase
 
           .from('salette')
 
@@ -219,21 +280,6 @@ export default function AdminSegnalazioni() {
             note:
               dati.note,
           });
-
-        if (
-          insertError
-        ) {
-
-          console.error(
-            insertError
-          );
-
-          toast.error(
-            'Errore approvazione saletta'
-          );
-
-          return;
-        }
       }
 
       // =====================
@@ -245,10 +291,7 @@ export default function AdminSegnalazioni() {
         'stazione'
       ) {
 
-        const {
-          error:
-            insertError,
-        } = await supabase
+        await supabase
 
           .from('stazioni')
 
@@ -286,25 +329,10 @@ export default function AdminSegnalazioni() {
 
             attiva: true,
           });
-
-        if (
-          insertError
-        ) {
-
-          console.error(
-            insertError
-          );
-
-          toast.error(
-            'Errore approvazione stazione'
-          );
-
-          return;
-        }
       }
 
       // =====================
-      // UPDATE STATUS
+      // STATUS
       // =====================
 
       await supabase
@@ -373,35 +401,7 @@ export default function AdminSegnalazioni() {
   }
 
   // =========================
-  // TYPE LABEL
-  // =========================
-
-  function getTipoLabel(
-    tipo: string
-  ) {
-
-    switch (tipo) {
-
-      case 'attivita':
-
-        return 'Attività';
-
-      case 'saletta':
-
-        return 'Saletta';
-
-      case 'stazione':
-
-        return 'Stazione';
-
-      default:
-
-        return tipo;
-    }
-  }
-
-  // =========================
-  // TYPE ICON
+  // ICON
   // =========================
 
   function getTipoIcon(
@@ -411,25 +411,21 @@ export default function AdminSegnalazioni() {
     switch (tipo) {
 
       case 'attivita':
-
         return (
           <Store className="w-5 h-5" />
         );
 
       case 'saletta':
-
         return (
           <Building2 className="w-5 h-5" />
         );
 
       case 'stazione':
-
         return (
           <MapPin className="w-5 h-5" />
         );
 
       default:
-
         return (
           <Eye className="w-5 h-5" />
         );
@@ -457,27 +453,6 @@ export default function AdminSegnalazioni() {
 
       </div>
 
-      {/* LOADING */}
-      {loading && (
-
-        <div className="text-sm text-gray-500">
-
-          Caricamento...
-
-        </div>
-      )}
-
-      {/* EMPTY */}
-      {!loading &&
-        contributi.length === 0 && (
-
-        <div className="bg-white rounded-2xl border border-gray-100 p-6 text-sm text-gray-500 text-center">
-
-          Nessuna segnalazione presente
-
-        </div>
-      )}
-
       {/* LIST */}
       <div className="flex flex-col gap-3">
 
@@ -486,13 +461,12 @@ export default function AdminSegnalazioni() {
 
             <div
               key={c.id}
-              className="bg-white rounded-2xl border border-gray-100 p-4 flex flex-col gap-4 shadow-sm"
+              className="bg-white rounded-2xl border border-gray-100 p-4 shadow-sm flex flex-col gap-4"
             >
 
-              {/* TOP */}
-              <div className="flex items-start justify-between gap-3">
+              <div className="flex items-start justify-between">
 
-                <div className="flex items-start gap-3">
+                <div className="flex items-center gap-3">
 
                   <div className="w-10 h-10 rounded-2xl bg-trenord-green/10 text-trenord-green flex items-center justify-center">
 
@@ -514,9 +488,7 @@ export default function AdminSegnalazioni() {
 
                     <p className="text-sm text-gray-500">
 
-                      {getTipoLabel(
-                        c.tipo
-                      )}
+                      {c.tipo}
 
                     </p>
 
@@ -524,7 +496,6 @@ export default function AdminSegnalazioni() {
 
                 </div>
 
-                {/* STATUS */}
                 <div
                   className={`px-3 py-1 rounded-full text-xs font-semibold ${
                     c.stato ===
@@ -543,17 +514,6 @@ export default function AdminSegnalazioni() {
 
               </div>
 
-              {/* PREVIEW */}
-              <div className="bg-gray-50 rounded-xl p-3 text-sm text-gray-700 border border-gray-100">
-
-                {JSON.stringify(
-                  c.dati,
-                  null,
-                  2
-                )}
-
-              </div>
-
               {/* DATE */}
               <div className="flex items-center gap-2 text-xs text-gray-400">
 
@@ -568,64 +528,57 @@ export default function AdminSegnalazioni() {
               </div>
 
               {/* ACTIONS */}
-              {c.stato ===
-                'pending' && (
+              <div className="flex gap-2 flex-wrap">
 
-                <div className="flex gap-2 flex-wrap">
+                <button
+                  onClick={() => {
 
-                  {/* DETAILS */}
-                  <button
-                    onClick={() => {
+                    setSelected(c);
 
-                      setSelected(c);
+                    setEditedData(
+                      c.dati || {}
+                    );
+                  }}
+                  className="px-4 py-2 rounded-xl bg-gray-100 text-gray-700 text-sm font-medium"
+                >
 
-                      setEditedData(
-                        c.dati || {}
-                      );
-                    }}
-                    className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gray-100 text-gray-700 text-sm font-medium hover:bg-gray-200"
-                  >
+                  Apri
 
-                    <Eye className="w-4 h-4" />
+                </button>
 
-                    Apri
+                {c.stato ===
+                  'pending' && (
 
-                  </button>
+                  <>
+                    <button
+                      onClick={() =>
+                        approveContribution(
+                          c
+                        )
+                      }
+                      className="px-4 py-2 rounded-xl bg-emerald-600 text-white text-sm font-medium"
+                    >
 
-                  {/* APPROVE */}
-                  <button
-                    onClick={() =>
-                      approveContribution(
-                        c
-                      )
-                    }
-                    className="flex items-center gap-2 px-4 py-2 rounded-xl bg-emerald-600 text-white text-sm font-medium hover:opacity-90"
-                  >
+                      Approva
 
-                    <Check className="w-4 h-4" />
+                    </button>
 
-                    Approva
+                    <button
+                      onClick={() =>
+                        rejectContribution(
+                          c
+                        )
+                      }
+                      className="px-4 py-2 rounded-xl bg-red-600 text-white text-sm font-medium"
+                    >
 
-                  </button>
+                      Rifiuta
 
-                  {/* REJECT */}
-                  <button
-                    onClick={() =>
-                      rejectContribution(
-                        c
-                      )
-                    }
-                    className="flex items-center gap-2 px-4 py-2 rounded-xl bg-red-600 text-white text-sm font-medium hover:opacity-90"
-                  >
+                    </button>
+                  </>
+                )}
 
-                    <X className="w-4 h-4" />
-
-                    Rifiuta
-
-                  </button>
-
-                </div>
-              )}
+              </div>
 
             </div>
           )
@@ -647,15 +600,13 @@ export default function AdminSegnalazioni() {
 
                 <h2 className="text-xl font-bold text-gray-900">
 
-                  Dettaglio contributo
+                  Modifica contributo
 
                 </h2>
 
                 <p className="text-sm text-gray-500">
 
-                  {getTipoLabel(
-                    selected.tipo
-                  )}
+                  {selected.tipo}
 
                 </p>
 
@@ -663,9 +614,7 @@ export default function AdminSegnalazioni() {
 
               <button
                 onClick={() =>
-                  setSelected(
-                    null
-                  )
+                  setSelected(null)
                 }
                 className="w-10 h-10 rounded-2xl bg-gray-100 flex items-center justify-center"
               >
@@ -676,89 +625,100 @@ export default function AdminSegnalazioni() {
 
             </div>
 
-            {/* DATA */}
-            <div className="bg-gray-50 rounded-2xl p-4 border border-gray-100 overflow-auto">
+            {/* FORM */}
+            <div className="flex flex-col gap-3">
 
-              <div className="flex flex-col gap-3">
+              {Object.entries(
+                editedData || {}
+              ).map(
+                ([key, value]) => (
 
-                {Object.entries(
-                  editedData || {}
-                ).map(
-                  ([key, value]) => (
+                  <div
+                    key={key}
+                    className="flex flex-col gap-1"
+                  >
 
-                    <div
-                      key={key}
-                      className="flex flex-col gap-1"
-                    >
+                    <label className="text-xs font-semibold uppercase text-gray-400">
 
-                      <label className="text-xs font-semibold uppercase text-gray-400">
+                      {key}
 
-                        {key}
+                    </label>
 
-                      </label>
+                    <input
+                      value={
+                        value as string
+                      }
+                      onChange={(e) =>
+                        setEditedData({
 
-                      <input
-                        value={
-                          value as string
-                        }
-                        onChange={(e) =>
-                          setEditedData({
+                          ...editedData,
 
-                            ...editedData,
+                          [key]:
+                            e.target.value,
+                        })
+                      }
+                      className="border border-gray-200 rounded-xl px-3 py-2 text-sm"
+                    />
 
-                            [key]:
-                              e.target.value,
-                          })
-                        }
-                        className="border border-gray-200 rounded-xl px-3 py-2 text-sm"
-                      />
-
-                    </div>
-                  )
-                )}
-
-              </div>
+                  </div>
+                )
+              )}
 
             </div>
 
             {/* ACTIONS */}
-            {selected.stato ===
-              'pending' && (
+            <div className="flex gap-3">
 
-              <div className="flex gap-3">
+              <button
+                onClick={
+                  saveEdits
+                }
+                className="flex-1 bg-blue-600 text-white rounded-2xl py-3 font-semibold flex items-center justify-center gap-2"
+              >
 
-                <button
-                  onClick={() =>
-                    approveContribution({
+                <Save className="w-4 h-4" />
 
-                      ...selected,
+                Salva modifiche
 
-                      dati:
-                        editedData,
-                    })
-                  }
-                  className="flex-1 bg-emerald-600 text-white rounded-2xl py-3 font-semibold"
-                >
+              </button>
 
-                  Approva
+              {selected.stato ===
+                'pending' && (
 
-                </button>
+                <>
+                  <button
+                    onClick={() =>
+                      approveContribution({
 
-                <button
-                  onClick={() =>
-                    rejectContribution(
-                      selected
-                    )
-                  }
-                  className="flex-1 bg-red-600 text-white rounded-2xl py-3 font-semibold"
-                >
+                        ...selected,
 
-                  Rifiuta
+                        dati:
+                          editedData,
+                      })
+                    }
+                    className="flex-1 bg-emerald-600 text-white rounded-2xl py-3 font-semibold"
+                  >
 
-                </button>
+                    Approva
 
-              </div>
-            )}
+                  </button>
+
+                  <button
+                    onClick={() =>
+                      rejectContribution(
+                        selected
+                      )
+                    }
+                    className="flex-1 bg-red-600 text-white rounded-2xl py-3 font-semibold"
+                  >
+
+                    Rifiuta
+
+                  </button>
+                </>
+              )}
+
+            </div>
 
           </div>
 
