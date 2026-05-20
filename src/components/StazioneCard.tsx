@@ -88,9 +88,11 @@ export default function StazioneCard({
         `)
 
         .eq(
-          'id',
-          stazione.id
-        )
+  'stazione_id',
+  String(
+    stazione.id
+  )
+)
 
         .single();
 
