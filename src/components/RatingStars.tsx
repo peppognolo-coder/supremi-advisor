@@ -6,17 +6,24 @@ interface Props {
 
   value: number;
 
-  onRate?: (
-    voto: number
+  onChange?: (
+    value: number
   ) => void;
 
-  small?: boolean;
+  size?: number;
+
+  readonly?: boolean;
 }
 
 export default function RatingStars({
+
   value,
-  onRate,
-  small,
+
+  onChange,
+
+  size = 18,
+
+  readonly = false,
 }: Props) {
 
   return (
@@ -33,23 +40,25 @@ export default function RatingStars({
 
             <button
               key={star}
-              disabled={!onRate}
+              type="button"
+              disabled={
+                readonly
+              }
               onClick={() =>
-                onRate?.(star)
+                onChange?.(
+                  star
+                )
               }
               className={`transition-transform ${
-                onRate
-                  ? 'hover:scale-110'
-                  : ''
+                readonly
+                  ? ''
+                  : 'hover:scale-110'
               }`}
             >
 
               <Star
+                size={size}
                 className={`${
-                  small
-                    ? 'w-3.5 h-3.5'
-                    : 'w-5 h-5'
-                } ${
                   active
                     ? 'fill-yellow-400 text-yellow-400'
                     : 'text-gray-300'
