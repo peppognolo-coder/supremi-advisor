@@ -4,6 +4,19 @@ export type StatoSaletta =
   | 'manutenzione';
 
 // =========================
+// FASCE ORARIE
+// =========================
+
+export interface FasciaOraria {
+
+  giorni: string[];
+
+  apertura: string;
+
+  chiusura: string;
+}
+
+// =========================
 // STAZIONI
 // =========================
 
@@ -132,6 +145,13 @@ export interface AttivitaStazione {
 
   note: string | null;
 
+  // =====================
+  // NUOVO SISTEMA ORARI
+  // =====================
+
+  fasce_orarie?: FasciaOraria[];
+
+  // legacy
   giorni_apertura?: string[];
 
   orario_apertura?: string | null;
@@ -144,7 +164,24 @@ export interface AttivitaStazione {
 }
 
 // =========================
-// PROPOSTE ATTIVITÀ
+// CONTRIBUTI
+// =========================
+
+export interface Contributo {
+
+  id: string;
+
+  tipo: string;
+
+  dati: any;
+
+  stato: string;
+
+  created_at: string;
+}
+
+// =========================
+// LEGACY
 // =========================
 
 export interface AttivitaStazioneSegnalazione {
@@ -181,7 +218,7 @@ export interface AttivitaStazioneSegnalazione {
 }
 
 // =========================
-// LOCALI LEGACY
+// LEGACY
 // =========================
 
 export interface Locale {
@@ -218,7 +255,7 @@ export interface Locale {
 }
 
 // =========================
-// SEGNALAZIONI SALETTE
+// LEGACY
 // =========================
 
 export interface SalettaSegnalazione {
@@ -251,8 +288,6 @@ export interface StazioneWithSalette
 
   attivita_stazione:
     AttivitaStazione[];
-
-  locali?: Locale[];
 }
 
 // =========================
@@ -265,9 +300,9 @@ export type Database = {
 
     Tables: {
 
-      // =========================
+      // =====================
       // STAZIONI
-      // =========================
+      // =====================
 
       stazioni: {
 
@@ -290,9 +325,9 @@ export type Database = {
         >;
       };
 
-      // =========================
+      // =====================
       // SALETTE
-      // =========================
+      // =====================
 
       salette: {
 
@@ -315,9 +350,55 @@ export type Database = {
         >;
       };
 
-      // =========================
-      // LOCALI LEGACY
-      // =========================
+      // =====================
+      // ATTIVITÀ STAZIONE
+      // =====================
+
+      attivita_stazione: {
+
+        Row: AttivitaStazione;
+
+        Insert: Omit<
+          AttivitaStazione,
+          'id' |
+          'created_at'
+        >;
+
+        Update: Partial<
+          Omit<
+            AttivitaStazione,
+            'id' |
+            'created_at'
+          >
+        >;
+      };
+
+      // =====================
+      // CONTRIBUTI
+      // =====================
+
+      contributi: {
+
+        Row: Contributo;
+
+        Insert: Omit<
+          Contributo,
+          'id' |
+          'created_at'
+        >;
+
+        Update: Partial<
+          Omit<
+            Contributo,
+            'id' |
+            'created_at'
+          >
+        >;
+      };
+
+      // =====================
+      // LEGACY
+      // =====================
 
       locali: {
 
@@ -340,36 +421,14 @@ export type Database = {
         >;
       };
 
-      // =========================
-      // ATTIVITÀ STAZIONE
-      // =========================
-
-      attivita_stazione: {
-
-        Row: AttivitaStazione;
-
-        Insert: Omit<
-          AttivitaStazione,
-          'id' |
-          'created_at'
-        >;
-
-        Update: Partial<
-          Omit<
-            AttivitaStazione,
-            'id' |
-            'created_at'
-          >
-        >;
-      };
-
-      // =========================
-      // PROPOSTE ATTIVITÀ
-      // =========================
+      // =====================
+      // LEGACY
+      // =====================
 
       attivita_stazione_segnalazioni: {
 
-        Row: AttivitaStazioneSegnalazione;
+        Row:
+          AttivitaStazioneSegnalazione;
 
         Insert: Omit<
           AttivitaStazioneSegnalazione,
@@ -386,13 +445,14 @@ export type Database = {
         >;
       };
 
-      // =========================
-      // VALUTAZIONI ATTIVITÀ
-      // =========================
+      // =====================
+      // VALUTAZIONI
+      // =====================
 
       attivita_valutazioni: {
 
-        Row: AttivitaValutazione;
+        Row:
+          AttivitaValutazione;
 
         Insert: Omit<
           AttivitaValutazione,
@@ -409,13 +469,14 @@ export type Database = {
         >;
       };
 
-      // =========================
-      // SEGNALAZIONI SALETTE
-      // =========================
+      // =====================
+      // LEGACY
+      // =====================
 
       saletta_segnalazioni: {
 
-        Row: SalettaSegnalazione;
+        Row:
+          SalettaSegnalazione;
 
         Insert: Omit<
           SalettaSegnalazione,
@@ -432,13 +493,14 @@ export type Database = {
         >;
       };
 
-      // =========================
+      // =====================
       // SERVIZI SALETTA
-      // =========================
+      // =====================
 
       saletta_servizi: {
 
-        Row: SalettaServizio;
+        Row:
+          SalettaServizio;
 
         Insert: Omit<
           SalettaServizio,
