@@ -13,7 +13,10 @@ import toast from 'react-hot-toast';
 import { supabase } from '../../lib/supabase';
 
 interface Props {
+
   onBack: () => void;
+
+  stazionePredefinita?: string;
 }
 
 const stati = [
@@ -33,6 +36,7 @@ const tipi = [
 
 export default function ContributoSalettaForm({
   onBack,
+  stazionePredefinita,
 }: Props) {
 
   // =========================
@@ -40,7 +44,9 @@ export default function ContributoSalettaForm({
   // =========================
 
   const [stazione, setStazione] =
-    useState('');
+    useState(
+      stazionePredefinita || ''
+    );
 
   const [tipo, setTipo] =
     useState(tipi[0]);
@@ -91,38 +97,49 @@ export default function ContributoSalettaForm({
 
     try {
 
+      // =====================
+      // PAYLOAD
+      // =====================
+
       const payload = {
 
-        stazione,
+        stazione:
+          stazione.trim(),
 
         tipo,
 
         codice_accesso:
-          codice,
+          codice.trim(),
 
-        ubicazione,
+        ubicazione:
+          ubicazione.trim(),
 
         stato,
 
-        note,
+        note:
+          note.trim(),
 
-        microonde,
+        servizi: {
 
-        distributori,
+          microonde,
 
-        acqua,
+          distributori,
 
-        climatizzata,
+          acqua,
+
+          climatizzata,
+        },
       };
 
-      console.log(
-        'PAYLOAD:',
-        payload
-      );
+      // =====================
+      // INSERT
+      // =====================
 
-      const response =
+      const { error } =
         await supabase
+
           .from('contributi')
+
           .insert({
 
             tipo: 'saletta',
@@ -132,31 +149,11 @@ export default function ContributoSalettaForm({
             stato: 'pending',
           });
 
-      console.log(
-        'SUPABASE RESPONSE:',
-        response
-      );
-
-      const error =
-        response.error;
-
       if (error) {
 
-        console.error(
-          'SUPABASE ERROR:',
-          error
-        );
-
-        alert(
-          JSON.stringify(
-            error,
-            null,
-            2
-          )
-        );
+        console.error(error);
 
         toast.error(
-          error.message ||
           'Errore invio contributo'
         );
 
@@ -165,31 +162,23 @@ export default function ContributoSalettaForm({
         return;
       }
 
+      // =====================
+      // SUCCESS
+      // =====================
+
       toast.success(
-        'Contributo inviato con successo'
+        'Contributo inviato'
       );
 
       setLoading(false);
 
       onBack();
 
-    } catch (err: any) {
+    } catch (err) {
 
-      console.error(
-        'CATCH ERROR:',
-        err
-      );
-
-      alert(
-        JSON.stringify(
-          err,
-          null,
-          2
-        )
-      );
+      console.error(err);
 
       toast.error(
-        err?.message ||
         'Errore imprevisto'
       );
 
@@ -381,134 +370,60 @@ export default function ContributoSalettaForm({
           </label>
 
           {/* MICROONDE */}
-          <button
-            type="button"
+          <ServiceToggle
+            active={microonde}
             onClick={() =>
               setMicroonde(
                 !microonde
               )
             }
-            className={`flex items-center justify-between rounded-xl border px-4 py-3 transition-colors ${
-              microonde
-                ? 'bg-trenord-green text-white border-trenord-green'
-                : 'bg-white border-gray-200 text-gray-700'
-            }`}
-          >
-
-            <div className="flex items-center gap-3">
-
+            icon={
               <Microwave className="w-5 h-5" />
-
-              Microonde
-
-            </div>
-
-            <span>
-
-              {microonde
-                ? 'SI'
-                : 'NO'}
-
-            </span>
-
-          </button>
+            }
+            label="Microonde"
+          />
 
           {/* DISTRIBUTORI */}
-          <button
-            type="button"
+          <ServiceToggle
+            active={distributori}
             onClick={() =>
               setDistributori(
                 !distributori
               )
             }
-            className={`flex items-center justify-between rounded-xl border px-4 py-3 transition-colors ${
-              distributori
-                ? 'bg-trenord-green text-white border-trenord-green'
-                : 'bg-white border-gray-200 text-gray-700'
-            }`}
-          >
-
-            <div className="flex items-center gap-3">
-
+            icon={
               <Coffee className="w-5 h-5" />
-
-              Distributori
-
-            </div>
-
-            <span>
-
-              {distributori
-                ? 'SI'
-                : 'NO'}
-
-            </span>
-
-          </button>
+            }
+            label="Distributori"
+          />
 
           {/* ACQUA */}
-          <button
-            type="button"
+          <ServiceToggle
+            active={acqua}
             onClick={() =>
-              setAcqua(!acqua)
+              setAcqua(
+                !acqua
+              )
             }
-            className={`flex items-center justify-between rounded-xl border px-4 py-3 transition-colors ${
-              acqua
-                ? 'bg-trenord-green text-white border-trenord-green'
-                : 'bg-white border-gray-200 text-gray-700'
-            }`}
-          >
-
-            <div className="flex items-center gap-3">
-
+            icon={
               <Droplets className="w-5 h-5" />
-
-              Acqua
-
-            </div>
-
-            <span>
-
-              {acqua
-                ? 'SI'
-                : 'NO'}
-
-            </span>
-
-          </button>
+            }
+            label="Acqua"
+          />
 
           {/* CLIMA */}
-          <button
-            type="button"
+          <ServiceToggle
+            active={climatizzata}
             onClick={() =>
               setClimatizzata(
                 !climatizzata
               )
             }
-            className={`flex items-center justify-between rounded-xl border px-4 py-3 transition-colors ${
-              climatizzata
-                ? 'bg-trenord-green text-white border-trenord-green'
-                : 'bg-white border-gray-200 text-gray-700'
-            }`}
-          >
-
-            <div className="flex items-center gap-3">
-
+            icon={
               <Snowflake className="w-5 h-5" />
-
-              Climatizzata
-
-            </div>
-
-            <span>
-
-              {climatizzata
-                ? 'SI'
-                : 'NO'}
-
-            </span>
-
-          </button>
+            }
+            label="Climatizzata"
+          />
 
         </div>
 
@@ -550,5 +465,48 @@ export default function ContributoSalettaForm({
       </div>
 
     </div>
+  );
+}
+
+// =========================
+// SERVICE TOGGLE
+// =========================
+
+function ServiceToggle({
+  active,
+  onClick,
+  icon,
+  label,
+}: any) {
+
+  return (
+
+    <button
+      type="button"
+      onClick={onClick}
+      className={`flex items-center justify-between rounded-xl border px-4 py-3 transition-colors ${
+        active
+          ? 'bg-trenord-green text-white border-trenord-green'
+          : 'bg-white border-gray-200 text-gray-700'
+      }`}
+    >
+
+      <div className="flex items-center gap-3">
+
+        {icon}
+
+        {label}
+
+      </div>
+
+      <span>
+
+        {active
+          ? 'SI'
+          : 'NO'}
+
+      </span>
+
+    </button>
   );
 }
