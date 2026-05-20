@@ -802,7 +802,13 @@ export default function SegnalazioniScreen() {
                         ...c,
 
                         dati:
-                          editedData,
+                          Object.keys(
+                            editedData || {}
+                          ).length > 0
+
+                            ? editedData
+
+                            : c.dati,
                       })
                     }
                     className="flex-1 flex items-center justify-center gap-2 bg-emerald-500 text-white rounded-xl py-2.5 text-sm font-semibold"
