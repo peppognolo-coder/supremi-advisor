@@ -403,7 +403,7 @@ export default function SegnalazioniScreen() {
       // ATTIVITA
       // =====================
 
-            if (
+      if (
         contributo.tipo ===
         'attivita'
       ) {
@@ -423,6 +423,9 @@ export default function SegnalazioniScreen() {
               String(
                 dati.stazione_id
               ),
+
+            stazione_nome:
+              dati.stazione_nome,
 
             nome:
               dati.nome,
