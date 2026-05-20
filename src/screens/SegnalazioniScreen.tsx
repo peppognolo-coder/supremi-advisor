@@ -10,7 +10,6 @@ import {
   DoorOpen,
   Store,
   Pencil,
-  Save,
   Clock3,
   Train,
 } from 'lucide-react';
@@ -228,7 +227,10 @@ export default function SegnalazioniScreen() {
         'stazione'
       ) {
 
-        await supabase
+        const {
+          error:
+            stazioneInsertError,
+        } = await supabase
 
           .from('stazioni')
 
@@ -246,9 +248,6 @@ export default function SegnalazioniScreen() {
             provincia:
               dati.provincia,
 
-            indirizzo:
-              dati.indirizzo,
-
             maps_query:
               dati.maps_query,
 
@@ -263,6 +262,21 @@ export default function SegnalazioniScreen() {
 
             attiva: true,
           });
+
+        if (
+          stazioneInsertError
+        ) {
+
+          console.error(
+            stazioneInsertError
+          );
+
+          toast.error(
+            'Errore inserimento stazione'
+          );
+
+          return;
+        }
       }
 
       // =====================
@@ -273,10 +287,6 @@ export default function SegnalazioniScreen() {
         contributo.tipo ===
         'saletta'
       ) {
-
-        // ===================
-        // CERCA STAZIONE
-        // ===================
 
         const {
           data: stazioneData,
@@ -299,6 +309,10 @@ export default function SegnalazioniScreen() {
           !stazioneData
         ) {
 
+          console.error(
+            stazioneError
+          );
+
           toast.error(
             'Stazione non trovata'
           );
@@ -306,11 +320,10 @@ export default function SegnalazioniScreen() {
           return;
         }
 
-        // ===================
-        // INSERT SALETTA
-        // ===================
-
-        await supabase
+        const {
+          error:
+            salettaError,
+        } = await supabase
 
           .from('salette')
 
@@ -364,6 +377,19 @@ export default function SegnalazioniScreen() {
                 ?.acqua ??
               false,
           });
+
+        if (salettaError) {
+
+          console.error(
+            salettaError
+          );
+
+          toast.error(
+            'Errore inserimento saletta'
+          );
+
+          return;
+        }
       }
 
       // =====================
@@ -375,7 +401,15 @@ export default function SegnalazioniScreen() {
         'attivita'
       ) {
 
-        await supabase
+        console.log(
+          'DATI ATTIVITA',
+          dati
+        );
+
+        const {
+          error:
+            attivitaError,
+        } = await supabase
 
           .from(
             'attivita_stazione'
@@ -393,30 +427,53 @@ export default function SegnalazioniScreen() {
               dati.categoria,
 
             indirizzo:
-              dati.indirizzo,
-
-            convenzionato:
-              !!dati.convenzione,
-
-            note:
-              dati.note,
+              dati.indirizzo ||
+              null,
 
             maps_query:
               dati.maps_query ||
 
               dati.nome,
 
+            ubicazione:
+              dati.ubicazione ||
+              null,
+
+            convenzionato:
+              dati.convenzionato ??
+              false,
+
+            note:
+              dati.note ||
+              null,
+
             fasce_orarie:
               dati.fasce_orarie ??
               [],
           });
+
+        if (attivitaError) {
+
+          console.error(
+            attivitaError
+          );
+
+          toast.error(
+            'Errore inserimento attività'
+          );
+
+          return;
+        }
       }
 
       // =====================
       // UPDATE STATUS
       // =====================
 
-      await supabase
+      const {
+        error:
+          updateError,
+      } = await supabase
 
         .from('contributi')
 
@@ -430,6 +487,19 @@ export default function SegnalazioniScreen() {
           'id',
           contributo.id
         );
+
+      if (updateError) {
+
+        console.error(
+          updateError
+        );
+
+        toast.error(
+          'Errore aggiornamento stato contributo'
+        );
+
+        return;
+      }
 
       toast.success(
         'Contributo approvato'
