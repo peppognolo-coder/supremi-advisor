@@ -2,12 +2,6 @@ import { useState, useEffect } from 'react';
 
 import {
   ArrowLeft,
-  Store,
-  Phone,
-  Globe,
-  Percent,
-  MapPin,
-  Clock3,
   Plus,
   Trash2,
 } from 'lucide-react';
@@ -76,17 +70,16 @@ export default function ContributoAttivitaForm({
   const [indirizzo, setIndirizzo] =
     useState('');
 
-  const [convenzione, setConvenzione] =
+  const [mapsQuery, setMapsQuery] =
     useState('');
 
-  const [sconto, setSconto] =
+  const [ubicazione, setUbicazione] =
     useState('');
 
-  const [telefono, setTelefono] =
-    useState('');
-
-  const [sito, setSito] =
-    useState('');
+  const [
+    convenzionato,
+    setConvenzionato,
+  ] = useState(false);
 
   const [note, setNote] =
     useState('');
@@ -265,6 +258,11 @@ export default function ContributoAttivitaForm({
             stazioneId
         );
 
+      console.log({
+        stazione_id:
+          stazioneId,
+      });
+
       const payload = {
 
         stazione_id:
@@ -281,17 +279,13 @@ export default function ContributoAttivitaForm({
         indirizzo:
           indirizzo.trim(),
 
-        convenzione:
-          convenzione.trim(),
+        maps_query:
+          mapsQuery.trim(),
 
-        sconto:
-          sconto.trim(),
+        ubicazione:
+          ubicazione.trim(),
 
-        telefono:
-          telefono.trim(),
-
-        sito:
-          sito.trim(),
+        convenzionato,
 
         note:
           note.trim(),
@@ -464,53 +458,52 @@ export default function ContributoAttivitaForm({
           className="border border-gray-200 rounded-xl px-3 py-2"
         />
 
-        {/* CONVENZIONE */}
+        {/* MAPS QUERY */}
         <input
-          value={convenzione}
+          value={mapsQuery}
           onChange={(e) =>
-            setConvenzione(
+            setMapsQuery(
               e.target.value
             )
           }
-          placeholder="Convenzione"
+          placeholder="Maps query"
           className="border border-gray-200 rounded-xl px-3 py-2"
         />
 
-        {/* SCONTO */}
+        {/* UBICAZIONE */}
         <input
-          value={sconto}
+          value={ubicazione}
           onChange={(e) =>
-            setSconto(
+            setUbicazione(
               e.target.value
             )
           }
-          placeholder="Sconto"
+          placeholder="Ubicazione"
           className="border border-gray-200 rounded-xl px-3 py-2"
         />
 
-        {/* TELEFONO */}
-        <input
-          value={telefono}
-          onChange={(e) =>
-            setTelefono(
-              e.target.value
-            )
-          }
-          placeholder="Telefono"
-          className="border border-gray-200 rounded-xl px-3 py-2"
-        />
+        {/* CONVENZIONATO */}
+        <label className="flex items-center gap-3">
 
-        {/* SITO */}
-        <input
-          value={sito}
-          onChange={(e) =>
-            setSito(
-              e.target.value
-            )
-          }
-          placeholder="Sito web"
-          className="border border-gray-200 rounded-xl px-3 py-2"
-        />
+          <input
+            type="checkbox"
+            checked={
+              convenzionato
+            }
+            onChange={(e) =>
+              setConvenzionato(
+                e.target.checked
+              )
+            }
+          />
+
+          <span className="text-sm font-medium">
+
+            Convenzionato Trenord
+
+          </span>
+
+        </label>
 
         {/* FASCE */}
         <div className="flex flex-col gap-4">
@@ -548,7 +541,6 @@ export default function ContributoAttivitaForm({
                 className="border border-gray-200 rounded-2xl p-4 flex flex-col gap-4"
               >
 
-                {/* TOP */}
                 <div className="flex items-center justify-between">
 
                   <h4 className="font-medium text-gray-800">
@@ -576,7 +568,6 @@ export default function ContributoAttivitaForm({
 
                 </div>
 
-                {/* GIORNI */}
                 <div className="grid grid-cols-4 gap-2">
 
                   {giorniSettimana.map(
@@ -614,7 +605,6 @@ export default function ContributoAttivitaForm({
 
                 </div>
 
-                {/* ORARI */}
                 <div className="grid grid-cols-2 gap-3">
 
                   <input
