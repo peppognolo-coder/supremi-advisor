@@ -1,0 +1,189 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* =========================
+   BASE
+========================= */
+
+@layer base {
+
+  * {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  html,
+  body,
+  #root {
+    height: 100%;
+    overflow-x: hidden;
+    overscroll-behavior-y: contain;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  body {
+
+    font-family: 'Inter', system-ui, sans-serif;
+
+    background-color: #f3f4f6;
+
+    overscroll-behavior: none;
+
+    touch-action: pan-y;
+
+    color: #111827;
+  }
+
+  button,
+  a,
+  input,
+  textarea,
+  select {
+    touch-action: manipulation;
+  }
+
+  input,
+  textarea,
+  select,
+  button {
+
+    font: inherit;
+  }
+
+  img {
+    user-select: none;
+    -webkit-user-drag: none;
+  }
+}
+
+/* =========================
+   COMPONENTS
+========================= */
+
+@layer components {
+
+  .admin-input {
+
+    @apply w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-trenord-green/30 focus:border-trenord-green transition-all;
+  }
+
+  .glass-card {
+
+    @apply bg-white/90 backdrop-blur-xl border border-white/40 shadow-sm;
+  }
+
+  .section-title {
+
+    @apply text-sm font-semibold text-gray-500 uppercase tracking-wide;
+  }
+
+  .card-hover {
+
+    @apply transition-all duration-200 hover:shadow-md hover:-translate-y-[1px];
+  }
+}
+
+/* =========================
+   UTILITIES
+========================= */
+
+@layer utilities {
+
+  .scrollbar-hide {
+
+    -ms-overflow-style: none;
+
+    scrollbar-width: none;
+  }
+
+  .scrollbar-hide::-webkit-scrollbar {
+
+    display: none;
+  }
+
+  .safe-bottom {
+
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  .safe-top {
+
+    padding-top: env(safe-area-inset-top);
+  }
+}
+
+/* =========================
+   ANIMATIONS
+========================= */
+
+@keyframes fadeIn {
+
+  from {
+
+    opacity: 0;
+  }
+
+  to {
+
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+
+  from {
+
+    opacity: 0;
+
+    transform: translateY(10px);
+  }
+
+  to {
+
+    opacity: 1;
+
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in {
+
+  animation: fadeIn 0.2s ease-out;
+}
+
+.animate-slide-up {
+
+  animation: slideUp 0.25s ease-out;
+}
+
+/* =========================
+   MOBILE APP FEEL
+========================= */
+
+body::before {
+
+  content: '';
+
+  position: fixed;
+
+  top: 0;
+  left: 0;
+  right: 0;
+
+  height: env(safe-area-inset-top);
+
+  background: white;
+
+  z-index: 999;
+}
+
+/* =========================
+   SMOOTH SCROLL
+========================= */
+
+html {
+
+  scroll-behavior: smooth;
+}
