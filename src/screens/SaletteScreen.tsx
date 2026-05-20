@@ -44,6 +44,7 @@ interface StazioneCoordinates {
 }
 
 interface Props {
+
   refreshKey?: number;
 }
 
@@ -66,27 +67,41 @@ export default function SaletteScreen({
       lng: number;
     } | null>(null);
 
+  const [locationReady, setLocationReady] =
+    useState(false);
+
   // =========================
   // GEOLOCATION
   // =========================
 
   useEffect(() => {
 
-    getCurrentLocation()
+    async function initLocation() {
 
-      .then((location) => {
+      try {
+
+        const location =
+          await getCurrentLocation();
 
         setUserLocation(
           location
         );
-      })
 
-      .catch(() => {
+      } catch {
 
         console.log(
           'Geolocalizzazione non disponibile'
         );
-      });
+
+      } finally {
+
+        setLocationReady(
+          true
+        );
+      }
+    }
+
+    initLocation();
 
   }, []);
 
@@ -95,6 +110,10 @@ export default function SaletteScreen({
   // =========================
 
   useEffect(() => {
+
+    // aspetta geolocalizzazione
+    if (!locationReady)
+      return;
 
     async function load() {
 
@@ -363,6 +382,7 @@ export default function SaletteScreen({
 
   }, [
     userLocation,
+    locationReady,
     refreshKey,
   ]);
 
@@ -400,7 +420,10 @@ export default function SaletteScreen({
   // LOADING
   // =========================
 
-  if (loading) {
+  if (
+    loading ||
+    !locationReady
+  ) {
 
     return <LoadingSpinner />;
   }
