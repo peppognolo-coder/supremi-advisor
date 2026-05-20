@@ -258,9 +258,6 @@ export default function SegnalazioniScreen() {
             lng:
               dati.lng || null,
 
-            plus_code:
-              dati.plus_code,
-
             note:
               dati.note,
 
@@ -277,26 +274,77 @@ export default function SegnalazioniScreen() {
         'saletta'
       ) {
 
+        // ===================
+        // CERCA STAZIONE
+        // ===================
+
+        const {
+          data: stazioneData,
+          error: stazioneError,
+        } = await supabase
+
+          .from('stazioni')
+
+          .select('id')
+
+          .eq(
+            'nome',
+            dati.stazione
+          )
+
+          .single();
+
+        if (
+          stazioneError ||
+          !stazioneData
+        ) {
+
+          toast.error(
+            'Stazione non trovata'
+          );
+
+          return;
+        }
+
+        // ===================
+        // INSERT SALETTA
+        // ===================
+
         await supabase
 
           .from('salette')
 
           .insert({
 
-            stazione:
-              dati.stazione,
+            stazione_id:
+              stazioneData.id,
 
-            tipo:
-              dati.tipo,
+            nome:
+              dati.tipo ||
+
+              'Saletta',
+
+            stato:
+              dati.stato ===
+              'Aperta'
+                ? 'aperta'
+                : dati.stato ===
+                  'Chiusa'
+                ? 'chiusa'
+                : 'manutenzione',
+
+            accessibile: true,
+
+            climatizzata:
+              dati.servizi
+                ?.climatizzata ??
+              false,
 
             codice_accesso:
               dati.codice_accesso,
 
             ubicazione:
               dati.ubicazione,
-
-            stato:
-              dati.stato,
 
             note:
               dati.note,
@@ -311,14 +359,9 @@ export default function SegnalazioniScreen() {
                 ?.distributori ??
               false,
 
-            acqua:
+            fontana_acqua:
               dati.servizi
                 ?.acqua ??
-              false,
-
-            climatizzata:
-              dati.servizi
-                ?.climatizzata ??
               false,
           });
       }
@@ -352,29 +395,20 @@ export default function SegnalazioniScreen() {
             indirizzo:
               dati.indirizzo,
 
-            convenzione:
-              dati.convenzione,
-
-            sconto:
-              dati.sconto,
-
-            telefono:
-              dati.telefono,
-
-            sito:
-              dati.sito,
-
-            apertura:
-              dati.apertura,
-
-            chiusura:
-              dati.chiusura,
-
-            giorni:
-              dati.giorni,
+            convenzionato:
+              !!dati.convenzione,
 
             note:
               dati.note,
+
+            maps_query:
+              dati.maps_query ||
+
+              dati.nome,
+
+            fasce_orarie:
+              dati.fasce_orarie ??
+              [],
           });
       }
 
@@ -501,7 +535,7 @@ export default function SegnalazioniScreen() {
   }
 
   // =========================
-  // RENDER LABEL
+  // TITLE
   // =========================
 
   function getTitle(
@@ -551,7 +585,6 @@ export default function SegnalazioniScreen() {
 
     <div className="flex flex-col gap-4">
 
-      {/* HEADER */}
       <div>
 
         <h1 className="text-2xl font-bold text-gray-900">
@@ -568,7 +601,6 @@ export default function SegnalazioniScreen() {
 
       </div>
 
-      {/* LOADING */}
       {loading && (
 
         <div className="text-sm text-gray-500">
@@ -578,7 +610,6 @@ export default function SegnalazioniScreen() {
         </div>
       )}
 
-      {/* EMPTY */}
       {!loading &&
         contributi.length ===
           0 && (
@@ -590,7 +621,6 @@ export default function SegnalazioniScreen() {
         </div>
       )}
 
-      {/* LIST */}
       <div className="flex flex-col gap-3">
 
         {contributi.map(
@@ -601,7 +631,6 @@ export default function SegnalazioniScreen() {
               className="bg-white rounded-2xl border border-gray-100 p-4 shadow-sm flex flex-col gap-4"
             >
 
-              {/* TOP */}
               <div className="flex items-start gap-3">
 
                 <div className="w-10 h-10 rounded-2xl bg-trenord-green/10 flex items-center justify-center flex-shrink-0">
@@ -652,7 +681,6 @@ export default function SegnalazioniScreen() {
 
               </div>
 
-              {/* JSON PREVIEW */}
               <div className="bg-gray-50 rounded-xl p-3 text-xs text-gray-600 overflow-x-auto">
 
                 <pre>
@@ -667,7 +695,6 @@ export default function SegnalazioniScreen() {
 
               </div>
 
-              {/* DATE */}
               <div className="flex items-center gap-2 text-xs text-gray-400">
 
                 <Clock3 className="w-4 h-4" />
@@ -680,13 +707,11 @@ export default function SegnalazioniScreen() {
 
               </div>
 
-              {/* ACTIONS */}
               {c.stato ===
                 'pending' && (
 
                 <div className="flex gap-2 flex-wrap">
 
-                  {/* EDIT */}
                   <button
                     onClick={() =>
                       openEdit(c)
@@ -700,17 +725,15 @@ export default function SegnalazioniScreen() {
 
                   </button>
 
-                  {/* APPROVE */}
                   <button
                     onClick={() =>
-                      approveContributo(
-                        {
-                          ...c,
+                      approveContributo({
 
-                          dati:
-                            editedData,
-                        }
-                      )
+                        ...c,
+
+                        dati:
+                          editedData,
+                      })
                     }
                     className="flex-1 flex items-center justify-center gap-2 bg-emerald-500 text-white rounded-xl py-2.5 text-sm font-semibold"
                   >
@@ -721,7 +744,6 @@ export default function SegnalazioniScreen() {
 
                   </button>
 
-                  {/* REJECT */}
                   <button
                     onClick={() =>
                       rejectContributo(
@@ -745,139 +767,6 @@ export default function SegnalazioniScreen() {
         )}
 
       </div>
-
-      {/* MODAL EDIT */}
-      {selected && (
-
-        <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4">
-
-          <div className="bg-white rounded-3xl p-5 w-full max-w-2xl max-h-[90vh] overflow-y-auto flex flex-col gap-4">
-
-            {/* HEADER */}
-            <div className="flex items-center justify-between">
-
-              <div>
-
-                <h2 className="text-xl font-bold text-gray-900">
-
-                  Modifica contributo
-
-                </h2>
-
-                <p className="text-sm text-gray-500">
-
-                  {selected.tipo}
-
-                </p>
-
-              </div>
-
-              <button
-                onClick={() =>
-                  setSelected(
-                    null
-                  )
-                }
-                className="w-10 h-10 rounded-2xl bg-gray-100 flex items-center justify-center"
-              >
-
-                <X className="w-5 h-5 text-gray-500" />
-
-              </button>
-
-            </div>
-
-            {/* FORM */}
-            <div className="flex flex-col gap-3">
-
-              {Object.entries(
-                editedData || {}
-              ).map(
-                ([key, value]) => (
-
-                  <div
-                    key={key}
-                    className="flex flex-col gap-1"
-                  >
-
-                    <label className="text-xs font-semibold uppercase text-gray-400">
-
-                      {key}
-
-                    </label>
-
-                    <textarea
-                      value={
-                        typeof value ===
-                        'object'
-                          ? JSON.stringify(
-                              value,
-                              null,
-                              2
-                            )
-                          : String(
-                              value ??
-                                ''
-                            )
-                      }
-                      onChange={(e) =>
-                        setEditedData({
-
-                          ...editedData,
-
-                          [key]:
-                            e.target.value,
-                        })
-                      }
-                      rows={4}
-                      className="border border-gray-200 rounded-xl px-3 py-2 text-sm resize-none"
-                    />
-
-                  </div>
-                )
-              )}
-
-            </div>
-
-            {/* ACTIONS */}
-            <div className="flex gap-3">
-
-              <button
-                onClick={
-                  saveEdits
-                }
-                className="flex-1 bg-blue-600 text-white rounded-2xl py-3 font-semibold flex items-center justify-center gap-2"
-              >
-
-                <Save className="w-4 h-4" />
-
-                Salva
-
-              </button>
-
-              <button
-                onClick={() =>
-                  approveContributo({
-
-                    ...selected,
-
-                    dati:
-                      editedData,
-                  })
-                }
-                className="flex-1 bg-emerald-600 text-white rounded-2xl py-3 font-semibold"
-              >
-
-                Approva
-
-              </button>
-
-            </div>
-
-          </div>
-
-        </div>
-      )}
 
     </div>
   );
