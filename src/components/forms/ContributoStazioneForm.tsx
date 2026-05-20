@@ -11,12 +11,17 @@ import toast from 'react-hot-toast';
 import { supabase } from '../../lib/supabase';
 
 interface Props {
+
   onBack: () => void;
 }
 
 export default function ContributoStazioneForm({
   onBack,
 }: Props) {
+
+  // =========================
+  // STATE
+  // =========================
 
   const [nome, setNome] =
     useState('');
@@ -57,6 +62,10 @@ export default function ContributoStazioneForm({
 
   async function submit() {
 
+    // =====================
+    // VALIDATION
+    // =====================
+
     if (!nome.trim()) {
 
       toast.error(
@@ -68,63 +77,107 @@ export default function ContributoStazioneForm({
 
     setLoading(true);
 
-    const payload = {
+    try {
 
-      nome,
+      // =====================
+      // PAYLOAD
+      // =====================
 
-      codice,
+      const payload = {
 
-      regione,
+        nome:
+          nome.trim(),
 
-      provincia,
+        codice:
+          codice.trim(),
 
-      indirizzo,
+        regione:
+          regione.trim(),
 
-      maps_query:
-        mapsQuery,
+        provincia:
+          provincia.trim(),
 
-      lat,
+        indirizzo:
+          indirizzo.trim(),
 
-      lng,
+        maps_query:
+          mapsQuery.trim(),
 
-      plus_code:
-        plusCode,
+        lat:
+          lat.trim(),
 
-      note,
-    };
+        lng:
+          lng.trim(),
 
-    const { error } =
-      await supabase
-        .from('contributi')
-        .insert({
+        plus_code:
+          plusCode.trim(),
 
-          tipo: 'stazione',
+        note:
+          note.trim(),
+      };
 
-          dati: payload,
-
-          stato: 'pending',
-        });
-
-    setLoading(false);
-
-    if (error) {
-
-      console.error(
-        error
+      console.log(
+        'PAYLOAD:',
+        payload
       );
+
+      // =====================
+      // INSERT
+      // =====================
+
+      const { error } =
+        await supabase
+
+          .from('contributi')
+
+          .insert({
+
+            tipo: 'stazione',
+
+            dati: payload,
+
+            stato: 'pending',
+          });
+
+      // =====================
+      // ERROR
+      // =====================
+
+      if (error) {
+
+        console.error(error);
+
+        toast.error(
+          'Errore invio contributo'
+        );
+
+        setLoading(false);
+
+        return;
+      }
+
+      // =====================
+      // SUCCESS
+      // =====================
+
+      toast.success(
+        'Stazione inviata con successo'
+      );
+
+      setLoading(false);
+
+      onBack();
+
+    } catch (err) {
+
+      console.error(err);
 
       toast.error(
-        'Errore invio contributo'
+        'Errore imprevisto'
       );
 
-      return;
+      setLoading(false);
     }
-
-    toast.success(
-      'Stazione inviata con successo'
-    );
-
-    onBack();
   }
 
   return (
