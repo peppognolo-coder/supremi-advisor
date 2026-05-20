@@ -3,11 +3,13 @@ import { useState, useEffect } from 'react';
 import {
   ArrowLeft,
   Store,
-  Clock3,
   Phone,
   Globe,
   Percent,
   MapPin,
+  Clock3,
+  Plus,
+  Trash2,
 } from 'lucide-react';
 
 import toast from 'react-hot-toast';
@@ -19,6 +21,15 @@ interface Props {
   onBack: () => void;
 
   stazionePredefinitaId?: string;
+}
+
+interface FasciaOraria {
+
+  giorni: string[];
+
+  apertura: string;
+
+  chiusura: string;
 }
 
 const categorie = [
@@ -33,7 +44,7 @@ const categorie = [
   'Altro',
 ];
 
-const giorni = [
+const giorniSettimana = [
   'Lun',
   'Mar',
   'Mer',
@@ -47,10 +58,6 @@ export default function ContributoAttivitaForm({
   onBack,
   stazionePredefinitaId,
 }: Props) {
-
-  // =========================
-  // STATE
-  // =========================
 
   const [stazioni, setStazioni] =
     useState<any[]>([]);
@@ -81,20 +88,24 @@ export default function ContributoAttivitaForm({
   const [sito, setSito] =
     useState('');
 
-  const [apertura, setApertura] =
-    useState('');
-
-  const [chiusura, setChiusura] =
-    useState('');
-
   const [note, setNote] =
     useState('');
 
   const [loading, setLoading] =
     useState(false);
 
-  const [giorniAttivi, setGiorniAttivi] =
-    useState<string[]>([]);
+  const [
+    fasceOrarie,
+    setFasceOrarie,
+  ] = useState<
+    FasciaOraria[]
+  >([
+    {
+      giorni: [],
+      apertura: '',
+      chiusura: '',
+    },
+  ]);
 
   // =========================
   // LOAD STAZIONI
@@ -119,8 +130,6 @@ export default function ContributoAttivitaForm({
 
       if (error) {
 
-        console.error(error);
-
         toast.error(
           'Errore caricamento stazioni'
         );
@@ -138,33 +147,87 @@ export default function ContributoAttivitaForm({
   }, []);
 
   // =========================
-  // TOGGLE GIORNI
+  // FASCE
   // =========================
 
+  function addFascia() {
+
+    setFasceOrarie([
+      ...fasceOrarie,
+
+      {
+        giorni: [],
+        apertura: '',
+        chiusura: '',
+      },
+    ]);
+  }
+
+  function removeFascia(
+    index: number
+  ) {
+
+    setFasceOrarie(
+      fasceOrarie.filter(
+        (_, i) =>
+          i !== index
+      )
+    );
+  }
+
+  function updateFascia(
+    index: number,
+    field: string,
+    value: any
+  ) {
+
+    const updated = [
+      ...fasceOrarie,
+    ];
+
+    updated[index] = {
+
+      ...updated[index],
+
+      [field]: value,
+    };
+
+    setFasceOrarie(
+      updated
+    );
+  }
+
   function toggleGiorno(
+    fasciaIndex: number,
     giorno: string
   ) {
 
-    if (
-      giorniAttivi.includes(
-        giorno
-      )
-    ) {
+    const fascia =
+      fasceOrarie[
+        fasciaIndex
+      ];
 
-      setGiorniAttivi(
-        giorniAttivi.filter(
-          (g) =>
-            g !== giorno
-        )
+    const exists =
+      fascia.giorni.includes(
+        giorno
       );
 
-    } else {
+    const nuoviGiorni =
+      exists
+        ? fascia.giorni.filter(
+            (g) =>
+              g !== giorno
+          )
+        : [
+            ...fascia.giorni,
+            giorno,
+          ];
 
-      setGiorniAttivi([
-        ...giorniAttivi,
-        giorno,
-      ]);
-    }
+    updateFascia(
+      fasciaIndex,
+      'giorni',
+      nuoviGiorni
+    );
   }
 
   // =========================
@@ -195,20 +258,12 @@ export default function ContributoAttivitaForm({
 
     try {
 
-      // =====================
-      // STAZIONE INFO
-      // =====================
-
       const stazione =
         stazioni.find(
           (s) =>
             s.id ===
             stazioneId
         );
-
-      // =====================
-      // PAYLOAD
-      // =====================
 
       const payload = {
 
@@ -238,20 +293,12 @@ export default function ContributoAttivitaForm({
         sito:
           sito.trim(),
 
-        apertura,
-
-        chiusura,
-
-        giorni:
-          giorniAttivi,
-
         note:
           note.trim(),
-      };
 
-      // =====================
-      // INSERT
-      // =====================
+        fasce_orarie:
+          fasceOrarie,
+      };
 
       const { error } =
         await supabase
@@ -279,10 +326,6 @@ export default function ContributoAttivitaForm({
 
         return;
       }
-
-      // =====================
-      // SUCCESS
-      // =====================
 
       toast.success(
         'Contributo inviato'
@@ -333,391 +376,302 @@ export default function ContributoAttivitaForm({
 
         </h1>
 
-        <p className="text-sm text-gray-500 mt-1">
-
-          Invia nuove convenzioni o aggiorna informazioni
-
-        </p>
-
       </div>
 
       {/* FORM */}
       <div className="bg-white rounded-2xl border border-gray-100 p-4 flex flex-col gap-4">
 
         {/* STAZIONE */}
-        <div>
+        <select
+          value={stazioneId}
+          onChange={(e) =>
+            setStazioneId(
+              e.target.value
+            )
+          }
+          className="border border-gray-200 rounded-xl px-3 py-2"
+        >
 
-          <label className="text-xs font-semibold text-gray-400 uppercase">
+          <option value="">
 
-            Stazione
+            Seleziona stazione
 
-          </label>
+          </option>
 
-          <select
-            value={stazioneId}
-            onChange={(e) =>
-              setStazioneId(
-                e.target.value
-              )
-            }
-            className="mt-1 border border-gray-200 rounded-xl px-3 py-2 w-full"
-          >
+          {stazioni.map(
+            (stazione) => (
 
-            <option value="">
+              <option
+                key={stazione.id}
+                value={stazione.id}
+              >
 
-              Seleziona stazione
+                {stazione.nome}
 
-            </option>
+              </option>
+            )
+          )}
 
-            {stazioni.map(
-              (stazione) => (
-
-                <option
-                  key={stazione.id}
-                  value={stazione.id}
-                >
-
-                  {stazione.nome}
-
-                </option>
-              )
-            )}
-
-          </select>
-
-        </div>
+        </select>
 
         {/* NOME */}
-        <div>
-
-          <label className="text-xs font-semibold text-gray-400 uppercase">
-
-            Nome attività
-
-          </label>
-
-          <div className="relative mt-1">
-
-            <Store className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-
-            <input
-              value={nome}
-              onChange={(e) =>
-                setNome(
-                  e.target.value
-                )
-              }
-              placeholder="Es. Bar Stazione"
-              className="w-full border border-gray-200 rounded-xl pl-10 pr-3 py-2"
-            />
-
-          </div>
-
-        </div>
+        <input
+          value={nome}
+          onChange={(e) =>
+            setNome(
+              e.target.value
+            )
+          }
+          placeholder="Nome attività"
+          className="border border-gray-200 rounded-xl px-3 py-2"
+        />
 
         {/* CATEGORIA */}
-        <div>
+        <select
+          value={categoria}
+          onChange={(e) =>
+            setCategoria(
+              e.target.value
+            )
+          }
+          className="border border-gray-200 rounded-xl px-3 py-2"
+        >
 
-          <label className="text-xs font-semibold text-gray-400 uppercase">
+          {categorie.map(
+            (categoria) => (
 
-            Categoria
+              <option
+                key={categoria}
+              >
 
-          </label>
+                {categoria}
 
-          <select
-            value={categoria}
-            onChange={(e) =>
-              setCategoria(
-                e.target.value
-              )
-            }
-            className="mt-1 border border-gray-200 rounded-xl px-3 py-2 w-full"
-          >
+              </option>
+            )
+          )}
 
-            {categorie.map(
-              (categoria) => (
-
-                <option
-                  key={categoria}
-                >
-
-                  {categoria}
-
-                </option>
-              )
-            )}
-
-          </select>
-
-        </div>
+        </select>
 
         {/* INDIRIZZO */}
-        <div>
-
-          <label className="text-xs font-semibold text-gray-400 uppercase">
-
-            Indirizzo
-
-          </label>
-
-          <div className="relative mt-1">
-
-            <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-
-            <input
-              value={indirizzo}
-              onChange={(e) =>
-                setIndirizzo(
-                  e.target.value
-                )
-              }
-              placeholder="Es. Piazza Duca d'Aosta 1"
-              className="w-full border border-gray-200 rounded-xl pl-10 pr-3 py-2"
-            />
-
-          </div>
-
-        </div>
+        <input
+          value={indirizzo}
+          onChange={(e) =>
+            setIndirizzo(
+              e.target.value
+            )
+          }
+          placeholder="Indirizzo"
+          className="border border-gray-200 rounded-xl px-3 py-2"
+        />
 
         {/* CONVENZIONE */}
-        <div>
-
-          <label className="text-xs font-semibold text-gray-400 uppercase">
-
-            Convenzione
-
-          </label>
-
-          <input
-            value={convenzione}
-            onChange={(e) =>
-              setConvenzione(
-                e.target.value
-              )
-            }
-            placeholder="Es. Sconto dipendenti Trenord"
-            className="mt-1 border border-gray-200 rounded-xl px-3 py-2 w-full"
-          />
-
-        </div>
+        <input
+          value={convenzione}
+          onChange={(e) =>
+            setConvenzione(
+              e.target.value
+            )
+          }
+          placeholder="Convenzione"
+          className="border border-gray-200 rounded-xl px-3 py-2"
+        />
 
         {/* SCONTO */}
-        <div>
-
-          <label className="text-xs font-semibold text-gray-400 uppercase">
-
-            Sconto
-
-          </label>
-
-          <div className="relative mt-1">
-
-            <Percent className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-
-            <input
-              value={sconto}
-              onChange={(e) =>
-                setSconto(
-                  e.target.value
-                )
-              }
-              placeholder="Es. 10%"
-              className="w-full border border-gray-200 rounded-xl pl-10 pr-3 py-2"
-            />
-
-          </div>
-
-        </div>
+        <input
+          value={sconto}
+          onChange={(e) =>
+            setSconto(
+              e.target.value
+            )
+          }
+          placeholder="Sconto"
+          className="border border-gray-200 rounded-xl px-3 py-2"
+        />
 
         {/* TELEFONO */}
-        <div>
-
-          <label className="text-xs font-semibold text-gray-400 uppercase">
-
-            Telefono
-
-          </label>
-
-          <div className="relative mt-1">
-
-            <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-
-            <input
-              value={telefono}
-              onChange={(e) =>
-                setTelefono(
-                  e.target.value
-                )
-              }
-              placeholder="Es. 02 1234567"
-              className="w-full border border-gray-200 rounded-xl pl-10 pr-3 py-2"
-            />
-
-          </div>
-
-        </div>
+        <input
+          value={telefono}
+          onChange={(e) =>
+            setTelefono(
+              e.target.value
+            )
+          }
+          placeholder="Telefono"
+          className="border border-gray-200 rounded-xl px-3 py-2"
+        />
 
         {/* SITO */}
-        <div>
+        <input
+          value={sito}
+          onChange={(e) =>
+            setSito(
+              e.target.value
+            )
+          }
+          placeholder="Sito web"
+          className="border border-gray-200 rounded-xl px-3 py-2"
+        />
 
-          <label className="text-xs font-semibold text-gray-400 uppercase">
+        {/* FASCE */}
+        <div className="flex flex-col gap-4">
 
-            Sito web
+          <div className="flex items-center justify-between">
 
-          </label>
+            <h3 className="font-semibold text-gray-900">
 
-          <div className="relative mt-1">
+              Fasce orarie
 
-            <Globe className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+            </h3>
 
-            <input
-              value={sito}
-              onChange={(e) =>
-                setSito(
-                  e.target.value
-                )
-              }
-              placeholder="https://..."
-              className="w-full border border-gray-200 rounded-xl pl-10 pr-3 py-2"
-            />
+            <button
+              type="button"
+              onClick={addFascia}
+              className="flex items-center gap-2 text-sm text-trenord-green font-medium"
+            >
+
+              <Plus className="w-4 h-4" />
+
+              Aggiungi fascia
+
+            </button>
 
           </div>
 
-        </div>
+          {fasceOrarie.map(
+            (
+              fascia,
+              index
+            ) => (
 
-        {/* GIORNI */}
-        <div className="flex flex-col gap-3">
+              <div
+                key={index}
+                className="border border-gray-200 rounded-2xl p-4 flex flex-col gap-4"
+              >
 
-          <label className="text-xs font-semibold text-gray-400 uppercase">
+                {/* TOP */}
+                <div className="flex items-center justify-between">
 
-            Giorni apertura
+                  <h4 className="font-medium text-gray-800">
 
-          </label>
+                    Fascia {index + 1}
 
-          <div className="grid grid-cols-4 gap-2">
+                  </h4>
 
-            {giorni.map(
-              (giorno) => {
+                  {fasceOrarie.length >
+                    1 && (
 
-                const active =
-                  giorniAttivi.includes(
-                    giorno
-                  );
+                    <button
+                      type="button"
+                      onClick={() =>
+                        removeFascia(
+                          index
+                        )
+                      }
+                    >
 
-                return (
+                      <Trash2 className="w-4 h-4 text-red-500" />
 
-                  <button
-                    key={giorno}
-                    type="button"
-                    onClick={() =>
-                      toggleGiorno(
-                        giorno
+                    </button>
+                  )}
+
+                </div>
+
+                {/* GIORNI */}
+                <div className="grid grid-cols-4 gap-2">
+
+                  {giorniSettimana.map(
+                    (giorno) => {
+
+                      const active =
+                        fascia.giorni.includes(
+                          giorno
+                        );
+
+                      return (
+
+                        <button
+                          key={giorno}
+                          type="button"
+                          onClick={() =>
+                            toggleGiorno(
+                              index,
+                              giorno
+                            )
+                          }
+                          className={`rounded-xl border py-2 text-sm font-medium transition-colors ${
+                            active
+                              ? 'bg-trenord-green text-white border-trenord-green'
+                              : 'bg-white border-gray-200 text-gray-700'
+                          }`}
+                        >
+
+                          {giorno}
+
+                        </button>
+                      );
+                    }
+                  )}
+
+                </div>
+
+                {/* ORARI */}
+                <div className="grid grid-cols-2 gap-3">
+
+                  <input
+                    type="time"
+                    value={
+                      fascia.apertura
+                    }
+                    onChange={(e) =>
+                      updateFascia(
+                        index,
+                        'apertura',
+                        e.target.value
                       )
                     }
-                    className={`rounded-xl border py-2 text-sm font-medium transition-colors ${
-                      active
-                        ? 'bg-trenord-green text-white border-trenord-green'
-                        : 'bg-white border-gray-200 text-gray-700'
-                    }`}
-                  >
+                    className="border border-gray-200 rounded-xl px-3 py-2"
+                  />
 
-                    {giorno}
+                  <input
+                    type="time"
+                    value={
+                      fascia.chiusura
+                    }
+                    onChange={(e) =>
+                      updateFascia(
+                        index,
+                        'chiusura',
+                        e.target.value
+                      )
+                    }
+                    className="border border-gray-200 rounded-xl px-3 py-2"
+                  />
 
-                  </button>
-                );
-              }
-            )}
+                </div>
 
-          </div>
-
-        </div>
-
-        {/* ORARI */}
-        <div className="grid grid-cols-2 gap-3">
-
-          <div>
-
-            <label className="text-xs font-semibold text-gray-400 uppercase">
-
-              Apertura
-
-            </label>
-
-            <div className="relative mt-1">
-
-              <Clock3 className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-
-              <input
-                type="time"
-                value={apertura}
-                onChange={(e) =>
-                  setApertura(
-                    e.target.value
-                  )
-                }
-                className="w-full border border-gray-200 rounded-xl pl-10 pr-3 py-2"
-              />
-
-            </div>
-
-          </div>
-
-          <div>
-
-            <label className="text-xs font-semibold text-gray-400 uppercase">
-
-              Chiusura
-
-            </label>
-
-            <div className="relative mt-1">
-
-              <Clock3 className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-
-              <input
-                type="time"
-                value={chiusura}
-                onChange={(e) =>
-                  setChiusura(
-                    e.target.value
-                  )
-                }
-                className="w-full border border-gray-200 rounded-xl pl-10 pr-3 py-2"
-              />
-
-            </div>
-
-          </div>
+              </div>
+            )
+          )}
 
         </div>
 
         {/* NOTE */}
-        <div>
-
-          <label className="text-xs font-semibold text-gray-400 uppercase">
-
-            Note
-
-          </label>
-
-          <textarea
-            value={note}
-            onChange={(e) =>
-              setNote(
-                e.target.value
-              )
-            }
-            placeholder="Inserisci informazioni aggiuntive..."
-            className="mt-1 border border-gray-200 rounded-xl px-3 py-2 w-full min-h-[120px]"
-          />
-
-        </div>
+        <textarea
+          value={note}
+          onChange={(e) =>
+            setNote(
+              e.target.value
+            )
+          }
+          placeholder="Note"
+          className="border border-gray-200 rounded-xl px-3 py-2 min-h-[120px]"
+        />
 
         {/* SUBMIT */}
         <button
           onClick={submit}
           disabled={loading}
-          className="bg-trenord-green text-white rounded-xl py-3 font-medium hover:opacity-90 transition-opacity disabled:opacity-50"
+          className="bg-trenord-green text-white rounded-xl py-3 font-medium"
         >
 
           {loading
