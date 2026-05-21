@@ -898,17 +898,63 @@ const [mioVoto, setMioVoto] =
 
      <div className="flex items-center justify-between">
 
-  <div>
+<div>
 
-    <h3 className="font-semibold text-gray-900">
-      {attivita.nome}
-    </h3>
+  <h3 className="font-semibold text-gray-900">
+    {attivita.nome}
+  </h3>
 
-    <p className="text-sm text-gray-500">
-      {attivita.categoria}
-    </p>
+  <p className="text-sm text-gray-500">
+    {attivita.categoria}
+  </p>
 
-  </div>
+  {attivita.valutazioni &&
+    attivita.valutazioni.length > 0 && (
+
+      <div className="flex items-center gap-1 mt-2">
+
+        <Star
+          className="
+            w-4 h-4
+            fill-yellow-400
+            text-yellow-400
+          "
+        />
+
+        <span className="text-sm font-medium">
+
+          {(
+            attivita.valutazioni.reduce(
+              (
+                sum: number,
+                voto: any
+              ) =>
+                sum +
+                voto.voto,
+              0
+            ) /
+            attivita.valutazioni.length
+          ).toFixed(1)}
+
+        </span>
+
+        <span className="text-xs text-gray-400">
+
+          (
+          {
+            attivita
+              .valutazioni
+              .length
+          }
+          )
+
+        </span>
+
+      </div>
+
+  )}
+
+</div>
 
   {attivita.convenzionato && (
 
