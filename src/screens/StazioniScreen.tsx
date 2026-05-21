@@ -759,34 +759,15 @@ export default function StazioniScreen({
 
                 <div className="flex flex-col gap-3">
 
-                  {stazione.attivita_stazione.map(
-                    (attivita: any) => (
+                 {stazione.attivita_stazione.map(
+  (attivita: any) => (
 
-                      <AttivitaCard
-                        key={attivita.id}
-                        attivita={attivita}
-                        onClick={() => {
+    <div key={attivita.id}>
+      TEST CARD
+    </div>
 
-                          console.log(
-                            'ATTIVITA',
-                            attivita
-                          );
-
-                        }}
-                      />
-
-                    )
-                  )}
-
-                </div>
-              )}
-
-          </div>
-        )}
-
-      </div>
-    );
-  }
+  )
+)}
 
   return (
 
