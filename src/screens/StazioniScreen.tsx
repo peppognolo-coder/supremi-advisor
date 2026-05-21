@@ -199,13 +199,24 @@ const [mioVoto, setMioVoto] =
                     }
                   )
 
-                  .filter(
-  (
-    attivita: AttivitaStazione
-  ) =>
-    attivita.stazione_id ===
-    stazione.id
-)
+                 .filter(
+    (
+      attivita: AttivitaStazione
+    ) =>
+      attivita.stazione_id ===
+      stazione.id
+  );
+
+console.log(
+  'STAZIONE',
+  stazione.nome,
+  stazione.id
+);
+
+console.log(
+  'ATTIVITA',
+  attivita
+);
 
 .sort(
   (
