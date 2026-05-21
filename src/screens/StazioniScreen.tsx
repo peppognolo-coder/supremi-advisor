@@ -1126,7 +1126,79 @@ const [mioVoto, setMioVoto] =
 
       <p className="text-gray-500 mb-4">
 
-        {selectedAttivita.categoria}
+        {selectedAttivita.categoria
+
+          <div className="mt-4">
+
+  <div className="flex items-center gap-2">
+
+    <Star
+      className="
+        w-5 h-5
+        fill-yellow-400
+        text-yellow-400
+      "
+    />
+
+    <span className="font-medium">
+
+      {mediaRating.toFixed(1)}
+
+    </span>
+
+    <span className="text-gray-500">
+
+      ({numeroVoti} voti)
+
+    </span>
+
+  </div>
+
+  <div className="mt-3">
+
+    <p className="text-sm text-gray-500 mb-2">
+
+      La tua valutazione
+
+    </p>
+
+    <div className="flex gap-2">
+
+      {[1, 2, 3, 4, 5].map(
+        (numero) => (
+
+          <button
+            key={numero}
+            type="button"
+            onClick={() =>
+              voteAttivita(
+                numero
+              )
+            }
+          >
+
+            <Star
+              className={`
+                w-7 h-7
+                ${
+                  numero <=
+                  mioVoto
+                    ? 'fill-yellow-400 text-yellow-400'
+                    : 'text-gray-300'
+                }
+              `}
+            />
+
+          </button>
+
+        )
+      )}
+
+    </div>
+
+  </div>
+
+</div>
 
         <div className="border-t my-4" />
 
