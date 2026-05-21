@@ -1075,6 +1075,40 @@ export default function StazioniScreen({
 
       )}
 
+      {selectedAttivita.maps_query && (
+
+  <button
+    type="button"
+    onClick={() => {
+
+      const query =
+        encodeURIComponent(
+          selectedAttivita.maps_query
+        );
+
+      window.open(
+        `https://www.google.com/maps/search/?api=1&query=${query}`,
+        '_blank'
+      );
+
+    }}
+    className="
+      w-full
+      h-12
+      rounded-xl
+      bg-blue-600
+      text-white
+      font-medium
+      mb-4
+    "
+  >
+
+    📍 Apri Navigazione
+
+  </button>
+
+)}
+
       {selectedAttivita.note && (
 
         <div className="mb-3">
