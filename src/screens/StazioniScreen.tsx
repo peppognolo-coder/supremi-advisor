@@ -753,21 +753,38 @@ export default function StazioniScreen({
 
             </button>
 
-            {/* ATTIVITA */}
+                      {/* ATTIVITA */}
+
             {stazione.attivita_stazione &&
               stazione.attivita_stazione.length > 0 && (
 
                 <div className="flex flex-col gap-3">
 
-                 {stazione.attivita_stazione.map(
-  (attivita: any) => (
+                  {stazione.attivita_stazione.map(
+                    (attivita: any) => (
 
-    <div key={attivita.id}>
-      TEST CARD
-    </div>
+                      <div
+                        key={attivita.id}
+                        className="bg-white rounded-xl p-4 border"
+                      >
+                        TEST CARD
+                      </div>
 
-  )
-)}
+                    )
+                  )}
+
+                </div>
+
+              )}
+
+          </div>
+        )}
+
+      </div>
+    );
+  }
+  );
+}
 
   return (
 
