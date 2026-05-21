@@ -59,11 +59,13 @@ export default function AddAttivitaModal({
   const [indirizzo, setIndirizzo] =
     useState('');
 
-  const [mapsQuery, setMapsQuery] =
-    useState('');
-
   const [ubicazione, setUbicazione] =
     useState('');
+
+  const [
+  distanzaPiedi,
+  setDistanzaPiedi,
+] = useState('');
 
   const [note, setNote] =
     useState('');
@@ -215,29 +217,29 @@ export default function AddAttivitaModal({
 
       setLoading(true);
 
-      const payload = {
+const payload = {
 
-        stazione_id:
-          stazioneId,
+  stazione_id:
+    stazioneId,
 
-        nome,
+  nome,
 
-        categoria,
+  categoria,
 
-        indirizzo,
+  indirizzo,
 
-        maps_query:
-          mapsQuery,
+  distanza_piedi:
+    distanzaPiedi,
 
-        ubicazione,
+  ubicazione,
 
-        note,
+  note,
 
-        convenzionato,
+  convenzionato,
 
-        fasce_orarie:
-          fasceOrarie,
-      };
+  fasce_orarie:
+    fasceOrarie,
+};
 
       const {
         error,
@@ -391,18 +393,38 @@ export default function AddAttivitaModal({
           placeholder="Indirizzo"
         />
 
-        {/* MAPS */}
-        <input
-          type="text"
-          value={mapsQuery}
-          onChange={(e) =>
-            setMapsQuery(
-              e.target.value
-            )
-          }
-          className="border rounded-2xl px-3 py-3 text-sm"
-          placeholder="Maps Query"
-        />
+       {/* DISTANZA A PIEDI */}
+<select
+  value={distanzaPiedi}
+  onChange={(e) =>
+    setDistanzaPiedi(
+      e.target.value
+    )
+  }
+  className="border rounded-2xl px-3 py-3 text-sm"
+>
+
+  <option value="">
+    Distanza dalla stazione
+  </option>
+
+  <option value="Entro 2 minuti">
+    Entro 2 minuti
+  </option>
+
+  <option value="Entro 5 minuti">
+    Entro 5 minuti
+  </option>
+
+  <option value="Entro 10 minuti">
+    Entro 10 minuti
+  </option>
+
+  <option value="Oltre 10 minuti">
+    Oltre 10 minuti
+  </option>
+
+</select>
 
         {/* UBICAZIONE */}
         <input
