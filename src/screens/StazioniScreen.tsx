@@ -986,13 +986,14 @@ export default function StazioniScreen({
 
     <div
       className="
-        bg-white
-        w-full
-        rounded-t-3xl
-        p-6
-        max-h-[80vh]
-        overflow-y-auto
-      "
+  bg-white
+  w-full
+  rounded-t-3xl
+  p-6
+  pb-32
+  max-h-[80vh]
+  overflow-y-auto
+"
       onClick={(e) =>
         e.stopPropagation()
       }
@@ -1018,6 +1019,8 @@ export default function StazioniScreen({
       <p className="text-gray-500 mb-4">
 
         {selectedAttivita.categoria}
+
+        <div className="border-t my-4" />
 
       </p>
 
