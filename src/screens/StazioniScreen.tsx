@@ -110,6 +110,9 @@ export default function StazioniScreen({
   const [locationReady, setLocationReady] =
     useState(false);
 
+  const [selectedAttivita, setSelectedAttivita] =
+  useState<any>(null);
+
   // =========================
   // LOAD
   // =========================
@@ -761,17 +764,12 @@ export default function StazioniScreen({
                  {stazione.attivita_stazione.map(
   (attivita: any) => (
 
-   <button
+  <button
   key={attivita.id}
   type="button"
-  onClick={() => {
-
-    console.log(
-      'ATTIVITA',
-      attivita
-    );
-
-  }}
+  onClick={() =>
+    setSelectedAttivita(attivita)
+  }
   className="
     w-full
     bg-white
@@ -817,7 +815,7 @@ export default function StazioniScreen({
 
 </div>
 
-   </button>
+</button>
 
   )
 )}
