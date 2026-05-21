@@ -1124,11 +1124,13 @@ const [mioVoto, setMioVoto] =
 
       </h2>
 
-      <p className="text-gray-500 mb-4">
+     <p className="text-gray-500 mb-4">
 
-        {selectedAttivita.categoria
+  {selectedAttivita.categoria}
 
-          <div className="mt-4">
+</p>
+
+<div className="mt-4">
 
   <div className="flex items-center gap-2">
 
@@ -1164,16 +1166,14 @@ const [mioVoto, setMioVoto] =
 
     <div className="flex gap-2">
 
-      {[1, 2, 3, 4, 5].map(
+      {[1,2,3,4,5].map(
         (numero) => (
 
           <button
             key={numero}
             type="button"
             onClick={() =>
-              voteAttivita(
-                numero
-              )
+              voteAttivita(numero)
             }
           >
 
@@ -1181,8 +1181,7 @@ const [mioVoto, setMioVoto] =
               className={`
                 w-7 h-7
                 ${
-                  numero <=
-                  mioVoto
+                  numero <= mioVoto
                     ? 'fill-yellow-400 text-yellow-400'
                     : 'text-gray-300'
                 }
@@ -1200,8 +1199,7 @@ const [mioVoto, setMioVoto] =
 
 </div>
 
-        <div className="border-t my-4" />
-
+<div className="border-t my-4" />
       </p>
 
       {selectedAttivita.convenzionato && (
