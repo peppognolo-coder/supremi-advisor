@@ -376,7 +376,6 @@ export default function AdminContributiScreen() {
             });
         }
       }
-    }
 
     // =========================
     // UPDATE STATUS
