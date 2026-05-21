@@ -200,12 +200,48 @@ const [mioVoto, setMioVoto] =
                   )
 
                   .filter(
-                    (
-                      attivita: AttivitaStazione
-                    ) =>
-                      attivita.stazione_id ===
-                      stazione.id
-                  );
+  (
+    attivita: AttivitaStazione
+  ) =>
+    attivita.stazione_id ===
+    stazione.id
+)
+
+.sort(
+  (
+    a: any,
+    b: any
+  ) => {
+
+    const mediaA =
+      a.valutazioni.length > 0
+        ? a.valutazioni.reduce(
+            (
+              sum: number,
+              voto: any
+            ) =>
+              sum + voto.voto,
+            0
+          ) /
+          a.valutazioni.length
+        : 0;
+
+    const mediaB =
+      b.valutazioni.length > 0
+        ? b.valutazioni.reduce(
+            (
+              sum: number,
+              voto: any
+            ) =>
+              sum + voto.voto,
+            0
+          ) /
+          b.valutazioni.length
+        : 0;
+
+    return mediaB - mediaA;
+  }
+);
 
               return {
                 ...stazione,
