@@ -1109,6 +1109,70 @@ export default function StazioniScreen({
 
 )}
 
+      {/* ORARI */}
+
+{(
+  selectedAttivita.aperto_h24 ||
+  selectedAttivita.giorni_apertura ||
+  selectedAttivita.orario_apertura ||
+  selectedAttivita.orario_chiusura
+) && (
+
+  <div className="mb-4">
+
+    <h3 className="font-semibold mb-2">
+
+      🕒 Orari
+
+    </h3>
+
+    {selectedAttivita.aperto_h24 ? (
+
+      <p className="text-green-600 font-medium">
+
+        Aperto 24 ore
+
+      </p>
+
+    ) : (
+
+      <>
+
+        {selectedAttivita.giorni_apertura && (
+
+          <p>
+
+            {selectedAttivita.giorni_apertura}
+
+          </p>
+
+        )}
+
+        {(selectedAttivita.orario_apertura ||
+          selectedAttivita.orario_chiusura) && (
+
+          <p>
+
+            {selectedAttivita.orario_apertura}
+
+            {selectedAttivita.orario_apertura &&
+              selectedAttivita.orario_chiusura &&
+              ' - '}
+
+            {selectedAttivita.orario_chiusura}
+
+          </p>
+
+        )}
+
+      </>
+
+    )}
+
+  </div>
+
+)}
+
       {selectedAttivita.note && (
 
         <div className="mb-3">
