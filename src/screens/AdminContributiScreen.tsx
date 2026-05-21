@@ -240,8 +240,8 @@ export default function AdminContributiScreen() {
       indirizzo:
         dati.indirizzo,
 
-      maps_query:
-        dati.maps_query,
+     distanza_piedi:
+  dati.distanza_piedi,
 
       ubicazione:
         dati.ubicazione,
