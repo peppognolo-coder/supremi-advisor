@@ -41,6 +41,9 @@ import AddAttivitaModal from '../components/AddAttivitaModal';
 
 import SkeletonCard from '../components/SkeletonCard';
 
+import { Star } from 'lucide-react';
+import { getDeviceId } from '../lib/device';
+
 function getCategoriaIcon(
   categoria: string
 ) {
@@ -112,6 +115,15 @@ export default function StazioniScreen({
 
   const [selectedAttivita, setSelectedAttivita] =
   useState<any>(null);
+
+  const [mediaRating, setMediaRating] =
+  useState<number>(0);
+
+const [numeroVoti, setNumeroVoti] =
+  useState<number>(0);
+
+const [mioVoto, setMioVoto] =
+  useState<number>(0);
 
   // =========================
   // LOAD
@@ -289,6 +301,49 @@ export default function StazioniScreen({
       setLoading(false);
     }
   }
+
+  async function loadRating(
+  attivitaId: string
+) {
+
+  const { data } =
+    await supabase
+      .from('attivita_rating')
+      .select('*')
+      .eq(
+        'attivita_id',
+        attivitaId
+      );
+
+  const voti =
+    data || [];
+
+  const media =
+    voti.length > 0
+      ? voti.reduce(
+          (sum, voto) =>
+            sum + voto.voto,
+          0
+        ) / voti.length
+      : 0;
+
+  setMediaRating(media);
+
+  setNumeroVoti(
+    voti.length
+  );
+
+  const mioRecord =
+    voti.find(
+      (v) =>
+        v.device_id ===
+        getDeviceId()
+    );
+
+  setMioVoto(
+    mioRecord?.voto || 0
+  );
+}
 
   // =========================
   // INIT GEOLOCATION
@@ -767,9 +822,18 @@ export default function StazioniScreen({
   <button
   key={attivita.id}
   type="button"
-  onClick={() =>
-    setSelectedAttivita(attivita)
-  }
+  onClick={() => {
+
+  setSelectedAttivita(
+    attivita
+  );
+
+  loadRating(
+    attivita.id
+  );
+
+}}
+    
   className="
     w-full
     bg-white
