@@ -149,13 +149,13 @@ const [mioVoto, setMioVoto] =
         .from('attivita_stazione')
         .select('*');
 
-      const {
-        data: valutazioniData,
-      } = await supabase
-        .from(
-          'attivita_valutazioni'
-        )
-        .select('*');
+     const {
+  data: valutazioniData,
+} = await supabase
+  .from(
+    'attivita_rating'
+  )
+  .select('*');
 
       const merged =
         (stazioniData ?? [])
