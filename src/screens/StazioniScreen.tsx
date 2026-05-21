@@ -170,42 +170,78 @@ const [mioVoto, setMioVoto] =
           .map(
             (stazione: any) => {
 
-              const attivita =
+const attivita =
+  (
+    attivitaData ?? []
+  )
+
+    .map(
+      (
+        attivita: any
+      ) => {
+
+        const valutazioni =
+          (
+            valutazioniData ??
+            []
+          ).filter(
+            (
+              valutazione: any
+            ) =>
+              valutazione.attivita_id ===
+              attivita.id
+          );
+
+        return {
+          ...attivita,
+          valutazioni,
+        };
+      }
+    )
+
+    .filter(
+      (
+        attivita: AttivitaStazione
+      ) =>
+        attivita.stazione_id ===
+        stazione.id
+    )
+
+    .sort(
+      (
+        a: any,
+        b: any
+      ) => {
+
+        const mediaA =
+          a.valutazioni.length > 0
+            ? a.valutazioni.reduce(
                 (
-                  attivitaData ?? []
-                )
+                  sum: number,
+                  voto: any
+                ) =>
+                  sum + voto.voto,
+                0
+              ) /
+              a.valutazioni.length
+            : 0;
 
-                  .map(
-                    (
-                      attivita: any
-                    ) => {
+        const mediaB =
+          b.valutazioni.length > 0
+            ? b.valutazioni.reduce(
+                (
+                  sum: number,
+                  voto: any
+                ) =>
+                  sum + voto.voto,
+                0
+              ) /
+              b.valutazioni.length
+            : 0;
 
-                      const valutazioni =
-                        (
-                          valutazioniData ??
-                          []
-                        ).filter(
-                          (
-                            valutazione: any
-                          ) =>
-                            valutazione.attivita_id ===
-                            attivita.id
-                        );
-
-                      return {
-                        ...attivita,
-                        valutazioni,
-                      };
-                    }
-                  )
-
-                 .filter(
-    (
-      attivita: AttivitaStazione
-    ) =>
-      attivita.stazione_id ===
-      stazione.id
-  );
+        return mediaB - mediaA;
+      }
+    );
 
 console.log(
   'STAZIONE',
@@ -216,36 +252,6 @@ console.log(
 console.log(
   'ATTIVITA',
   attivita
-);
-
-    const mediaA =
-      a.valutazioni.length > 0
-        ? a.valutazioni.reduce(
-            (
-              sum: number,
-              voto: any
-            ) =>
-              sum + voto.voto,
-            0
-          ) /
-          a.valutazioni.length
-        : 0;
-
-    const mediaB =
-      b.valutazioni.length > 0
-        ? b.valutazioni.reduce(
-            (
-              sum: number,
-              voto: any
-            ) =>
-              sum + voto.voto,
-            0
-          ) /
-          b.valutazioni.length
-        : 0;
-
-    return mediaB - mediaA;
-  }
 );
 
               return {
