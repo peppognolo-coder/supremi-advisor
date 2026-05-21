@@ -267,8 +267,8 @@ export default function ContributoAttivitaForm({
         indirizzo:
           indirizzo.trim(),
 
-        maps_query:
-          mapsQuery.trim(),
+        distanza_piedi:
+    distanzaPiedi,
 
         ubicazione:
           ubicazione.trim(),
