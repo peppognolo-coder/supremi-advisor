@@ -1200,6 +1200,7 @@ const [mioVoto, setMioVoto] =
 </div>
 
 <div className="border-t my-4" />
+      
       </p>
 
       {selectedAttivita.convenzionato && (
