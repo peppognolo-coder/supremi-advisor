@@ -216,10 +216,52 @@ export default function AdminContributiScreen() {
       // ATTIVITA
       // =========================
 
-      if (
-        contributo.tipo ===
-        'attivita'
-      ) {
+     if (
+  contributo.tipo ===
+  'attivita'
+) {
+
+  const dati =
+    contributo.dati;
+
+  await supabase
+    .from('attivita_stazione')
+    .insert({
+
+      stazione_id:
+        dati.stazione_id,
+
+      nome:
+        dati.nome,
+
+      categoria:
+        dati.categoria,
+
+      indirizzo:
+        dati.indirizzo,
+
+      maps_query:
+        dati.maps_query,
+
+      ubicazione:
+        dati.ubicazione,
+
+      note:
+        dati.note,
+
+      convenzionato:
+        dati.convenzionato,
+
+      giorni_apertura:
+        dati.giorni_apertura,
+
+      orario_apertura:
+        dati.apertura,
+
+      orario_chiusura:
+        dati.chiusura,
+    });
+}
 
         const dati =
           contributo.dati;
