@@ -967,6 +967,152 @@ export default function StazioniScreen({
         />
       )}
 
+      {/* DETTAGLIO ATTIVITA */}
+{selectedAttivita && (
+
+  <div
+    className="
+      fixed
+      inset-0
+      bg-black/40
+      z-50
+      flex
+      items-end
+    "
+    onClick={() =>
+      setSelectedAttivita(null)
+    }
+  >
+
+    <div
+      className="
+        bg-white
+        w-full
+        rounded-t-3xl
+        p-6
+        max-h-[80vh]
+        overflow-y-auto
+      "
+      onClick={(e) =>
+        e.stopPropagation()
+      }
+    >
+
+      <div
+        className="
+          w-12
+          h-1.5
+          bg-gray-300
+          rounded-full
+          mx-auto
+          mb-5
+        "
+      />
+
+      <h2 className="text-xl font-bold">
+
+        {selectedAttivita.nome}
+
+      </h2>
+
+      <p className="text-gray-500 mb-4">
+
+        {selectedAttivita.categoria}
+
+      </p>
+
+      {selectedAttivita.convenzionato && (
+
+        <div
+          className="
+            inline-flex
+            px-3
+            py-1
+            rounded-full
+            bg-green-100
+            text-green-700
+            text-sm
+            mb-4
+          "
+        >
+          Convenzionato Trenord
+        </div>
+
+      )}
+
+      {selectedAttivita.ubicazione && (
+
+        <div className="mb-3">
+
+          <h3 className="font-semibold">
+            Ubicazione
+          </h3>
+
+          <p>
+            {selectedAttivita.ubicazione}
+          </p>
+
+        </div>
+
+      )}
+
+      {selectedAttivita.indirizzo && (
+
+        <div className="mb-3">
+
+          <h3 className="font-semibold">
+            Indirizzo
+          </h3>
+
+          <p>
+            {selectedAttivita.indirizzo}
+          </p>
+
+        </div>
+
+      )}
+
+      {selectedAttivita.note && (
+
+        <div className="mb-3">
+
+          <h3 className="font-semibold">
+            Note
+          </h3>
+
+          <p>
+            {selectedAttivita.note}
+          </p>
+
+        </div>
+
+      )}
+
+      <button
+        onClick={() =>
+          setSelectedAttivita(null)
+        }
+        className="
+          mt-4
+          w-full
+          h-11
+          rounded-xl
+          bg-trenord-green
+          text-white
+          font-medium
+        "
+      >
+
+        Chiudi
+
+      </button>
+
+    </div>
+
+  </div>
+
+)}
+      
     </>
   );
 }
