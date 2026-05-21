@@ -783,7 +783,6 @@ export default function StazioniScreen({
       </div>
     );
   }
-  );
 }
 
   return (
