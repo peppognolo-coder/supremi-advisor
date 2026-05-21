@@ -784,13 +784,38 @@ export default function StazioniScreen({
   "
 >
 
-      <h3 className="font-semibold text-gray-900">
-        {attivita.nome}
-      </h3>
+     <div className="flex items-center justify-between">
 
-      <p className="text-sm text-gray-500">
-        {attivita.categoria}
-      </p>
+  <div>
+
+    <h3 className="font-semibold text-gray-900">
+      {attivita.nome}
+    </h3>
+
+    <p className="text-sm text-gray-500">
+      {attivita.categoria}
+    </p>
+
+  </div>
+
+  {attivita.convenzionato && (
+
+    <span
+      className="
+        text-xs
+        bg-green-100
+        text-green-700
+        px-2
+        py-1
+        rounded-full
+      "
+    >
+      Convenzionato
+    </span>
+
+  )}
+
+</div>
 
    </button>
 
