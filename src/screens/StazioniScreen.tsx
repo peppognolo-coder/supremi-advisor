@@ -41,8 +41,6 @@ import AddAttivitaModal from '../components/AddAttivitaModal';
 
 import SkeletonCard from '../components/SkeletonCard';
 
-import AttivitaCard from '../components/stazioni/AttivitaCard';
-
 function getCategoriaIcon(
   categoria: string
 ) {
@@ -763,18 +761,20 @@ export default function StazioniScreen({
                  {stazione.attivita_stazione.map(
   (attivita: any) => (
 
-    <AttivitaCard
+    <div
       key={attivita.id}
-      attivita={attivita}
-      onClick={() => {
+      className="bg-white rounded-xl p-4 border"
+    >
 
-        console.log(
-          'ATTIVITA',
-          attivita
-        );
+      <h3 className="font-semibold text-gray-900">
+        {attivita.nome}
+      </h3>
 
-      }}
-    />
+      <p className="text-sm text-gray-500">
+        {attivita.categoria}
+      </p>
+
+    </div>
 
   )
 )}
