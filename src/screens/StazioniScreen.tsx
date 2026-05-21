@@ -12,7 +12,6 @@ import {
   ChevronDown,
   ChevronUp,
   Plus,
-  Star,
 } from 'lucide-react';
 
 import toast from 'react-hot-toast';
