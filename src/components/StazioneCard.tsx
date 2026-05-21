@@ -39,6 +39,8 @@ export default function StazioneCard({
   isNearest = false,
 }: StazioneCardProps) {
 
+  console.log('STAZIONECARD VERSIONE TEST');
+  
   const [expanded, setExpanded] =
     useState(false);
 
