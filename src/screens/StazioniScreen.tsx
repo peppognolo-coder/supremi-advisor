@@ -343,6 +343,53 @@ const [mioVoto, setMioVoto] =
   );
 }
 
+  async function voteAttivita(
+  voto: number
+) {
+
+  if (!selectedAttivita) {
+    return;
+  }
+
+  const { error } =
+    await supabase
+      .from('attivita_rating')
+      .upsert(
+        {
+          attivita_id:
+            selectedAttivita.id,
+
+          device_id:
+            getDeviceId(),
+
+          voto,
+
+          updated_at:
+            new Date()
+              .toISOString(),
+        },
+        {
+          onConflict:
+            'attivita_id,device_id',
+        }
+      );
+
+  if (error) {
+
+    console.error(
+      error
+    );
+
+    return;
+  }
+
+  setMioVoto(voto);
+
+  await loadRating(
+    selectedAttivita.id
+  );
+}
+
   // =========================
   // INIT GEOLOCATION
   // =========================
