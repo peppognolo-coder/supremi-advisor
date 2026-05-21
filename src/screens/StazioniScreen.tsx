@@ -41,6 +41,8 @@ import AddAttivitaModal from '../components/AddAttivitaModal';
 
 import SkeletonCard from '../components/SkeletonCard';
 
+import AttivitaCard from '../components/Stazioni/AttivitaCard';
+
 function getCategoriaIcon(
   categoria: string
 ) {
@@ -752,87 +754,32 @@ export default function StazioniScreen({
             </button>
 
             {/* ATTIVITA */}
-{stazione.attivita_stazione &&
- stazione.attivita_stazione.length > 0 && (
+            {stazione.attivita_stazione &&
+              stazione.attivita_stazione.length > 0 && (
 
-  <div className="flex flex-col gap-3">
+                <div className="flex flex-col gap-3">
 
-    {stazione.attivita_stazione.map(
-      (attivita: any) => {
+                  {stazione.attivita_stazione.map(
+                    (attivita: any) => (
 
-        const Icon =
-          getCategoriaIcon(
-            attivita.categoria || ''
-          );
+                      <AttivitaCard
+                        key={attivita.id}
+                        attivita={attivita}
+                        onClick={() => {
 
-        const valutazioni =
-          attivita.valutazioni || [];
+                          console.log(
+                            'ATTIVITA',
+                            attivita
+                          );
 
-        const media =
-          valutazioni.length
-            ? valutazioni.reduce(
-                (sum: number, v: any) =>
-                  sum + (v.voto || 0),
-                0
-              ) /
-              valutazioni.length
-            : 0;
+                        }}
+                      />
 
-        return (
+                    )
+                  )}
 
-          <div
-            key={attivita.id}
-            className="bg-white rounded-2xl border border-gray-200 p-4"
-          >
-
-            <div className="flex items-center gap-3">
-
-              <div className="w-10 h-10 rounded-xl bg-trenord-green/10 flex items-center justify-center">
-
-                <Icon className="w-5 h-5 text-trenord-green" />
-
-              </div>
-
-              <div className="flex-1">
-
-                <h3 className="font-semibold text-gray-900">
-
-                  {attivita.nome}
-
-                </h3>
-
-                <p className="text-xs text-gray-500">
-
-                  {attivita.categoria}
-                </p>
-
-              </div>
-
-            </div>
-
-            <div className="mt-3 flex items-center gap-2">
-
-              <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-
-              <span className="text-sm">
-
-                {media.toFixed(1)}
-              </span>
-
-              <span className="text-xs text-gray-400">
-
-                ({valutazioni.length})
-              </span>
-
-            </div>
-
-          </div>
-        );
-      }
-    )}
-
-  </div>
-)}
+                </div>
+              )}
 
           </div>
         )}
