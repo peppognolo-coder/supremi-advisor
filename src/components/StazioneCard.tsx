@@ -130,6 +130,22 @@ export default function StazioneCard({
       attivitaData
     );
 
+    console.log(
+  'STAZIONE CARD',
+  stazione.id,
+  stazione.nome
+);
+
+console.log(
+  'ATTIVITA COUNT',
+  attivitaData?.length
+);
+
+console.log(
+  'ATTIVITA DATA',
+  JSON.stringify(attivitaData)
+);
+
     // =====================
     // MERGE
     // =====================
