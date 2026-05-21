@@ -12,6 +12,7 @@ import {
   ChevronDown,
   ChevronUp,
   Plus,
+  Star,
 } from 'lucide-react';
 
 import toast from 'react-hot-toast';
@@ -40,9 +41,6 @@ import EmptyState from '../components/EmptyState';
 import AddAttivitaModal from '../components/AddAttivitaModal';
 
 import SkeletonCard from '../components/SkeletonCard';
-
-import { Star } from 'lucide-react';
-import { getDeviceId } from '../lib/device';
 
 function getCategoriaIcon(
   categoria: string
