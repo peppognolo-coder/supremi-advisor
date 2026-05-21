@@ -41,7 +41,7 @@ import AddAttivitaModal from '../components/AddAttivitaModal';
 
 import SkeletonCard from '../components/SkeletonCard';
 
-import AttivitaCard from '../components/stazioni/AttivitaCard.tsx';
+import AttivitaCard from '../components/stazioni/AttivitaCard';
 
 function getCategoriaIcon(
   categoria: string
