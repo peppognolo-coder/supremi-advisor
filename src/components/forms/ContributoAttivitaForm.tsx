@@ -65,11 +65,13 @@ export default function ContributoAttivitaForm({
   const [indirizzo, setIndirizzo] =
     useState('');
 
-  const [mapsQuery, setMapsQuery] =
-    useState('');
-
   const [ubicazione, setUbicazione] =
     useState('');
+
+  const [
+  distanzaPiedi,
+  setDistanzaPiedi,
+] = useState('');
 
   const [
     convenzionato,
@@ -461,17 +463,38 @@ export default function ContributoAttivitaForm({
           className="border border-gray-200 rounded-xl px-3 py-2"
         />
 
-        {/* MAPS QUERY */}
-        <input
-          value={mapsQuery}
-          onChange={(e) =>
-            setMapsQuery(
-              e.target.value
-            )
-          }
-          placeholder="Maps query"
-          className="border border-gray-200 rounded-xl px-3 py-2"
-        />
+       {/* DISTANZA DALLA STAZIONE */}
+<select
+  value={distanzaPiedi}
+  onChange={(e) =>
+    setDistanzaPiedi(
+      e.target.value
+    )
+  }
+  className="border border-gray-200 rounded-xl px-3 py-2"
+>
+
+  <option value="">
+    Distanza dalla stazione
+  </option>
+
+  <option value="Entro 2 minuti">
+    Entro 2 minuti
+  </option>
+
+  <option value="Entro 5 minuti">
+    Entro 5 minuti
+  </option>
+
+  <option value="Entro 10 minuti">
+    Entro 10 minuti
+  </option>
+
+  <option value="Oltre 10 minuti">
+    Oltre 10 minuti
+  </option>
+
+</select>
 
         {/* UBICAZIONE */}
         <input
