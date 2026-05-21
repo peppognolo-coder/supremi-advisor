@@ -761,10 +761,28 @@ export default function StazioniScreen({
                  {stazione.attivita_stazione.map(
   (attivita: any) => (
 
-    <div
-      key={attivita.id}
-      className="bg-white rounded-xl p-4 border"
-    >
+   <button
+  key={attivita.id}
+  type="button"
+  onClick={() => {
+
+    console.log(
+      'ATTIVITA',
+      attivita
+    );
+
+  }}
+  className="
+    w-full
+    bg-white
+    rounded-xl
+    p-4
+    border
+    text-left
+    hover:bg-gray-50
+    transition
+  "
+>
 
       <h3 className="font-semibold text-gray-900">
         {attivita.nome}
@@ -774,7 +792,7 @@ export default function StazioniScreen({
         {attivita.categoria}
       </p>
 
-    </div>
+   </button>
 
   )
 )}
