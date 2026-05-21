@@ -218,12 +218,6 @@ console.log(
   attivita
 );
 
-.sort(
-  (
-    a: any,
-    b: any
-  ) => {
-
     const mediaA =
       a.valutazioni.length > 0
         ? a.valutazioni.reduce(
