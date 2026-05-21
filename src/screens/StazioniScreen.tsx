@@ -346,6 +346,12 @@ const [mioVoto, setMioVoto] =
   voto: number
 ) {
 
+    console.log(
+  'VOTO',
+  voto,
+  selectedAttivita
+);
+
   if (!selectedAttivita) {
     return;
   }
