@@ -760,18 +760,24 @@ export default function StazioniScreen({
 
                 <div className="flex flex-col gap-3">
 
-                  {stazione.attivita_stazione.map(
-                    (attivita: any) => (
+                 {stazione.attivita_stazione.map(
+  (attivita: any) => (
 
-                      <div
-                        key={attivita.id}
-                        className="bg-white rounded-xl p-4 border"
-                      >
-                        TEST CARD
-                      </div>
+    <AttivitaCard
+      key={attivita.id}
+      attivita={attivita}
+      onClick={() => {
 
-                    )
-                  )}
+        console.log(
+          'ATTIVITA',
+          attivita
+        );
+
+      }}
+    />
+
+  )
+)}
 
                 </div>
 
