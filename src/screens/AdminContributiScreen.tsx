@@ -56,43 +56,43 @@ export default function AdminContributiScreen() {
   // LOAD
   // =========================
 
-  async function load() {
+ async function load() {
 
-    setLoading(true);
+  setLoading(true);
 
-    const { data, error } =
-      await supabase
-        .from('contributi')
-        .select('*')
-        .order('created_at', {
-          ascending: false,
-        });
+  const { data, error } =
+    await supabase
+      .from('contributi')
+      .select('*')
+      .order('created_at', {
+        ascending: false,
+      });
 
-    if (!error) {
+  if (!error) {
 
-      setContributi(
-        data ?? []
-      );
-    }
-
-    setLoading(false);
+    setContributi(
+      data ?? []
+    );
   }
+
+  const {
+    data: stazioniData,
+  } = await supabase
+    .from('stazioni')
+    .select('id,nome');
+
+  setStazioni(
+    stazioniData || []
+  );
+
+  setLoading(false);
+}
 
   useEffect(() => {
 
     load();
 
   }, []);
-
-  const {
-  data: stazioniData,
-} = await supabase
-  .from('stazioni')
-  .select('id,nome');
-
-  setStazioni(
-  stazioniData || []
-);
   
   // =========================
   // UPDATE STATUS
