@@ -874,12 +874,19 @@ function addFasciaAdmin() {
       );
     }
 
-        if (
-      key === 'fasce_orarie'
-    ) {
+       if (
+  key === 'fasce_orarie'
+) {
 
-      return null;
-    }
+  return null;
+}
+
+if (
+  key === 'convenzionato'
+) {
+
+  return null;
+}
     
     return (
 
@@ -913,6 +920,7 @@ function addFasciaAdmin() {
               },
             })
           }
+
           className="
             border
             rounded-xl
@@ -1072,6 +1080,43 @@ function addFasciaAdmin() {
 
     )
   )}
+
+</div>
+
+            <div className="flex items-center gap-3">
+
+  <input
+    type="checkbox"
+    checked={
+      Boolean(
+        editingContributo
+          ?.dati
+          ?.convenzionato
+      )
+    }
+    onChange={(e) =>
+
+      setEditingContributo({
+
+        ...editingContributo,
+
+        dati: {
+
+          ...editingContributo.dati,
+
+          convenzionato:
+            e.target.checked,
+        },
+      })
+
+    }
+  />
+
+  <span className="font-medium">
+
+    Convenzionato Trenord
+
+  </span>
 
 </div>
             
