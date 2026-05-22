@@ -37,6 +37,16 @@ export default function AdminContributiScreen() {
   editingContributo,
   setEditingContributo,
 ] = useState<any>(null);
+
+  const giorniSettimana = [
+  'Lun',
+  'Mar',
+  'Mer',
+  'Gio',
+  'Ven',
+  'Sab',
+  'Dom',
+];
   
   // =========================
   // NORMALIZE
@@ -93,6 +103,106 @@ export default function AdminContributiScreen() {
     load();
 
   }, []);
+
+  function updateFasciaAdmin(
+  fasciaIndex: number,
+  field: string,
+  value: any
+) {
+
+  const nuoveFasce = [
+    ...(editingContributo
+      ?.dati
+      ?.fasce_orarie || [])
+  ];
+
+  nuoveFasce[fasciaIndex] = {
+
+    ...nuoveFasce[
+      fasciaIndex
+    ],
+
+    [field]: value,
+  };
+
+  setEditingContributo({
+
+    ...editingContributo,
+
+    dati: {
+
+      ...editingContributo.dati,
+
+      fasce_orarie:
+        nuoveFasce,
+    },
+  });
+}
+
+function toggleGiornoAdmin(
+  fasciaIndex: number,
+  giorno: string
+) {
+
+  const fascia =
+    editingContributo
+      ?.dati
+      ?.fasce_orarie?.[
+        fasciaIndex
+      ];
+
+  if (!fascia) return;
+
+  const giorni =
+    fascia.giorni.includes(
+      giorno
+    )
+      ? fascia.giorni.filter(
+          (
+            g: string
+          ) =>
+            g !== giorno
+        )
+      : [
+          ...fascia.giorni,
+          giorno,
+        ];
+
+  updateFasciaAdmin(
+    fasciaIndex,
+    'giorni',
+    giorni
+  );
+}
+
+function addFasciaAdmin() {
+
+  const nuoveFasce = [
+
+    ...(editingContributo
+      ?.dati
+      ?.fasce_orarie || []),
+
+    {
+      giorni: [],
+      apertura: '',
+      chiusura: '',
+    },
+  ];
+
+  setEditingContributo({
+
+    ...editingContributo,
+
+    dati: {
+
+      ...editingContributo.dati,
+
+      fasce_orarie:
+        nuoveFasce,
+    },
+  });
+}
   
   // =========================
   // UPDATE STATUS
@@ -761,6 +871,13 @@ export default function AdminContributiScreen() {
       );
     }
 
+        if (
+      key === 'fasce_orarie'
+    ) {
+
+      return null;
+    }
+    
     return (
 
       <div
@@ -812,6 +929,149 @@ export default function AdminContributiScreen() {
 
           <div className="flex flex-col gap-1">
 
+            <div className="flex flex-col gap-4">
+
+  <div className="flex items-center justify-between">
+
+    <h3 className="font-semibold">
+
+      Fasce orarie
+
+    </h3>
+
+    <button
+      type="button"
+      onClick={
+        addFasciaAdmin
+      }
+      className="
+        text-sm
+        text-trenord-green
+      "
+    >
+
+      + Aggiungi fascia
+
+    </button>
+
+  </div>
+
+  {(editingContributo
+    ?.dati
+    ?.fasce_orarie || []
+  ).map(
+    (
+      fascia: any,
+      index: number
+    ) => (
+
+      <div
+        key={index}
+        className="
+          border
+          rounded-2xl
+          p-4
+          flex
+          flex-col
+          gap-4
+        "
+      >
+
+        <div className="font-medium">
+
+          Fascia {index + 1}
+
+        </div>
+
+        <div className="grid grid-cols-4 gap-2">
+
+          {giorniSettimana.map(
+            (giorno) => {
+
+              const active =
+                fascia.giorni.includes(
+                  giorno
+                );
+
+              return (
+
+                <button
+                  key={giorno}
+                  type="button"
+                  onClick={() =>
+                    toggleGiornoAdmin(
+                      index,
+                      giorno
+                    )
+                  }
+                  className={`rounded-xl border py-2 text-sm ${
+                    active
+                      ? 'bg-trenord-green text-white'
+                      : 'bg-white'
+                  }`}
+                >
+
+                  {giorno}
+
+                </button>
+
+              );
+            }
+          )}
+
+        </div>
+
+        <div className="grid grid-cols-2 gap-3">
+
+          <input
+            type="time"
+            value={
+              fascia.apertura
+            }
+            onChange={(e) =>
+              updateFasciaAdmin(
+                index,
+                'apertura',
+                e.target.value
+              )
+            }
+            className="
+              border
+              rounded-xl
+              px-3
+              py-2
+            "
+          />
+
+          <input
+            type="time"
+            value={
+              fascia.chiusura
+            }
+            onChange={(e) =>
+              updateFasciaAdmin(
+                index,
+                'chiusura',
+                e.target.value
+              )
+            }
+            className="
+              border
+              rounded-xl
+              px-3
+              py-2
+            "
+          />
+
+        </div>
+
+      </div>
+
+    )
+  )}
+
+</div>
+            
   <label className="text-xs text-gray-500">
 
     Maps Query
