@@ -497,20 +497,60 @@ export default function AdminContributiScreen() {
 
               </div>
 
-              {/* JSON */}
-              <div className="bg-gray-50 rounded-xl border border-gray-100 p-3 overflow-auto">
+         {/* DATI CONTRIBUTO */}
+<div
+  className="
+    bg-gray-50
+    rounded-xl
+    border
+    border-gray-100
+    p-4
+    flex
+    flex-col
+    gap-3
+  "
+>
 
-                <pre className="text-xs text-gray-700 whitespace-pre-wrap">
+  {Object.entries(
+    c.dati || {}
+  ).map(
+    ([key, value]) => (
 
-                  {JSON.stringify(
-                    c.dati,
-                    null,
-                    2
-                  )}
+      <div
+        key={key}
+        className="
+          flex
+          justify-between
+          gap-4
+          text-sm
+        "
+      >
 
-                </pre>
+        <span
+          className="
+            font-medium
+            text-gray-500
+          "
+        >
+          {key}
+        </span>
 
-              </div>
+        <span
+          className="
+            text-gray-900
+            text-right
+            break-all
+          "
+        >
+          {String(value)}
+        </span>
+
+      </div>
+
+    )
+  )}
+
+</div>
 
               {/* DATE */}
               <div className="flex items-center gap-2 text-xs text-gray-400">
