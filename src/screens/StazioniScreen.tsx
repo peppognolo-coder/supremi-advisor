@@ -955,6 +955,20 @@ console.log(
     {attivita.categoria}
   </p>
 
+  {attivita.distanza_piedi && (
+
+  <div
+    className="
+      text-xs
+      text-gray-500
+      mt-1
+    "
+  >
+    🚶 {attivita.distanza_piedi}
+  </div>
+
+)}
+  
   {attivita.valutazioni &&
     attivita.valutazioni.length > 0 && (
 
