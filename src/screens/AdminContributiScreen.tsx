@@ -932,22 +932,17 @@ return (
 
         </label>
 
-        <input
+       <input
   value={String(value ?? '')}
-  onChange={(e) =>
-
+  onChange={(e) => {
     setEditingContributo({
       ...editingContributo,
-
       dati: {
         ...editingContributo.dati,
-
-        [key]:
-          e.target.value,
+        [key]: e.target.value,
       },
-    })
-
-  }
+    });
+  }}
   className="
     border
     rounded-xl
@@ -1334,6 +1329,8 @@ return (
   Salva modifiche
 
 </button>
+
+        </div>
 
       </div>
 
