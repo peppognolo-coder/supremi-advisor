@@ -1243,6 +1243,27 @@ console.log(
 
 </p>
 
+      {selectedAttivita.distanza_piedi && (
+
+  <div
+    className="
+      flex
+      items-center
+      gap-2
+      text-gray-600
+      mb-4
+    "
+  >
+    <span>🚶</span>
+
+    <span>
+      {selectedAttivita.distanza_piedi}
+    </span>
+
+  </div>
+
+)}
+      
 <div className="mt-4">
 
   <div className="flex items-center gap-2">
