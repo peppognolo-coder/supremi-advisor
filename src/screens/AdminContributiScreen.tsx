@@ -747,6 +747,45 @@ export default function AdminContributiScreen() {
 
           </div>
 
+          <div className="flex flex-col gap-1">
+
+  <label className="text-xs text-gray-500">
+
+    Maps Query
+
+  </label>
+
+  <input
+    value={
+      editingContributo.dati
+        ?.maps_query || ''
+    }
+    onChange={(e) =>
+
+      setEditingContributo({
+
+        ...editingContributo,
+
+        dati: {
+
+          ...editingContributo.dati,
+
+          maps_query:
+            e.target.value,
+        },
+      })
+
+    }
+    className="
+      border
+      rounded-xl
+      px-3
+      py-2
+    "
+  />
+
+</div>
+          
           <button
             onClick={() =>
               console.log(
