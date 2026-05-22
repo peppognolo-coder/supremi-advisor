@@ -933,28 +933,28 @@ return (
         </label>
 
         <input
-          value={String(value ?? '')}
-          onChange={(e) =>
+  value={String(value ?? '')}
+  onChange={(e) =>
 
-            setEditingContributo({
-              ...editingContributo,
+    setEditingContributo({
+      ...editingContributo,
 
-              dati: {
-                ...editingContributo.dati,
+      dati: {
+        ...editingContributo.dati,
 
-                [key]:
-                  e.target.value,
-              },
-            })
-          }
+        [key]:
+          e.target.value,
+      },
+    })
 
-          className="
-            border
-            rounded-xl
-            px-3
-            py-2
-          "
-        />
+  }
+  className="
+    border
+    rounded-xl
+    px-3
+    py-2
+  "
+/>
 
       </div>
 
@@ -965,9 +965,7 @@ return (
 
           </div>
 
-          <div className="flex flex-col gap-1">
-
-            <div className="flex flex-col gap-4">
+         <div className="flex flex-col gap-4">
 
   <div className="flex items-center justify-between">
 
