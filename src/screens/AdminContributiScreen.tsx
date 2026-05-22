@@ -874,7 +874,7 @@ function addFasciaAdmin() {
       );
     }
 
-       if (
+if (
   key === 'fasce_orarie'
 ) {
 
@@ -887,8 +887,22 @@ if (
 
   return null;
 }
-    
-    return (
+
+if (
+  key === 'categoria'
+) {
+
+  return null;
+}
+
+if (
+  key === 'distanza_piedi'
+) {
+
+  return null;
+}
+
+return (
 
       <div
         key={key}
@@ -1117,6 +1131,138 @@ if (
     Convenzionato Trenord
 
   </span>
+
+</div>
+
+            <div className="flex flex-col gap-1">
+
+  <label className="text-xs text-gray-500">
+
+    Categoria
+
+  </label>
+
+  <select
+    value={
+      editingContributo
+        ?.dati
+        ?.categoria || ''
+    }
+    onChange={(e) =>
+
+      setEditingContributo({
+
+        ...editingContributo,
+
+        dati: {
+
+          ...editingContributo.dati,
+
+          categoria:
+            e.target.value,
+        },
+      })
+
+    }
+    className="
+      border
+      rounded-xl
+      px-3
+      py-2
+    "
+  >
+
+    <option value="Bar">
+      Bar
+    </option>
+
+    <option value="Fast Food">
+      Fast Food
+    </option>
+
+    <option value="Market">
+      Market
+    </option>
+
+    <option value="Ristorante">
+      Ristorante
+    </option>
+
+    <option value="Farmacia">
+      Farmacia
+    </option>
+
+    <option value="Tabacchi">
+      Tabacchi
+    </option>
+
+    <option value="Hotel">
+      Hotel
+    </option>
+
+    <option value="Altro">
+      Altro
+    </option>
+
+  </select>
+
+</div>
+
+            <div className="flex flex-col gap-1">
+
+  <label className="text-xs text-gray-500">
+
+    Distanza a piedi
+
+  </label>
+
+  <select
+    value={
+      editingContributo
+        ?.dati
+        ?.distanza_piedi || ''
+    }
+    onChange={(e) =>
+
+      setEditingContributo({
+
+        ...editingContributo,
+
+        dati: {
+
+          ...editingContributo.dati,
+
+          distanza_piedi:
+            e.target.value,
+        },
+      })
+
+    }
+    className="
+      border
+      rounded-xl
+      px-3
+      py-2
+    "
+  >
+
+    <option value="Entro 2 minuti">
+      Entro 2 minuti
+    </option>
+
+    <option value="Entro 5 minuti">
+      Entro 5 minuti
+    </option>
+
+    <option value="Entro 10 minuti">
+      Entro 10 minuti
+    </option>
+
+    <option value="Oltre 10 minuti">
+      Oltre 10 minuti
+    </option>
+
+  </select>
 
 </div>
             
