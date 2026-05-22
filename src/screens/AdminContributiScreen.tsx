@@ -203,6 +203,51 @@ function addFasciaAdmin() {
     },
   });
 }
+
+  async function saveContributoModificato() {
+
+  if (!editingContributo) {
+
+    return;
+  }
+
+  const { error } =
+    await supabase
+
+      .from('contributi')
+
+      .update({
+
+        dati:
+          editingContributo.dati,
+      })
+
+      .eq(
+        'id',
+        editingContributo.id
+      );
+
+  if (error) {
+
+    console.error(error);
+
+    alert(
+      'Errore salvataggio'
+    );
+
+    return;
+  }
+
+  await load();
+
+  setEditingContributo(
+    null
+  );
+
+  alert(
+    'Modifiche salvate'
+  );
+}
   
   // =========================
   // UPDATE STATUS
@@ -1303,24 +1348,22 @@ return (
 
 </div>
           
-          <button
-            onClick={() =>
-              console.log(
-                editingContributo
-              )
-            }
-            className="
-              bg-blue-600
-              text-white
-              rounded-xl
-              py-3
-              font-medium
-            "
-          >
+         <button
+  onClick={
+    saveContributoModificato
+  }
+  className="
+    bg-blue-600
+    text-white
+    rounded-xl
+    py-3
+    font-medium
+  "
+>
 
-            Salva modifiche
+  Salva modifiche
 
-          </button>
+</button>
 
         </div>
 
