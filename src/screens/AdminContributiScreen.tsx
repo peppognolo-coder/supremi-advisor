@@ -428,43 +428,40 @@ function addFasciaAdmin() {
   const dati =
     contributo.dati;
 
-  await supabase
-    .from('attivita_stazione')
-    .insert({
+ await supabase
+  .from('attivita_stazione')
+  .insert({
 
-      stazione_id:
-        dati.stazione_id,
+    stazione_id:
+      dati.stazione_id,
 
-      nome:
-        dati.nome,
+    nome:
+      dati.nome,
 
-      categoria:
-        dati.categoria,
+    categoria:
+      dati.categoria,
 
-      indirizzo:
-        dati.indirizzo,
+    indirizzo:
+      dati.indirizzo,
 
-     distanza_piedi:
-  dati.distanza_piedi,
+    maps_query:
+      dati.maps_query,
 
-      ubicazione:
-        dati.ubicazione,
+    distanza_piedi:
+      dati.distanza_piedi,
 
-      note:
-        dati.note,
+    ubicazione:
+      dati.ubicazione,
 
-      convenzionato:
-        dati.convenzionato,
+    note:
+      dati.note,
 
-      giorni_apertura:
-        dati.giorni_apertura,
+    convenzionato:
+      dati.convenzionato,
 
-      orario_apertura:
-        dati.apertura,
-
-      orario_chiusura:
-        dati.chiusura,
-    });
+    fasce_orarie:
+      dati.fasce_orarie,
+  });
 }
 
         const dati =
