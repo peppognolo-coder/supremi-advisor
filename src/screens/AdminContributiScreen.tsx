@@ -1250,27 +1250,17 @@ return (
 
 <select
   value={
-    editingContributo
-      ?.dati
-      ?.distanza_piedi || ''
+    editingContributo?.dati?.distanza_piedi || ''
   }
   onChange={(e) =>
-
     setEditingContributo({
-
       ...editingContributo,
-
       dati: {
-
         ...editingContributo.dati,
-
-        distanza_piedi:
-          e.target.value,
+        distanza_piedi: e.target.value,
       },
     })
-
   }
-}
   className="
     border
     rounded-xl
@@ -1279,23 +1269,23 @@ return (
   "
 >
 
-    <option value="Entro 2 minuti">
-      Entro 2 minuti
-    </option>
+  <option value="Entro 2 minuti">
+    Entro 2 minuti
+  </option>
 
-    <option value="Entro 5 minuti">
-      Entro 5 minuti
-    </option>
+  <option value="Entro 5 minuti">
+    Entro 5 minuti
+  </option>
 
-    <option value="Entro 10 minuti">
-      Entro 10 minuti
-    </option>
+  <option value="Entro 10 minuti">
+    Entro 10 minuti
+  </option>
 
-    <option value="Oltre 10 minuti">
-      Oltre 10 minuti
-    </option>
+  <option value="Oltre 10 minuti">
+    Oltre 10 minuti
+  </option>
 
-  </select>
+</select>
 
 </div>
             
