@@ -204,6 +204,37 @@ function addFasciaAdmin() {
   });
 }
 
+  function removeFasciaAdmin(
+  fasciaIndex: number
+) {
+
+  const nuoveFasce =
+    (
+      editingContributo
+        ?.dati
+        ?.fasce_orarie || []
+    ).filter(
+      (
+        _: any,
+        index: number
+      ) =>
+        index !== fasciaIndex
+    );
+
+  setEditingContributo({
+
+    ...editingContributo,
+
+    dati: {
+
+      ...editingContributo.dati,
+
+      fasce_orarie:
+        nuoveFasce,
+    },
+  });
+}
+  
   async function saveContributoModificato() {
 
   if (!editingContributo) {
@@ -1047,11 +1078,39 @@ return (
         "
       >
 
-        <div className="font-medium">
+       <div className="flex items-center justify-between">
 
-          Fascia {index + 1}
+  <div className="font-medium">
 
-        </div>
+    Fascia {index + 1}
+
+  </div>
+
+  {(editingContributo
+    ?.dati
+    ?.fasce_orarie
+    ?.length || 0) > 1 && (
+
+    <button
+      type="button"
+      onClick={() =>
+        removeFasciaAdmin(
+          index
+        )
+      }
+      className="
+        text-red-600
+        text-sm
+      "
+    >
+
+      Elimina
+
+    </button>
+
+  )}
+
+</div>
 
         <div className="grid grid-cols-4 gap-2">
 
