@@ -30,6 +30,11 @@ export default function AdminContributiScreen() {
   const [contributi, setContributi] =
     useState<Contributo[]>([]);
 
+  const [
+  editingContributo,
+  setEditingContributo,
+] = useState<any>(null);
+  
   // =========================
   // NORMALIZE
   // =========================
@@ -398,8 +403,10 @@ export default function AdminContributiScreen() {
   // UI
   // =========================
 
-  return (
+ return (
 
+  <>
+  
     <div className="flex flex-col gap-4">
 
       {/* TITLE */}
@@ -571,6 +578,28 @@ export default function AdminContributiScreen() {
 
                 <div className="flex gap-2">
 
+                  <button
+  onClick={() =>
+    setEditingContributo(c)
+  }
+  className="
+    flex
+    items-center
+    gap-2
+    px-4
+    py-2
+    rounded-xl
+    bg-blue-600
+    text-white
+    text-sm
+    font-medium
+  "
+>
+
+  Modifica
+
+</button>
+                  
                   {/* APPROVE */}
                   <button
                     onClick={() =>
@@ -612,8 +641,137 @@ export default function AdminContributiScreen() {
           )
         )}
 
-      </div>
+            </div>
 
     </div>
-  );
+
+    {editingContributo && (
+
+      <div
+        className="
+          fixed
+          inset-0
+          bg-black/40
+          z-50
+          flex
+          items-center
+          justify-center
+          p-4
+        "
+      >
+
+        <div
+          className="
+            bg-white
+            rounded-3xl
+            w-full
+            max-w-2xl
+            p-6
+            flex
+            flex-col
+            gap-4
+          "
+        >
+
+          <div className="flex items-center justify-between">
+
+            <h2 className="text-xl font-bold">
+
+              Modifica contributo
+
+            </h2>
+
+            <button
+              onClick={() =>
+                setEditingContributo(
+                  null
+                )
+              }
+            >
+
+              <X className="w-5 h-5" />
+
+            </button>
+
+          </div>
+
+          <div className="grid gap-3">
+
+            {Object.entries(
+              editingContributo.dati || {}
+            ).map(
+              ([key, value]) => (
+
+                <div
+                  key={key}
+                  className="
+                    flex
+                    flex-col
+                    gap-1
+                  "
+                >
+
+                  <label className="text-xs text-gray-500">
+
+                    {key}
+
+                  </label>
+
+                  <input
+                    value={String(value ?? '')}
+                    onChange={(e) =>
+
+                      setEditingContributo({
+                        ...editingContributo,
+
+                        dati: {
+                          ...editingContributo.dati,
+
+                          [key]:
+                            e.target.value,
+                        },
+                      })
+                    }
+                    className="
+                      border
+                      rounded-xl
+                      px-3
+                      py-2
+                    "
+                  />
+
+                </div>
+
+              )
+            )}
+
+          </div>
+
+          <button
+            onClick={() =>
+              console.log(
+                editingContributo
+              )
+            }
+            className="
+              bg-blue-600
+              text-white
+              rounded-xl
+              py-3
+              font-medium
+            "
+          >
+
+            Salva modifiche
+
+          </button>
+
+        </div>
+
+      </div>
+
+    )}
+
+  </>
+);
 }
