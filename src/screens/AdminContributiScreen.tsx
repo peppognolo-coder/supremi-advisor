@@ -30,6 +30,9 @@ export default function AdminContributiScreen() {
   const [contributi, setContributi] =
     useState<Contributo[]>([]);
 
+  const [stazioni, setStazioni] =
+  useState<any[]>([]);
+
   const [
   editingContributo,
   setEditingContributo,
@@ -81,6 +84,16 @@ export default function AdminContributiScreen() {
 
   }, []);
 
+  const {
+  data: stazioniData,
+} = await supabase
+  .from('stazioni')
+  .select('id,nome');
+
+  setStazioni(
+  stazioniData || []
+);
+  
   // =========================
   // UPDATE STATUS
   // =========================
@@ -697,13 +710,103 @@ export default function AdminContributiScreen() {
 
           <div className="grid gap-3">
 
-            {Object.entries(
-              editingContributo.dati || {}
-            ).map(
-              ([key, value]) => (
+           {Object.entries(
+  editingContributo.dati || {}
+).map(
+  ([key, value]) => {
 
-                <div
-                  key={key}
+    if (
+      key === 'stazione_id'
+    ) {
+
+      const stazione =
+        stazioni.find(
+          (s) =>
+            s.id === value
+        );
+
+      return (
+
+        <div
+          key={key}
+          className="
+            flex
+            flex-col
+            gap-1
+          "
+        >
+
+          <label className="text-xs text-gray-500">
+
+            Stazione
+
+          </label>
+
+          <input
+            value={
+              stazione?.nome || ''
+            }
+            disabled
+            className="
+              border
+              rounded-xl
+              px-3
+              py-2
+              bg-gray-100
+            "
+          />
+
+        </div>
+
+      );
+    }
+
+    return (
+
+      <div
+        key={key}
+        className="
+          flex
+          flex-col
+          gap-1
+        "
+      >
+
+        <label className="text-xs text-gray-500">
+
+          {key}
+
+        </label>
+
+        <input
+          value={String(value ?? '')}
+          onChange={(e) =>
+
+            setEditingContributo({
+              ...editingContributo,
+
+              dati: {
+                ...editingContributo.dati,
+
+                [key]:
+                  e.target.value,
+              },
+            })
+          }
+          className="
+            border
+            rounded-xl
+            px-3
+            py-2
+          "
+        />
+
+      </div>
+
+    );
+
+  }
+)}
                   className="
                     flex
                     flex-col
