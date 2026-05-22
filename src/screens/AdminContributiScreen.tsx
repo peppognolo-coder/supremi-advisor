@@ -428,155 +428,95 @@ function addFasciaAdmin() {
   const dati =
     contributo.dati;
 
- await supabase
-  .from('attivita_stazione')
-  .insert({
+  const {
+    data: existing,
+  } = await supabase
+    .from('attivita_stazione')
+    .select('id')
+    .eq(
+      'stazione_id',
+      dati.stazione_id
+    )
+    .eq(
+      'nome',
+      dati.nome
+    )
+    .maybeSingle();
 
-    stazione_id:
-      dati.stazione_id,
+  if (existing) {
 
-    nome:
-      dati.nome,
+    await supabase
+      .from('attivita_stazione')
+      .update({
 
-    categoria:
-      dati.categoria,
+        categoria:
+          dati.categoria,
 
-    indirizzo:
-      dati.indirizzo,
+        indirizzo:
+          dati.indirizzo,
 
-    maps_query:
-      dati.maps_query,
+        maps_query:
+          dati.maps_query,
 
-    distanza_piedi:
-      dati.distanza_piedi,
+        distanza_piedi:
+          dati.distanza_piedi,
 
-    ubicazione:
-      dati.ubicazione,
+        ubicazione:
+          dati.ubicazione,
 
-    note:
-      dati.note,
+        note:
+          dati.note,
 
-    convenzionato:
-      dati.convenzionato,
+        convenzionato:
+          dati.convenzionato,
 
-    fasce_orarie:
-      dati.fasce_orarie,
-  });
+        fasce_orarie:
+          dati.fasce_orarie,
+      })
+      .eq(
+        'id',
+        existing.id
+      );
+
+  } else {
+
+    await supabase
+      .from('attivita_stazione')
+      .insert({
+
+        stazione_id:
+          dati.stazione_id,
+
+        nome:
+          dati.nome,
+
+        categoria:
+          dati.categoria,
+
+        indirizzo:
+          dati.indirizzo,
+
+        maps_query:
+          dati.maps_query,
+
+        distanza_piedi:
+          dati.distanza_piedi,
+
+        ubicazione:
+          dati.ubicazione,
+
+        note:
+          dati.note,
+
+        convenzionato:
+          dati.convenzionato,
+
+        fasce_orarie:
+          dati.fasce_orarie,
+      });
+
+  }
 }
-
-        const dati =
-          contributo.dati;
-
-        const groupId =
-          normalizeGroupId(
-            dati.nome
-          );
-
-        // CERCA ATTIVITA
-        const {
-          data: existing,
-        } = await supabase
-          .from('attivita')
-          .select('*')
-          .eq(
-            'activity_group_id',
-            groupId
-          )
-          .maybeSingle();
-
-        // =========================
-        // UPDATE
-        // =========================
-
-        if (existing) {
-
-          await supabase
-            .from('attivita')
-            .update({
-
-              categoria:
-                dati.categoria,
-
-              indirizzo:
-                dati.indirizzo,
-
-              convenzione:
-                dati.convenzione,
-
-              sconto:
-                dati.sconto,
-
-              telefono:
-                dati.telefono,
-
-              sito_web:
-                dati.sito_web,
-
-              giorni_apertura:
-                dati.giorni_apertura,
-
-              apertura:
-                dati.apertura,
-
-              chiusura:
-                dati.chiusura,
-
-              note:
-                dati.note,
-            })
-            .eq(
-              'id',
-              existing.id
-            );
-
-        } else {
-
-          // =========================
-          // INSERT
-          // =========================
-
-          await supabase
-            .from('attivita')
-            .insert({
-
-              activity_group_id:
-                groupId,
-
-              nome:
-                dati.nome,
-
-              categoria:
-                dati.categoria,
-
-              indirizzo:
-                dati.indirizzo,
-
-              convenzione:
-                dati.convenzione,
-
-              sconto:
-                dati.sconto,
-
-              telefono:
-                dati.telefono,
-
-              sito_web:
-                dati.sito_web,
-
-              giorni_apertura:
-                dati.giorni_apertura,
-
-              apertura:
-                dati.apertura,
-
-              chiusura:
-                dati.chiusura,
-
-              note:
-                dati.note,
-            });
-        }
-      }
 
     // =========================
     // UPDATE STATUS
