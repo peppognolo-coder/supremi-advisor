@@ -1313,34 +1313,26 @@ return (
 
   </label>
 
-  <input
-    value={
-      editingContributo.dati
-        ?.maps_query || ''
-    }
-    onChange={(e) =>
-
-      setEditingContributo({
-
-        ...editingContributo,
-
-        dati: {
-
-          ...editingContributo.dati,
-
-          maps_query:
-            e.target.value,
-        },
-      })
-
-    }
-    className="
-      border
-      rounded-xl
-      px-3
-      py-2
-    "
-  />
+ <input
+  value={
+    editingContributo.dati?.maps_query || ''
+  }
+  onChange={(e) =>
+    setEditingContributo({
+      ...editingContributo,
+      dati: {
+        ...editingContributo.dati,
+        maps_query: e.target.value,
+      },
+    })
+  }
+  className="
+    border
+    rounded-xl
+    px-3
+    py-2
+  "
+/>
 
 </div>
           
