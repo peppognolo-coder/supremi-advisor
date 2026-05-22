@@ -1184,34 +1184,25 @@ return (
   </label>
 
   <select
-    value={
-      editingContributo
-        ?.dati
-        ?.categoria || ''
-    }
-    onChange={(e) =>
-
-      setEditingContributo({
-
-        ...editingContributo,
-
-        dati: {
-
-          ...editingContributo.dati,
-
-          categoria:
-            e.target.value,
-        },
-      })
-
-    }
-    className="
-      border
-      rounded-xl
-      px-3
-      py-2
-    "
-  >
+  value={
+    editingContributo?.dati?.categoria || ''
+  }
+  onChange={(e) =>
+    setEditingContributo({
+      ...editingContributo,
+      dati: {
+        ...editingContributo.dati,
+        categoria: e.target.value,
+      },
+    })
+  }
+  className="
+    border
+    rounded-xl
+    px-3
+    py-2
+  "
+>
 
     <option value="Bar">
       Bar
@@ -1257,35 +1248,36 @@ return (
 
   </label>
 
-  <select
-    value={
-      editingContributo
-        ?.dati
-        ?.distanza_piedi || ''
-    }
-    onChange={(e) =>
+<select
+  value={
+    editingContributo
+      ?.dati
+      ?.distanza_piedi || ''
+  }
+  onChange={(e) =>
 
-      setEditingContributo({
+    setEditingContributo({
 
-        ...editingContributo,
+      ...editingContributo,
 
-        dati: {
+      dati: {
 
-          ...editingContributo.dati,
+        ...editingContributo.dati,
 
-          distanza_piedi:
-            e.target.value,
-        },
-      })
+        distanza_piedi:
+          e.target.value,
+      },
+    })
 
-    }
-    className="
-      border
-      rounded-xl
-      px-3
-      py-2
-    "
-  >
+  }
+}
+  className="
+    border
+    rounded-xl
+    px-3
+    py-2
+  "
+>
 
     <option value="Entro 2 minuti">
       Entro 2 minuti
