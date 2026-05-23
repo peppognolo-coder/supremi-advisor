@@ -3,11 +3,6 @@ import { useState, useEffect } from 'react';
 import {
   Search,
   MapPin,
-  Coffee,
-  Pill,
-  ShoppingCart,
-  Cigarette,
-  Store,
   Star,
   ChevronDown,
   ChevronUp,
@@ -41,31 +36,15 @@ import AddAttivitaModal from '../components/AddAttivitaModal';
 
 import SkeletonCard from '../components/SkeletonCard';
 
-function getCategoriaIcon(
-  categoria: string
-) {
+import {
+  getStatoApertura,
+} from '../lib/getStatoApertura';
 
-  switch (categoria) {
-
-    case 'bar':
-      return Coffee;
-
-    case 'fast_food':
-      return Store;
-
-    case 'supermercato':
-      return ShoppingCart;
-
-    case 'farmacia':
-      return Pill;
-
-    case 'tabacchi':
-      return Cigarette;
-
-    default:
-      return Store;
-  }
-}
+import {
+  sortAttivita,
+  SORT_OPTIONS,
+  type SortMode,
+} from '../lib/sortAttivita';
 
 interface Props {
 
@@ -77,9 +56,7 @@ export default function StazioniScreen({
 }: Props) {
 
   const [stazioni, setStazioni] =
-    useState<
-      StazioneWithSalette[]
-    >([]);
+    useState<StazioneWithSalette[]>([]);
 
   const [loading, setLoading] =
     useState(true);
@@ -90,8 +67,10 @@ export default function StazioniScreen({
   const [favorites, setFavorites] =
     useState<string[]>([]);
 
-  const [favoritesExpanded, setFavoritesExpanded] =
-    useState(true);
+  const [
+    favoritesExpanded,
+    setFavoritesExpanded,
+  ] = useState(true);
 
   const [expandedId, setExpandedId] =
     useState<string | null>(null);
@@ -111,16 +90,43 @@ export default function StazioniScreen({
     useState(false);
 
   const [selectedAttivita, setSelectedAttivita] =
-  useState<any>(null);
+    useState<any>(null);
 
   const [mediaRating, setMediaRating] =
-  useState<number>(0);
+    useState<number>(0);
 
-const [numeroVoti, setNumeroVoti] =
-  useState<number>(0);
+  const [numeroVoti, setNumeroVoti] =
+    useState<number>(0);
 
-const [mioVoto, setMioVoto] =
-  useState<number>(0);
+  const [mioVoto, setMioVoto] =
+    useState<number>(0);
+
+  // sortMode per stazione: Map<stazioneId, SortMode>
+  const [sortModes, setSortModes] =
+    useState<
+      Record<string, SortMode>
+    >({});
+
+  function getSortMode(
+    stazioneId: string
+  ): SortMode {
+
+    return (
+      sortModes[stazioneId] ??
+      'aperte'
+    );
+  }
+
+  function setSortModeForStazione(
+    stazioneId: string,
+    mode: SortMode
+  ) {
+
+    setSortModes((prev) => ({
+      ...prev,
+      [stazioneId]: mode,
+    }));
+  }
 
   // =========================
   // LOAD
@@ -147,188 +153,131 @@ const [mioVoto, setMioVoto] =
         data: attivitaData,
       } = await supabase
         .from('attivita_stazione')
-        .select('*');
+        .select('*')
+        .eq('is_active', true);
 
-     const {
-  data: valutazioniData,
-} = await supabase
-  .from(
-    'attivita_rating'
-  )
-  .select('*');
+      const {
+        data: valutazioniData,
+      } = await supabase
+        .from('attivita_rating')
+        .select('*');
 
       const merged =
         (stazioniData ?? [])
 
-          // rimuovi stazioni senza coordinate
           .filter(
-            (s: any) =>
-              s.lat &&
-              s.lng
+            (s: any) => s.lat && s.lng
           )
 
           .map(
             (stazione: any) => {
 
-const attivita =
-  (
-    attivitaData ?? []
-  )
+              const attivita =
+                (attivitaData ?? [])
 
-    .map(
-      (
-        attivita: any
-      ) => {
+                  .map(
+                    (attivita: any) => {
 
-        const valutazioni =
-          (
-            valutazioniData ??
-            []
-          ).filter(
-            (
-              valutazione: any
-            ) =>
-              valutazione.attivita_id ===
-              attivita.id
-          );
+                      const valutazioni =
+                        (
+                          valutazioniData ?? []
+                        ).filter(
+                          (v: any) =>
+                            v.attivita_id ===
+                            attivita.id
+                        );
 
-        return {
-          ...attivita,
-          valutazioni,
-        };
-      }
-    )
+                      return {
+                        ...attivita,
+                        valutazioni,
+                      };
+                    }
+                  )
 
-    .filter(
-      (
-        attivita: AttivitaStazione
-      ) =>
-        attivita.stazione_id ===
-        stazione.id
-    )
+                  .filter(
+                    (a: AttivitaStazione) =>
+                      a.stazione_id ===
+                      stazione.id
+                  )
 
-    .sort(
-      (
-        a: any,
-        b: any
-      ) => {
+                  .sort(
+                    (a: any, b: any) => {
 
-        const mediaA =
-          a.valutazioni.length > 0
-            ? a.valutazioni.reduce(
-                (
-                  sum: number,
-                  voto: any
-                ) =>
-                  sum + voto.voto,
-                0
-              ) /
-              a.valutazioni.length
-            : 0;
+                      const mediaA =
+                        a.valutazioni.length > 0
+                          ? a.valutazioni.reduce(
+                              (sum: number, v: any) =>
+                                sum + v.voto,
+                              0
+                            ) /
+                            a.valutazioni.length
+                          : 0;
 
-        const mediaB =
-          b.valutazioni.length > 0
-            ? b.valutazioni.reduce(
-                (
-                  sum: number,
-                  voto: any
-                ) =>
-                  sum + voto.voto,
-                0
-              ) /
-              b.valutazioni.length
-            : 0;
+                      const mediaB =
+                        b.valutazioni.length > 0
+                          ? b.valutazioni.reduce(
+                              (sum: number, v: any) =>
+                                sum + v.voto,
+                              0
+                            ) /
+                            b.valutazioni.length
+                          : 0;
 
-        return mediaB - mediaA;
-      }
-    );
-
-console.log(
-  'STAZIONE',
-  stazione.nome,
-  stazione.id
-);
-
-console.log(
-  'ATTIVITA',
-  attivita
-);
+                      return mediaB - mediaA;
+                    }
+                  );
 
               return {
                 ...stazione,
                 salette: [],
-                attivita_stazione:
-                  attivita,
+                attivita_stazione: attivita,
               };
             }
           )
 
-          // SORT
-          .sort((a: any, b: any) => {
+          .sort(
+            (a: any, b: any) => {
 
-            // FAVORITES FIRST
-            const aFav =
-              favorites.includes(
-                a.id
-              );
+              const aFav =
+                favorites.includes(a.id);
 
-            const bFav =
-              favorites.includes(
-                b.id
-              );
+              const bFav =
+                favorites.includes(b.id);
 
-            if (
-              aFav &&
-              !bFav
-            )
-              return -1;
+              if (aFav && !bFav) return -1;
+              if (!aFav && bFav) return 1;
 
-            if (
-              !aFav &&
-              bFav
-            )
-              return 1;
+              if (
+                userLocation &&
+                a.lat && a.lng &&
+                b.lat && b.lng
+              ) {
 
-            // NEAREST
-            if (
-              userLocation &&
-              a.lat &&
-              a.lng &&
-              b.lat &&
-              b.lng
-            ) {
+                const aDist =
+                  calculateDistance(
+                    userLocation.lat,
+                    userLocation.lng,
+                    Number(a.lat),
+                    Number(a.lng)
+                  );
 
-              const aDist =
-                calculateDistance(
+                const bDist =
+                  calculateDistance(
+                    userLocation.lat,
+                    userLocation.lng,
+                    Number(b.lat),
+                    Number(b.lng)
+                  );
 
-                  userLocation.lat,
-                  userLocation.lng,
+                return aDist - bDist;
+              }
 
-                  Number(a.lat),
-                  Number(a.lng)
-                );
-
-              const bDist =
-                calculateDistance(
-
-                  userLocation.lat,
-                  userLocation.lng,
-
-                  Number(b.lat),
-                  Number(b.lng)
-                );
-
-              return (
-                aDist - bDist
+              return a.nome.localeCompare(
+                b.nome,
+                'it'
               );
             }
-
-            // ALPHABETIC
-            return a.nome.localeCompare(
-              b.nome,
-              'it'
-            );
-          });
+          );
 
       setStazioni(merged);
 
@@ -346,101 +295,82 @@ console.log(
     }
   }
 
+  // =========================
+  // LOAD RATING
+  // =========================
+
   async function loadRating(
-  attivitaId: string
-) {
+    attivitaId: string
+  ) {
 
-  const { data } =
-    await supabase
-      .from('attivita_rating')
-      .select('*')
-      .eq(
-        'attivita_id',
-        attivitaId
-      );
+    const { data } =
+      await supabase
+        .from('attivita_rating')
+        .select('*')
+        .eq('attivita_id', attivitaId);
 
-  const voti =
-    data || [];
+    const voti = data || [];
 
-  const media =
-    voti.length > 0
-      ? voti.reduce(
-          (sum, voto) =>
-            sum + voto.voto,
-          0
-        ) / voti.length
-      : 0;
+    const media =
+      voti.length > 0
+        ? voti.reduce(
+            (sum, v) => sum + v.voto,
+            0
+          ) / voti.length
+        : 0;
 
-  setMediaRating(media);
+    setMediaRating(media);
 
-  setNumeroVoti(
-    voti.length
-  );
+    setNumeroVoti(voti.length);
 
-  const mioRecord =
-    voti.find(
-      (v) =>
-        v.device_id ===
-        getDeviceId()
+    const mioRecord = voti.find(
+      (v) => v.device_id === getDeviceId()
     );
 
-  setMioVoto(
-    mioRecord?.voto || 0
-  );
-}
+    setMioVoto(mioRecord?.voto || 0);
+  }
+
+  // =========================
+  // VOTE
+  // =========================
 
   async function voteAttivita(
-  voto: number
-) {
+    voto: number
+  ) {
 
-    console.log(
-  'VOTO',
-  voto,
-  selectedAttivita
-);
+    if (!selectedAttivita) return;
 
-  if (!selectedAttivita) {
-    return;
-  }
+    const { error } =
+      await supabase
+        .from('attivita_rating')
+        .upsert(
+          {
+            attivita_id:
+              selectedAttivita.id,
+            device_id: getDeviceId(),
+            voto,
+            updated_at:
+              new Date().toISOString(),
+          },
+          {
+            onConflict:
+              'attivita_id,device_id',
+          }
+        );
 
-  const { error } =
-    await supabase
-      .from('attivita_rating')
-      .upsert(
-        {
-          attivita_id:
-            selectedAttivita.id,
+    if (error) {
 
-          device_id:
-            getDeviceId(),
+      console.error(error);
 
-          voto,
+      return;
+    }
 
-          updated_at:
-            new Date()
-              .toISOString(),
-        },
-        {
-          onConflict:
-            'attivita_id,device_id',
-        }
-      );
+    setMioVoto(voto);
 
-  if (error) {
-
-    console.error(
-      error
+    await loadRating(
+      selectedAttivita.id
     );
-
-    return;
   }
-
-  setMioVoto(voto);
-
-  await loadRating(
-    selectedAttivita.id
-  );
-}
 
   // =========================
   // INIT GEOLOCATION
@@ -448,8 +378,7 @@ console.log(
 
   useEffect(() => {
 
-    const favs =
-      getFavorites();
+    const favs = getFavorites();
 
     setFavorites(favs);
 
@@ -460,9 +389,7 @@ console.log(
         const location =
           await getCurrentLocation();
 
-        setUserLocation(
-          location
-        );
+        setUserLocation(location);
 
       } catch {
 
@@ -472,9 +399,7 @@ console.log(
 
       } finally {
 
-        setLocationReady(
-          true
-        );
+        setLocationReady(true);
       }
     }
 
@@ -488,9 +413,7 @@ console.log(
 
   useEffect(() => {
 
-    // aspetta geolocalizzazione
-    if (!locationReady)
-      return;
+    if (!locationReady) return;
 
     load();
 
@@ -509,199 +432,76 @@ console.log(
 
     const channel =
       supabase
-
-        .channel(
-          'realtime-stazioni'
-        )
-
-        // STAZIONI
+        .channel('realtime-stazioni')
         .on(
           'postgres_changes',
-
           {
             event: '*',
             schema: 'public',
             table: 'stazioni',
           },
-
           () => {
-
-            console.log(
-              'Realtime stazioni'
-            );
-
             load(true);
-
             toast.success(
               'Stazioni aggiornate'
             );
           }
         )
-
-        // ATTIVITA
         .on(
           'postgres_changes',
-
           {
             event: '*',
             schema: 'public',
-            table:
-              'attivita_stazione',
+            table: 'attivita_stazione',
           },
-
           () => {
-
-            console.log(
-              'Realtime attività'
-            );
-
             load(true);
-
             toast.success(
               'Nuova attività disponibile'
             );
           }
         )
-
-        // VALUTAZIONI
         .on(
           'postgres_changes',
-
           {
             event: '*',
             schema: 'public',
-            table:
-              'attivita_valutazioni',
+            table: 'attivita_valutazioni',
           },
-
-          () => {
-
-            load(true);
-          }
+          () => { load(true); }
         )
-
         .subscribe();
 
     return () => {
-
-      supabase.removeChannel(
-        channel
-      );
+      supabase.removeChannel(channel);
     };
 
   }, []);
-
-  // =========================
-  // VOTE
-  // =========================
-
-  async function vote(
-    attivitaId: string,
-    voto: number
-  ) {
-
-    try {
-
-      const deviceId =
-        getDeviceId();
-
-      const {
-        data: existing,
-      } = await supabase
-        .from(
-          'attivita_valutazioni'
-        )
-        .select('*')
-        .eq(
-          'attivita_id',
-          attivitaId
-        )
-        .eq(
-          'device_id',
-          deviceId
-        )
-        .maybeSingle();
-
-      if (existing) {
-
-        await supabase
-          .from(
-            'attivita_valutazioni'
-          )
-          .update({
-            voto,
-          })
-          .eq(
-            'id',
-            existing.id
-          );
-
-      } else {
-
-        await supabase
-          .from(
-            'attivita_valutazioni'
-          )
-          .insert({
-
-            attivita_id:
-              attivitaId,
-
-            voto,
-
-            device_id:
-              deviceId,
-          });
-      }
-
-      toast.success(
-        'Valutazione salvata'
-      );
-
-      load(true);
-
-    } catch (err) {
-
-      console.error(err);
-
-      toast.error(
-        'Errore salvataggio voto'
-      );
-    }
-  }
 
   // =========================
   // FILTER
   // =========================
 
   const filtered =
-    [...stazioni]
-      .filter((s) => {
+    [...stazioni].filter((s) => {
 
-        const q =
-          search.toLowerCase();
+      const q = search.toLowerCase();
 
-        return (
-          !q ||
-          s.nome
-            ?.toLowerCase()
-            .includes(q) ||
-          s.codice
-            ?.toLowerCase()
-            .includes(q)
-        );
-      });
+      return (
+        !q ||
+        s.nome?.toLowerCase().includes(q) ||
+        s.codice?.toLowerCase().includes(q)
+      );
+    });
 
   const favoriteStations =
     filtered.filter(
-      (s) =>
-        favorites.includes(s.id)
+      (s) => favorites.includes(s.id)
     );
 
   const normalStations =
     filtered.filter(
-      (s) =>
-        !favorites.includes(s.id)
+      (s) => !favorites.includes(s.id)
     );
 
   // =========================
@@ -714,25 +514,17 @@ console.log(
   ) {
 
     const expanded =
-      expandedId ===
-      stazione.id;
+      expandedId === stazione.id;
 
     const distance =
       userLocation &&
       stazione.lat &&
       stazione.lng
         ? calculateDistance(
-
             userLocation.lat,
             userLocation.lng,
-
-            Number(
-              stazione.lat
-            ),
-
-            Number(
-              stazione.lng
-            )
+            Number(stazione.lat),
+            Number(stazione.lng)
           )
         : null;
 
@@ -751,9 +543,7 @@ console.log(
         <div
           onClick={() =>
             setExpandedId(
-              expanded
-                ? null
-                : stazione.id
+              expanded ? null : stazione.id
             )
           }
           className="p-5 cursor-pointer"
@@ -825,18 +615,12 @@ console.log(
                 e.stopPropagation();
 
                 const updated =
-                  toggleFavorite(
-                    stazione.id
-                  );
+                  toggleFavorite(stazione.id);
 
-                setFavorites(
-                  updated
-                );
+                setFavorites(updated);
 
                 toast.success(
-                  favorites.includes(
-                    stazione.id
-                  )
+                  favorites.includes(stazione.id)
                     ? 'Rimosso dai preferiti'
                     : 'Aggiunto ai preferiti'
                 );
@@ -846,9 +630,7 @@ console.log(
 
               <Star
                 className={`w-5 h-5 ${
-                  favorites.includes(
-                    stazione.id
-                  )
+                  favorites.includes(stazione.id)
                     ? 'fill-yellow-400 text-yellow-400'
                     : 'text-yellow-400'
                 }`}
@@ -906,144 +688,232 @@ console.log(
 
             </button>
 
-                      {/* ATTIVITA */}
-
+            {/* ATTIVITA */}
             {stazione.attivita_stazione &&
-              stazione.attivita_stazione.length > 0 && (
+              stazione.attivita_stazione
+                .length > 0 && (
 
-                <div className="flex flex-col gap-3">
+              <div className="flex flex-col gap-3">
 
-                 {stazione.attivita_stazione.map(
-  (attivita: any) => (
+                {/* SORT BUTTONS */}
+                <div className="flex gap-2 flex-wrap">
 
-  <button
-  key={attivita.id}
-  type="button"
-  onClick={() => {
+                  {SORT_OPTIONS.map(
+                    (opt) => (
 
-  setSelectedAttivita(
-    attivita
-  );
+                      <button
+                        key={opt.mode}
+                        type="button"
+                        onClick={() =>
+                          setSortModeForStazione(
+                            stazione.id,
+                            opt.mode
+                          )
+                        }
+                        className={`
+                          flex
+                          items-center
+                          gap-1
+                          px-3
+                          py-1.5
+                          rounded-xl
+                          text-xs
+                          font-medium
+                          border
+                          transition-colors
+                          ${
+                            getSortMode(
+                              stazione.id
+                            ) === opt.mode
+                              ? 'bg-trenord-green text-white border-trenord-green'
+                              : 'bg-white text-gray-600 border-gray-200 hover:border-trenord-green hover:text-trenord-green'
+                          }
+                        `}
+                      >
 
-  loadRating(
-    attivita.id
-  );
+                        <span>
+                          {opt.emoji}
+                        </span>
 
-}}
-    
-  className="
-    w-full
-    bg-white
-    rounded-xl
-    p-4
-    border
-    text-left
-    hover:bg-gray-50
-    transition
-  "
->
+                        <span>
+                          {opt.label}
+                        </span>
 
-     <div className="flex items-center justify-between">
-
-<div>
-
-  <h3 className="font-semibold text-gray-900">
-    {attivita.nome}
-  </h3>
-
-  <p className="text-sm text-gray-500">
-    {attivita.categoria}
-  </p>
-
-  {attivita.distanza_piedi && (
-
-  <div
-    className="
-      text-xs
-      text-gray-500
-      mt-1
-    "
-  >
-    🚶 {attivita.distanza_piedi}
-  </div>
-
-)}
-  
-  {attivita.valutazioni &&
-    attivita.valutazioni.length > 0 && (
-
-      <div className="flex items-center gap-1 mt-2">
-
-        <Star
-          className="
-            w-4 h-4
-            fill-yellow-400
-            text-yellow-400
-          "
-        />
-
-        <span className="text-sm font-medium">
-
-          {(
-            attivita.valutazioni.reduce(
-              (
-                sum: number,
-                voto: any
-              ) =>
-                sum +
-                voto.voto,
-              0
-            ) /
-            attivita.valutazioni.length
-          ).toFixed(1)}
-
-        </span>
-
-        <span className="text-xs text-gray-400">
-
-          (
-          {
-            attivita
-              .valutazioni
-              .length
-          }
-          )
-
-        </span>
-
-      </div>
-
-  )}
-
-</div>
-
-  {attivita.convenzionato && (
-
-    <span
-      className="
-        text-xs
-        bg-green-100
-        text-green-700
-        px-2
-        py-1
-        rounded-full
-      "
-    >
-      Convenzionato
-    </span>
-
-  )}
-
-</div>
-
-</button>
-
-  )
-)}
+                      </button>
+                    )
+                  )}
 
                 </div>
 
-              )}
+                {sortAttivita(
+                  stazione.attivita_stazione,
+                  getSortMode(stazione.id)
+                ).map(
+                  (attivita: any) => {
+
+                    const stato =
+                      getStatoApertura(
+                        attivita
+                      );
+
+                    return (
+
+                      <button
+                        key={attivita.id}
+                        type="button"
+                        onClick={() => {
+
+                          setSelectedAttivita(
+                            attivita
+                          );
+
+                          loadRating(
+                            attivita.id
+                          );
+                        }}
+                        className="
+                          w-full
+                          bg-white
+                          rounded-xl
+                          p-4
+                          border
+                          text-left
+                          hover:bg-gray-50
+                          transition
+                        "
+                      >
+
+                        <div className="flex items-center justify-between">
+
+                          <div>
+
+                            <h3 className="font-semibold text-gray-900">
+
+                              {attivita.nome}
+
+                            </h3>
+
+                            <p className="text-sm text-gray-500">
+
+                              {attivita.categoria}
+
+                            </p>
+
+                            {attivita.distanza_piedi && (
+
+                              <div className="text-xs text-gray-500 mt-1">
+
+                                🚶 {attivita.distanza_piedi}
+
+                              </div>
+                            )}
+
+                            {/* STATO APERTURA */}
+                            <div className="flex items-center gap-1.5 mt-2">
+
+                              <span
+                                className={`w-2 h-2 rounded-full flex-shrink-0 ${
+                                  stato.aperto
+                                    ? 'bg-emerald-500'
+                                    : 'bg-red-400'
+                                }`}
+                              />
+
+                              <span
+                                className={`text-xs font-medium ${
+                                  stato.aperto
+                                    ? 'text-emerald-700'
+                                    : 'text-red-500'
+                                }`}
+                              >
+
+                                {stato.aperto
+                                  ? 'Aperto ora'
+                                  : 'Chiuso'}
+
+                              </span>
+
+                              <span className="text-xs text-gray-400">
+
+                                · {stato.testo}
+
+                              </span>
+
+                            </div>
+
+                            {attivita.valutazioni &&
+                              attivita.valutazioni
+                                .length > 0 && (
+
+                              <div className="flex items-center gap-1 mt-2">
+
+                                <Star
+                                  className="
+                                    w-4 h-4
+                                    fill-yellow-400
+                                    text-yellow-400
+                                  "
+                                />
+
+                                <span className="text-sm font-medium">
+
+                                  {(
+                                    attivita.valutazioni.reduce(
+                                      (
+                                        sum: number,
+                                        v: any
+                                      ) =>
+                                        sum + v.voto,
+                                      0
+                                    ) /
+                                    attivita.valutazioni
+                                      .length
+                                  ).toFixed(1)}
+
+                                </span>
+
+                                <span className="text-xs text-gray-400">
+
+                                  (
+                                  {
+                                    attivita
+                                      .valutazioni
+                                      .length
+                                  }
+                                  )
+
+                                </span>
+
+                              </div>
+                            )}
+
+                          </div>
+
+                          {attivita.convenzionato && (
+
+                            <span
+                              className="
+                                text-xs
+                                bg-green-100
+                                text-green-700
+                                px-2
+                                py-1
+                                rounded-full
+                              "
+                            >
+                              Convenzionato
+                            </span>
+                          )}
+
+                        </div>
+
+                      </button>
+                    );
+                  }
+                )}
+
+              </div>
+            )}
 
           </div>
         )}
@@ -1067,9 +937,7 @@ console.log(
             placeholder="Cerca stazione..."
             value={search}
             onChange={(e) =>
-              setSearch(
-                e.target.value
-              )
+              setSearch(e.target.value)
             }
             className="w-full bg-white border border-gray-200 rounded-2xl pl-10 pr-4 py-3 text-sm"
           />
@@ -1077,8 +945,7 @@ console.log(
         </div>
 
         {/* LOADING */}
-        {(loading ||
-          !locationReady) && (
+        {(loading || !locationReady) && (
 
           <div className="flex flex-col gap-3">
 
@@ -1101,8 +968,7 @@ console.log(
 
         {/* FAVORITES */}
         {!loading &&
-          favoriteStations.length >
-            0 && (
+          favoriteStations.length > 0 && (
 
           <div className="flex flex-col gap-3">
 
@@ -1136,9 +1002,7 @@ console.log(
             {favoritesExpanded &&
               favoriteStations.map(
                 (station) =>
-                  renderStationCard(
-                    station
-                  )
+                  renderStationCard(station)
               )}
 
           </div>
@@ -1150,10 +1014,7 @@ console.log(
           <div className="flex flex-col gap-3">
 
             {normalStations.map(
-              (
-                station,
-                index
-              ) =>
+              (station, index) =>
                 renderStationCard(
                   station,
                   index === 0
@@ -1165,7 +1026,7 @@ console.log(
 
       </div>
 
-      {/* MODAL */}
+      {/* MODAL AGGIUNGI */}
       {addAttivitaStazioneId && (
 
         <AddAttivitaModal
@@ -1173,15 +1034,11 @@ console.log(
             addAttivitaStazioneId
           }
           onClose={() =>
-            setAddAttivitaStazioneId(
-              null
-            )
+            setAddAttivitaStazioneId(null)
           }
           onSuccess={() => {
 
-            setAddAttivitaStazioneId(
-              null
-            );
+            setAddAttivitaStazioneId(null);
 
             load(true);
           }}
@@ -1189,342 +1046,362 @@ console.log(
       )}
 
       {/* DETTAGLIO ATTIVITA */}
-{selectedAttivita && (
-
-  <div
-    className="
-      fixed
-      inset-0
-      bg-black/40
-      z-50
-      flex
-      items-end
-    "
-    onClick={() =>
-      setSelectedAttivita(null)
-    }
-  >
-
-    <div
-      className="
-  bg-white
-  w-full
-  rounded-t-3xl
-  p-6
-  pb-32
-  max-h-[80vh]
-  overflow-y-auto
-"
-      onClick={(e) =>
-        e.stopPropagation()
-      }
-    >
-
-      <div
-        className="
-          w-12
-          h-1.5
-          bg-gray-300
-          rounded-full
-          mx-auto
-          mb-5
-        "
-      />
-
-      <h2 className="text-xl font-bold">
-
-        {selectedAttivita.nome}
-
-      </h2>
-
-     <p className="text-gray-500 mb-4">
-
-  {selectedAttivita.categoria}
-
-</p>
-
-      {selectedAttivita.distanza_piedi && (
-
-  <div
-    className="
-      flex
-      items-center
-      gap-2
-      text-gray-600
-      mb-4
-    "
-  >
-    <span>🚶</span>
-
-    <span>
-      {selectedAttivita.distanza_piedi}
-    </span>
-
-  </div>
-
-)}
-      
-<div className="mt-4">
-
-  <div className="flex items-center gap-2">
-
-    <Star
-      className="
-        w-5 h-5
-        fill-yellow-400
-        text-yellow-400
-      "
-    />
-
-    <span className="font-medium">
-
-      {mediaRating.toFixed(1)}
-
-    </span>
-
-    <span className="text-gray-500">
-
-      ({numeroVoti} voti)
-
-    </span>
-
-  </div>
-
-  <div className="mt-3">
-
-    <p className="text-sm text-gray-500 mb-2">
-
-      La tua valutazione
-
-    </p>
-
-    <div className="flex gap-2">
-
-      {[1,2,3,4,5].map(
-        (numero) => (
-
-          <button
-            key={numero}
-            type="button"
-            onClick={() =>
-              voteAttivita(numero)
-            }
-          >
-
-            <Star
-              className={`
-                w-7 h-7
-                ${
-                  numero <= mioVoto
-                    ? 'fill-yellow-400 text-yellow-400'
-                    : 'text-gray-300'
-                }
-              `}
-            />
-
-          </button>
-
-        )
-      )}
-
-    </div>
-
-  </div>
-
-</div>
-
-<div className="border-t my-4" />
-      
-      {selectedAttivita.convenzionato && (
+      {selectedAttivita && (
 
         <div
           className="
-            inline-flex
-            px-3
-            py-1
-            rounded-full
-            bg-green-100
-            text-green-700
-            text-sm
-            mb-4
+            fixed
+            inset-0
+            bg-black/40
+            z-50
+            flex
+            items-end
           "
+          onClick={() =>
+            setSelectedAttivita(null)
+          }
         >
-          Convenzionato Trenord
-        </div>
 
+          <div
+            className="
+              bg-white
+              w-full
+              rounded-t-3xl
+              p-6
+              pb-32
+              max-h-[80vh]
+              overflow-y-auto
+            "
+            onClick={(e) =>
+              e.stopPropagation()
+            }
+          >
+
+            <div
+              className="
+                w-12
+                h-1.5
+                bg-gray-300
+                rounded-full
+                mx-auto
+                mb-5
+              "
+            />
+
+            <h2 className="text-xl font-bold">
+
+              {selectedAttivita.nome}
+
+            </h2>
+
+            <p className="text-gray-500 mb-3">
+
+              {selectedAttivita.categoria}
+
+            </p>
+
+            {/* STATO APERTURA NEL MODAL */}
+            {(() => {
+
+              const stato =
+                getStatoApertura(
+                  selectedAttivita
+                );
+
+              return (
+
+                <div className="flex items-center gap-2 mb-4 px-3 py-2 rounded-xl bg-gray-50 w-fit">
+
+                  <span
+                    className={`w-2.5 h-2.5 rounded-full flex-shrink-0 ${
+                      stato.aperto
+                        ? 'bg-emerald-500'
+                        : 'bg-red-400'
+                    }`}
+                  />
+
+                  <span
+                    className={`text-sm font-semibold ${
+                      stato.aperto
+                        ? 'text-emerald-700'
+                        : 'text-red-500'
+                    }`}
+                  >
+
+                    {stato.aperto
+                      ? 'Aperto ora'
+                      : 'Chiuso'}
+
+                  </span>
+
+                  <span className="text-sm text-gray-500">
+
+                    · {stato.testo}
+
+                  </span>
+
+                </div>
+              );
+            })()}
+
+            {selectedAttivita.distanza_piedi && (
+
+              <div className="flex items-center gap-2 text-gray-600 mb-4">
+
+                <span>🚶</span>
+
+                <span>
+                  {selectedAttivita.distanza_piedi}
+                </span>
+
+              </div>
+            )}
+
+            <div className="mt-4">
+
+              <div className="flex items-center gap-2">
+
+                <Star
+                  className="
+                    w-5 h-5
+                    fill-yellow-400
+                    text-yellow-400
+                  "
+                />
+
+                <span className="font-medium">
+
+                  {mediaRating.toFixed(1)}
+
+                </span>
+
+                <span className="text-gray-500">
+
+                  ({numeroVoti} voti)
+
+                </span>
+
+              </div>
+
+              <div className="mt-3">
+
+                <p className="text-sm text-gray-500 mb-2">
+
+                  La tua valutazione
+
+                </p>
+
+                <div className="flex gap-2">
+
+                  {[1, 2, 3, 4, 5].map(
+                    (numero) => (
+
+                      <button
+                        key={numero}
+                        type="button"
+                        onClick={() =>
+                          voteAttivita(numero)
+                        }
+                      >
+
+                        <Star
+                          className={`
+                            w-7 h-7
+                            ${
+                              numero <= mioVoto
+                                ? 'fill-yellow-400 text-yellow-400'
+                                : 'text-gray-300'
+                            }
+                          `}
+                        />
+
+                      </button>
+                    )
+                  )}
+
+                </div>
+
+              </div>
+
+            </div>
+
+            <div className="border-t my-4" />
+
+            {selectedAttivita.convenzionato && (
+
+              <div
+                className="
+                  inline-flex
+                  px-3
+                  py-1
+                  rounded-full
+                  bg-green-100
+                  text-green-700
+                  text-sm
+                  mb-4
+                "
+              >
+                Convenzionato Trenord
+              </div>
+            )}
+
+            {selectedAttivita.ubicazione && (
+
+              <div className="mb-3">
+
+                <h3 className="font-semibold">
+                  Ubicazione
+                </h3>
+
+                <p>
+                  {selectedAttivita.ubicazione}
+                </p>
+
+              </div>
+            )}
+
+            {selectedAttivita.indirizzo && (
+
+              <div className="mb-3">
+
+                <h3 className="font-semibold">
+                  Indirizzo
+                </h3>
+
+                <p>
+                  {selectedAttivita.indirizzo}
+                </p>
+
+              </div>
+            )}
+
+            {selectedAttivita.maps_query && (
+
+              <button
+                type="button"
+                onClick={() => {
+
+                  const query =
+                    encodeURIComponent(
+                      selectedAttivita.maps_query
+                    );
+
+                  window.open(
+                    `https://www.google.com/maps/search/?api=1&query=${query}`,
+                    '_blank'
+                  );
+                }}
+                className="
+                  w-full
+                  h-12
+                  rounded-xl
+                  bg-blue-600
+                  text-white
+                  font-medium
+                  mb-4
+                "
+              >
+
+                📍 Apri Navigazione
+
+              </button>
+            )}
+
+            {/* FASCE ORARIE NEL MODAL */}
+            {Array.isArray(
+              selectedAttivita.fasce_orarie
+            ) &&
+              selectedAttivita.fasce_orarie
+                .length > 0 && (
+
+              <div className="mb-4">
+
+                <h3 className="font-semibold mb-2">
+
+                  🕒 Orari
+
+                </h3>
+
+                <div className="flex flex-col gap-2">
+
+                  {selectedAttivita.fasce_orarie.map(
+                    (
+                      fascia: any,
+                      index: number
+                    ) => (
+
+                      <div
+                        key={index}
+                        className="bg-gray-50 rounded-xl px-3 py-2 text-sm text-gray-700"
+                      >
+
+                        <div className="font-medium">
+
+                          {Array.isArray(
+                            fascia.giorni
+                          )
+                            ? fascia.giorni.join(
+                                ', '
+                              )
+                            : ''}
+
+                        </div>
+
+                        <div className="text-gray-500">
+
+                          {fascia.apertura} →{' '}
+                          {fascia.chiusura}
+
+                        </div>
+
+                      </div>
+                    )
+                  )}
+
+                </div>
+
+              </div>
+            )}
+
+            {selectedAttivita.note && (
+
+              <div className="mb-3">
+
+                <h3 className="font-semibold">
+                  Note
+                </h3>
+
+                <p>
+                  {selectedAttivita.note}
+                </p>
+
+              </div>
+            )}
+
+            <button
+              onClick={() =>
+                setSelectedAttivita(null)
+              }
+              className="
+                mt-4
+                w-full
+                h-11
+                rounded-xl
+                bg-trenord-green
+                text-white
+                font-medium
+              "
+            >
+
+              Chiudi
+
+            </button>
+
+          </div>
+
+        </div>
       )}
 
-      {selectedAttivita.ubicazione && (
-
-        <div className="mb-3">
-
-          <h3 className="font-semibold">
-            Ubicazione
-          </h3>
-
-          <p>
-            {selectedAttivita.ubicazione}
-          </p>
-
-        </div>
-
-      )}
-
-      {selectedAttivita.indirizzo && (
-
-        <div className="mb-3">
-
-          <h3 className="font-semibold">
-            Indirizzo
-          </h3>
-
-          <p>
-            {selectedAttivita.indirizzo}
-          </p>
-
-        </div>
-
-      )}
-
-      {selectedAttivita.maps_query && (
-
-  <button
-    type="button"
-    onClick={() => {
-
-      const query =
-        encodeURIComponent(
-          selectedAttivita.maps_query
-        );
-
-      window.open(
-        `https://www.google.com/maps/search/?api=1&query=${query}`,
-        '_blank'
-      );
-
-    }}
-    className="
-      w-full
-      h-12
-      rounded-xl
-      bg-blue-600
-      text-white
-      font-medium
-      mb-4
-    "
-  >
-
-    📍 Apri Navigazione
-
-  </button>
-
-)}
-
-      {/* ORARI */}
-
-{(
-  selectedAttivita.aperto_h24 ||
-  selectedAttivita.giorni_apertura ||
-  selectedAttivita.orario_apertura ||
-  selectedAttivita.orario_chiusura
-) && (
-
-  <div className="mb-4">
-
-    <h3 className="font-semibold mb-2">
-
-      🕒 Orari
-
-    </h3>
-
-    {selectedAttivita.aperto_h24 ? (
-
-      <p className="text-green-600 font-medium">
-
-        Aperto 24 ore
-
-      </p>
-
-    ) : (
-
-      <>
-
-        {selectedAttivita.giorni_apertura && (
-
-          <p>
-
-            {selectedAttivita.giorni_apertura}
-
-          </p>
-
-        )}
-
-        {(selectedAttivita.orario_apertura ||
-          selectedAttivita.orario_chiusura) && (
-
-          <p>
-
-            {selectedAttivita.orario_apertura}
-
-            {selectedAttivita.orario_apertura &&
-              selectedAttivita.orario_chiusura &&
-              ' - '}
-
-            {selectedAttivita.orario_chiusura}
-
-          </p>
-
-        )}
-
-      </>
-
-    )}
-
-  </div>
-
-)}
-
-      {selectedAttivita.note && (
-
-        <div className="mb-3">
-
-          <h3 className="font-semibold">
-            Note
-          </h3>
-
-          <p>
-            {selectedAttivita.note}
-          </p>
-
-        </div>
-
-      )}
-
-      <button
-        onClick={() =>
-          setSelectedAttivita(null)
-        }
-        className="
-          mt-4
-          w-full
-          h-11
-          rounded-xl
-          bg-trenord-green
-          text-white
-          font-medium
-        "
-      >
-
-        Chiudi
-
-      </button>
-
-    </div>
-
-  </div>
-
-)}
-      
     </>
   );
 }

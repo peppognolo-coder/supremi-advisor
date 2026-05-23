@@ -1,4 +1,7 @@
-import { useEffect, useState } from 'react';
+import {
+  useEffect,
+  useState,
+} from 'react';
 
 import {
   Building2,
@@ -8,6 +11,7 @@ import {
   Plus,
   ArrowLeft,
   FileJson,
+  Store,
 } from 'lucide-react';
 
 import { supabase } from '../lib/supabase';
@@ -15,6 +19,8 @@ import { supabase } from '../lib/supabase';
 import AdminSaletteScreen from './AdminSaletteScreen';
 
 import AdminContributiScreen from './AdminContributiScreen';
+
+import AdminAttivitaScreen from './AdminAttivitaScreen';
 
 export default function AdminScreen() {
 
@@ -25,11 +31,20 @@ export default function AdminScreen() {
   // SCREEN STATE
   // =========================
 
-  const [showSaletteManager, setShowSaletteManager] =
-    useState(false);
+  const [
+    showSaletteManager,
+    setShowSaletteManager,
+  ] = useState(false);
 
-  const [showContributiManager, setShowContributiManager] =
-    useState(false);
+  const [
+    showContributiManager,
+    setShowContributiManager,
+  ] = useState(false);
+
+  const [
+    showAttivitaManager,
+    setShowAttivitaManager,
+  ] = useState(false);
 
   // =========================
   // STATS
@@ -43,6 +58,8 @@ export default function AdminScreen() {
       stazioni: 0,
 
       pending: 0,
+
+      attivita: 0,
     });
 
   // =========================
@@ -53,7 +70,7 @@ export default function AdminScreen() {
 
     setLoading(true);
 
-    // SALLETTE
+    // SALETTE
     const {
       count: saletteCount,
     } = await supabase
@@ -64,16 +81,16 @@ export default function AdminScreen() {
       });
 
     // STAZIONI
-    const { data: stazioni } =
-      await supabase
-        .from('salette')
-        .select('stazione');
+    const {
+      data: stazioni,
+    } = await supabase
+      .from('salette')
+      .select('stazione');
 
     const uniqueStations =
       new Set(
         (stazioni ?? []).map(
-          (s) =>
-            s.stazione
+          (s) => s.stazione
         )
       );
 
@@ -86,10 +103,18 @@ export default function AdminScreen() {
         count: 'exact',
         head: true,
       })
-      .eq(
-        'stato',
-        'pending'
-      );
+      .eq('stato', 'pending');
+
+    // ATTIVITA ATTIVE
+    const {
+      count: attivitaCount,
+    } = await supabase
+      .from('attivita_stazione')
+      .select('*', {
+        count: 'exact',
+        head: true,
+      })
+      .eq('is_active', true);
 
     setStats({
 
@@ -101,6 +126,9 @@ export default function AdminScreen() {
 
       pending:
         pendingCount ?? 0,
+
+      attivita:
+        attivitaCount ?? 0,
     });
 
     setLoading(false);
@@ -111,6 +139,38 @@ export default function AdminScreen() {
     load();
 
   }, []);
+
+  // =========================
+  // ATTIVITA MANAGER
+  // =========================
+
+  if (showAttivitaManager) {
+
+    return (
+
+      <div className="flex flex-col gap-4">
+
+        {/* BACK */}
+        <button
+          onClick={() =>
+            setShowAttivitaManager(
+              false
+            )
+          }
+          className="self-start flex items-center gap-2 px-3 py-2 rounded-xl bg-white border border-gray-200 text-sm text-gray-700 hover:bg-gray-50"
+        >
+
+          <ArrowLeft className="w-4 h-4" />
+
+          Torna dashboard
+
+        </button>
+
+        <AdminAttivitaScreen />
+
+      </div>
+    );
+  }
 
   // =========================
   // CONTRIBUTI MANAGER
@@ -125,7 +185,9 @@ export default function AdminScreen() {
         {/* BACK */}
         <button
           onClick={() =>
-            setShowContributiManager(false)
+            setShowContributiManager(
+              false
+            )
           }
           className="self-start flex items-center gap-2 px-3 py-2 rounded-xl bg-white border border-gray-200 text-sm text-gray-700 hover:bg-gray-50"
         >
@@ -143,7 +205,7 @@ export default function AdminScreen() {
   }
 
   // =========================
-  // SALLETTE MANAGER
+  // SALETTE MANAGER
   // =========================
 
   if (showSaletteManager) {
@@ -155,7 +217,9 @@ export default function AdminScreen() {
         {/* BACK */}
         <button
           onClick={() =>
-            setShowSaletteManager(false)
+            setShowSaletteManager(
+              false
+            )
           }
           className="self-start flex items-center gap-2 px-3 py-2 rounded-xl bg-white border border-gray-200 text-sm text-gray-700 hover:bg-gray-50"
         >
@@ -216,9 +280,9 @@ export default function AdminScreen() {
       {/* STATS */}
       {!loading && (
 
-        <div className="grid grid-cols-3 gap-3">
+        <div className="grid grid-cols-2 gap-3">
 
-          {/* SALLETTE */}
+          {/* SALETTE */}
           <div className="bg-white rounded-2xl border border-gray-100 p-4 shadow-sm">
 
             <div className="flex items-center justify-between">
@@ -264,10 +328,42 @@ export default function AdminScreen() {
 
           </div>
 
+          {/* ATTIVITA */}
+          <button
+            onClick={() =>
+              setShowAttivitaManager(
+                true
+              )
+            }
+            className="bg-white rounded-2xl border border-gray-100 p-4 shadow-sm hover:border-trenord-green/40 transition-colors text-left"
+          >
+
+            <div className="flex items-center justify-between">
+
+              <Store className="w-5 h-5 text-trenord-green" />
+
+              <span className="text-2xl font-bold text-gray-900">
+
+                {stats.attivita}
+
+              </span>
+
+            </div>
+
+            <p className="text-xs text-gray-500 mt-3 uppercase tracking-wide">
+
+              Attività attive
+
+            </p>
+
+          </button>
+
           {/* PENDING */}
           <button
             onClick={() =>
-              setShowContributiManager(true)
+              setShowContributiManager(
+                true
+              )
             }
             className="bg-white rounded-2xl border border-gray-100 p-4 shadow-sm hover:border-amber-300 transition-colors text-left"
           >
@@ -317,6 +413,24 @@ export default function AdminScreen() {
           <span className="font-medium">
 
             Gestione salette
+
+          </span>
+
+        </button>
+
+        {/* ATTIVITA */}
+        <button
+          onClick={() =>
+            setShowAttivitaManager(true)
+          }
+          className="flex items-center gap-3 p-3 rounded-xl bg-purple-600 text-white hover:opacity-90 transition-opacity"
+        >
+
+          <Store className="w-5 h-5" />
+
+          <span className="font-medium">
+
+            Gestione attività
 
           </span>
 

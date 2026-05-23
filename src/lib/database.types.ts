@@ -146,6 +146,14 @@ export interface AttivitaStazione {
   note: string | null;
 
   // =====================
+  // SOFT DELETE
+  // =====================
+
+  is_active: boolean;
+
+  deleted_at: string | null;
+
+  // =====================
   // NUOVO SISTEMA ORARI
   // =====================
 
@@ -310,17 +318,17 @@ export type Database = {
 
         Insert: Omit<
           Stazione,
-          'id' |
-          'created_at' |
-          'updated_at'
+          | 'id'
+          | 'created_at'
+          | 'updated_at'
         >;
 
         Update: Partial<
           Omit<
             Stazione,
-            'id' |
-            'created_at' |
-            'updated_at'
+            | 'id'
+            | 'created_at'
+            | 'updated_at'
           >
         >;
       };
@@ -335,17 +343,17 @@ export type Database = {
 
         Insert: Omit<
           Saletta,
-          'id' |
-          'created_at' |
-          'updated_at'
+          | 'id'
+          | 'created_at'
+          | 'updated_at'
         >;
 
         Update: Partial<
           Omit<
             Saletta,
-            'id' |
-            'created_at' |
-            'updated_at'
+            | 'id'
+            | 'created_at'
+            | 'updated_at'
           >
         >;
       };
@@ -360,15 +368,15 @@ export type Database = {
 
         Insert: Omit<
           AttivitaStazione,
-          'id' |
-          'created_at'
+          | 'id'
+          | 'created_at'
         >;
 
         Update: Partial<
           Omit<
             AttivitaStazione,
-            'id' |
-            'created_at'
+            | 'id'
+            | 'created_at'
           >
         >;
       };
@@ -383,15 +391,15 @@ export type Database = {
 
         Insert: Omit<
           Contributo,
-          'id' |
-          'created_at'
+          | 'id'
+          | 'created_at'
         >;
 
         Update: Partial<
           Omit<
             Contributo,
-            'id' |
-            'created_at'
+            | 'id'
+            | 'created_at'
           >
         >;
       };
@@ -406,17 +414,17 @@ export type Database = {
 
         Insert: Omit<
           Locale,
-          'id' |
-          'created_at' |
-          'updated_at'
+          | 'id'
+          | 'created_at'
+          | 'updated_at'
         >;
 
         Update: Partial<
           Omit<
             Locale,
-            'id' |
-            'created_at' |
-            'updated_at'
+            | 'id'
+            | 'created_at'
+            | 'updated_at'
           >
         >;
       };
@@ -432,15 +440,15 @@ export type Database = {
 
         Insert: Omit<
           AttivitaStazioneSegnalazione,
-          'id' |
-          'created_at'
+          | 'id'
+          | 'created_at'
         >;
 
         Update: Partial<
           Omit<
             AttivitaStazioneSegnalazione,
-            'id' |
-            'created_at'
+            | 'id'
+            | 'created_at'
           >
         >;
       };
@@ -451,20 +459,19 @@ export type Database = {
 
       attivita_valutazioni: {
 
-        Row:
-          AttivitaValutazione;
+        Row: AttivitaValutazione;
 
         Insert: Omit<
           AttivitaValutazione,
-          'id' |
-          'created_at'
+          | 'id'
+          | 'created_at'
         >;
 
         Update: Partial<
           Omit<
             AttivitaValutazione,
-            'id' |
-            'created_at'
+            | 'id'
+            | 'created_at'
           >
         >;
       };
@@ -475,20 +482,19 @@ export type Database = {
 
       saletta_segnalazioni: {
 
-        Row:
-          SalettaSegnalazione;
+        Row: SalettaSegnalazione;
 
         Insert: Omit<
           SalettaSegnalazione,
-          'id' |
-          'created_at'
+          | 'id'
+          | 'created_at'
         >;
 
         Update: Partial<
           Omit<
             SalettaSegnalazione,
-            'id' |
-            'created_at'
+            | 'id'
+            | 'created_at'
           >
         >;
       };
@@ -499,20 +505,19 @@ export type Database = {
 
       saletta_servizi: {
 
-        Row:
-          SalettaServizio;
+        Row: SalettaServizio;
 
         Insert: Omit<
           SalettaServizio,
-          'id' |
-          'created_at'
+          | 'id'
+          | 'created_at'
         >;
 
         Update: Partial<
           Omit<
             SalettaServizio,
-            'id' |
-            'created_at'
+            | 'id'
+            | 'created_at'
           >
         >;
       };

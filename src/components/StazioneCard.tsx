@@ -1,4 +1,7 @@
-import { useState, useEffect } from 'react';
+import {
+  useState,
+  useEffect,
+} from 'react';
 
 import {
   MapPin,
@@ -27,6 +30,16 @@ import {
   toggleFavorite,
 } from '../lib/favorites';
 
+import {
+  getStatoApertura,
+} from '../lib/getStatoApertura';
+
+import {
+  sortAttivita,
+  SORT_OPTIONS,
+  type SortMode,
+} from '../lib/sortAttivita';
+
 interface StazioneCardProps {
 
   stazione: StazioneWithSalette;
@@ -39,10 +52,11 @@ export default function StazioneCard({
   isNearest = false,
 }: StazioneCardProps) {
 
-  console.log('STAZIONECARD VERSIONE TEST');
-  
   const [expanded, setExpanded] =
     useState(false);
+
+  const [sortMode, setSortMode] =
+    useState<SortMode>('aperte');
 
   const [
     showAddForm,
@@ -68,89 +82,38 @@ export default function StazioneCard({
 
   async function reloadStation() {
 
-    // =====================
-    // STAZIONE
-    // =====================
-
     const {
       data: stationData,
       error: stationError,
     } = await supabase
-
       .from('stazioni')
-
       .select(`
         *,
         salette (*)
       `)
-
-      .eq(
-        'id',
-        stazione.id
-      )
-
+      .eq('id', stazione.id)
       .single();
 
     if (stationError) {
 
-      console.error(
-        stationError
-      );
+      console.error(stationError);
 
       return;
     }
-
-    // =====================
-    // ATTIVITA
-    // =====================
 
     const {
       data: attivitaData,
       error: attivitaError,
     } = await supabase
-
-      .from(
-        'attivita_stazione'
-      )
-
+      .from('attivita_stazione')
       .select('*')
-
-      .eq(
-        'stazione_id',
-        stazione.id
-      );
+      .eq('stazione_id', stazione.id)
+      .eq('is_active', true);
 
     if (attivitaError) {
 
-      console.error(
-        attivitaError
-      );
+      console.error(attivitaError);
     }
-
-    console.log(
-      'ATTIVITA TROVATE',
-      attivitaData
-    );
-
-    console.log(
-  'STAZIONE CARD',
-  stazione.id,
-  stazione.nome
-);
-
-console.log(
-  'ATTIVITA COUNT',
-  attivitaData?.length
-);
-
-console.log(
-  'ATTIVITA DATA',
-  JSON.stringify(attivitaData)
-);
-
-    // =====================
-    // MERGE
-    // =====================
 
     setLiveStazione({
 
@@ -164,9 +127,7 @@ console.log(
           : [],
 
       attivita_stazione:
-        Array.isArray(
-          attivitaData
-        )
+        Array.isArray(attivitaData)
           ? attivitaData
           : [],
     });
@@ -182,50 +143,31 @@ console.log(
 
     const channel =
       supabase
-
         .channel(
           `station-${stazione.id}`
         )
-
         .on(
           'postgres_changes',
-
           {
             event: '*',
             schema: 'public',
-            table:
-              'attivita_stazione',
+            table: 'attivita_stazione',
           },
-
-          () => {
-
-            reloadStation();
-          }
+          () => { reloadStation(); }
         )
-
         .on(
           'postgres_changes',
-
           {
             event: '*',
             schema: 'public',
-            table:
-              'salette',
+            table: 'salette',
           },
-
-          () => {
-
-            reloadStation();
-          }
+          () => { reloadStation(); }
         )
-
         .subscribe();
 
     return () => {
-
-      supabase.removeChannel(
-        channel
-      );
+      supabase.removeChannel(channel);
     };
 
   }, [stazione.id]);
@@ -235,9 +177,7 @@ console.log(
   // =========================
 
   const salette =
-    Array.isArray(
-      liveStazione?.salette
-    )
+    Array.isArray(liveStazione?.salette)
       ? liveStazione.salette
       : [];
 
@@ -245,21 +185,16 @@ console.log(
     Array.isArray(
       liveStazione?.attivita_stazione
     )
-      ? liveStazione
-          .attivita_stazione
+      ? liveStazione.attivita_stazione
       : [];
 
   const aperte =
     salette.filter(
-      (s) =>
-        s.stato ===
-        'aperta'
+      (s) => s.stato === 'aperta'
     ).length;
 
   const isFavorite =
-    favorites.includes(
-      liveStazione.id
-    );
+    favorites.includes(liveStazione.id);
 
   // =========================
   // FAVORITE
@@ -272,9 +207,7 @@ console.log(
     e.stopPropagation();
 
     const updated =
-      toggleFavorite(
-        liveStazione.id
-      );
+      toggleFavorite(liveStazione.id);
 
     setFavorites(updated);
   }
@@ -285,9 +218,7 @@ console.log(
 
   function handleExpand() {
 
-    setExpanded(
-      !expanded
-    );
+    setExpanded(!expanded);
   }
 
   return (
@@ -490,13 +421,7 @@ console.log(
 
               e.stopPropagation();
 
-              console.log(
-                'OPEN FORM'
-              );
-
-              setShowAddForm(
-                !showAddForm
-              );
+              setShowAddForm(!showAddForm);
             }}
             className="px-4 py-3 rounded-2xl bg-white border border-gray-200 text-gray-700 flex items-center justify-center gap-2 text-sm font-medium shadow-sm hover:bg-gray-50 transition-colors"
           >
@@ -515,15 +440,11 @@ console.log(
             <div className="bg-white border border-gray-200 rounded-2xl p-4">
 
               <ContributoAttivitaForm
-
                 stazionePredefinitaId={
                   liveStazione.id
                 }
-
                 onBack={() =>
-                  setShowAddForm(
-                    false
-                  )
+                  setShowAddForm(false)
                 }
               />
 
@@ -589,141 +510,230 @@ console.log(
 
               </div>
 
-              {locali.map(
-                (locale: any) => (
+              {/* SORT BUTTONS */}
+              <div className="flex gap-2 flex-wrap">
 
-                  <div
-                    key={locale.id}
-                    className="bg-white border border-gray-200 rounded-2xl p-4 flex flex-col gap-3"
-                  >
+                {SORT_OPTIONS.map(
+                  (opt) => (
 
-                    <div className="flex items-start justify-between gap-3">
+                    <button
+                      key={opt.mode}
+                      type="button"
+                      onClick={() =>
+                        setSortMode(
+                          opt.mode
+                        )
+                      }
+                      className={`
+                        flex
+                        items-center
+                        gap-1
+                        px-3
+                        py-1.5
+                        rounded-xl
+                        text-xs
+                        font-medium
+                        border
+                        transition-colors
+                        ${
+                          sortMode ===
+                          opt.mode
+                            ? 'bg-trenord-green text-white border-trenord-green'
+                            : 'bg-white text-gray-600 border-gray-200 hover:border-trenord-green hover:text-trenord-green'
+                        }
+                      `}
+                    >
 
-                      <div>
+                      <span>
+                        {opt.emoji}
+                      </span>
 
-                        <div className="flex items-center gap-2 flex-wrap">
+                      <span>
+                        {opt.label}
+                      </span>
 
-                          <h5 className="font-semibold text-gray-900">
+                    </button>
+                  )
+                )}
 
-                            {locale.nome}
+              </div>
 
-                          </h5>
+              {sortAttivita(
+                locali,
+                sortMode
+              ).map(
+                (locale: any) => {
 
-                          <span className="text-xs px-2 py-1 rounded-full bg-gray-100 text-gray-600">
+                  const stato =
+                    getStatoApertura(
+                      locale
+                    );
 
-                            {locale.categoria}
+                  return (
 
-                          </span>
+                    <div
+                      key={locale.id}
+                      className="bg-white border border-gray-200 rounded-2xl p-4 flex flex-col gap-3"
+                    >
+
+                      <div className="flex items-start justify-between gap-3">
+
+                        <div>
+
+                          <div className="flex items-center gap-2 flex-wrap">
+
+                            <h5 className="font-semibold text-gray-900">
+
+                              {locale.nome}
+
+                            </h5>
+
+                            <span className="text-xs px-2 py-1 rounded-full bg-gray-100 text-gray-600">
+
+                              {locale.categoria}
+
+                            </span>
+
+                          </div>
+
+                          {locale.indirizzo && (
+
+                            <p className="text-sm text-gray-500 mt-1">
+
+                              {locale.indirizzo}
+
+                            </p>
+                          )}
+
+                          {/* STATO APERTURA */}
+                          <div className="flex items-center gap-1.5 mt-2">
+
+                            <span
+                              className={`w-2 h-2 rounded-full flex-shrink-0 ${
+                                stato.aperto
+                                  ? 'bg-emerald-500'
+                                  : 'bg-red-400'
+                              }`}
+                            />
+
+                            <span
+                              className={`text-xs font-medium ${
+                                stato.aperto
+                                  ? 'text-emerald-700'
+                                  : 'text-red-500'
+                              }`}
+                            >
+
+                              {stato.aperto
+                                ? 'Aperto ora'
+                                : 'Chiuso'}
+
+                            </span>
+
+                            <span className="text-xs text-gray-400">
+
+                              · {stato.testo}
+
+                            </span>
+
+                          </div>
 
                         </div>
 
-                        {locale.indirizzo && (
+                        {locale.convenzionato && (
 
-                          <p className="text-sm text-gray-500 mt-1">
+                          <div className="px-2 py-1 rounded-full bg-trenord-green/10 text-trenord-green text-xs font-semibold whitespace-nowrap">
 
-                            {locale.indirizzo}
+                            Convenzionato
 
-                          </p>
+                          </div>
                         )}
 
                       </div>
 
-                      {locale.convenzionato && (
+                      {locale.ubicazione && (
 
-                        <div className="px-2 py-1 rounded-full bg-trenord-green/10 text-trenord-green text-xs font-semibold whitespace-nowrap">
+                        <div className="text-xs text-gray-500">
 
-                          Convenzionato
+                          📍 {locale.ubicazione}
 
                         </div>
                       )}
 
+                      {/* FASCE ORARIE */}
+                      {Array.isArray(
+                        locale.fasce_orarie
+                      ) &&
+                        locale.fasce_orarie.length > 0 && (
+
+                        <div className="flex flex-col gap-2">
+
+                          {locale.fasce_orarie.map(
+                            (
+                              fascia: any,
+                              index: number
+                            ) => (
+
+                              <div
+                                key={index}
+                                className="bg-gray-50 rounded-xl p-3 text-xs text-gray-600"
+                              >
+
+                                <div className="flex items-center gap-2 mb-1">
+
+                                  <Clock3 className="w-3.5 h-3.5" />
+
+                                  <span className="font-medium">
+
+                                    {fascia.apertura} - {fascia.chiusura}
+
+                                  </span>
+
+                                </div>
+
+                                <div>
+
+                                  {Array.isArray(fascia.giorni)
+                                    ? fascia.giorni.join(', ')
+                                    : ''}
+
+                                </div>
+
+                              </div>
+                            )
+                          )}
+
+                        </div>
+                      )}
+
+                      {locale.note && (
+
+                        <div className="text-xs text-gray-400 italic">
+
+                          {locale.note}
+
+                        </div>
+                      )}
+
+                      <a
+                        href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
+                          locale.maps_query ||
+                          locale.nome
+                        )}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="mt-1 px-4 py-2 rounded-xl bg-trenord-green text-white text-sm font-medium flex items-center justify-center gap-2 hover:opacity-90 transition-opacity"
+                      >
+
+                        <Store className="w-4 h-4" />
+
+                        Apri su Maps
+
+                      </a>
+
                     </div>
-
-                    {locale.ubicazione && (
-
-                      <div className="text-xs text-gray-500">
-
-                        📍 {locale.ubicazione}
-
-                      </div>
-                    )}
-
-                    {Array.isArray(
-                      locale.fasce_orarie
-                    ) &&
-                      locale.fasce_orarie.length > 0 && (
-
-                      <div className="flex flex-col gap-2">
-
-                        {locale.fasce_orarie.map(
-                          (
-                            fascia: any,
-                            index: number
-                          ) => (
-
-                            <div
-                              key={index}
-                              className="bg-gray-50 rounded-xl p-3 text-xs text-gray-600"
-                            >
-
-                              <div className="flex items-center gap-2 mb-1">
-
-                                <Clock3 className="w-3.5 h-3.5" />
-
-                                <span className="font-medium">
-
-                                  {fascia.apertura} - {fascia.chiusura}
-
-                                </span>
-
-                              </div>
-
-                              <div>
-
-                                {Array.isArray(
-                                  fascia.giorni
-                                )
-                                  ? fascia.giorni.join(
-                                      ', '
-                                    )
-                                  : ''}
-
-                              </div>
-
-                            </div>
-                          )
-                        )}
-
-                      </div>
-                    )}
-
-                    {locale.note && (
-
-                      <div className="text-xs text-gray-400 italic">
-
-                        {locale.note}
-
-                      </div>
-                    )}
-
-                    <a
-                      href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
-                        locale.maps_query ||
-                        locale.nome
-                      )}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="mt-1 px-4 py-2 rounded-xl bg-trenord-green text-white text-sm font-medium flex items-center justify-center gap-2 hover:opacity-90 transition-opacity"
-                    >
-
-                      <Store className="w-4 h-4" />
-
-                      Apri su Maps
-
-                    </a>
-
-                  </div>
-                )
+                  );
+                }
               )}
 
             </div>

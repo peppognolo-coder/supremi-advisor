@@ -1,6 +1,7 @@
 import {
   useEffect,
-   useState,
+  useRef,
+  useState,
 } from 'react';
 
 import {
@@ -43,6 +44,9 @@ export default function AdminContributiScreen() {
 
   const [processingId, setProcessingId] =
     useState<string | null>(null);
+
+  const firstInputRef =
+    useRef<HTMLInputElement>(null);
 
   const giorniSettimana = [
     'Lun',
@@ -142,7 +146,22 @@ export default function AdminContributiScreen() {
 
   }, [editingContributo]);
 
-    // =========================
+  // =========================
+  // AUTOFOCUS PRIMO INPUT
+  // =========================
+
+  useEffect(() => {
+
+    if (editingContributo) {
+
+      setTimeout(() => {
+        firstInputRef.current?.focus();
+      }, 50);
+    }
+
+  }, [editingContributo]);
+
+  // =========================
   // FASCE ORARIE
   // =========================
 
@@ -710,6 +729,12 @@ export default function AdminContributiScreen() {
 
                 fasce_orarie:
                   fasceSalvate,
+
+                is_active:
+                  true,
+
+                deleted_at:
+                  null,
               });
 
           if (error) {
