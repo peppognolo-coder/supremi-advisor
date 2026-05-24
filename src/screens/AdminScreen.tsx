@@ -1,5 +1,6 @@
 import {
   useEffect,
+  useMemo,
   useState,
 } from 'react';
 
@@ -12,6 +13,14 @@ import {
   ArrowLeft,
   FileJson,
   Store,
+  AlertCircle,
+  AlertTriangle,
+  Clock,
+  FileText,
+  Trash2,
+  Copy,
+  X,
+  Pencil,
 } from 'lucide-react';
 
 import { supabase } from '../lib/supabase';
@@ -21,6 +30,61 @@ import AdminSaletteScreen from './AdminSaletteScreen';
 import AdminContributiScreen from './AdminContributiScreen';
 
 import AdminAttivitaScreen from './AdminAttivitaScreen';
+
+// =========================
+// TIPI
+// =========================
+
+interface AttivitaQualita {
+
+  id: string;
+
+  stazione_id: string;
+
+  nome: string;
+
+  categoria: string;
+
+  convenzionato: boolean;
+
+  is_active: boolean;
+
+  maps_query: string | null;
+
+  indirizzo: string | null;
+
+  fasce_orarie: any[] | null;
+
+  note: string | null;
+}
+
+interface StazioneNome {
+
+  id: string;
+
+  nome: string;
+}
+
+type TipoControllo =
+  | 'maps_query'
+  | 'indirizzo'
+  | 'orari'
+  | 'note'
+  | 'eliminate'
+  | 'duplicati';
+
+interface ModalQualita {
+
+  tipo: TipoControllo;
+
+  titolo: string;
+
+  lista: AttivitaQualita[];
+}
+
+// =========================
+// COMPONENTE
+// =========================
 
 export default function AdminScreen() {
 
@@ -46,21 +110,39 @@ export default function AdminScreen() {
     setShowAttivitaManager,
   ] = useState(false);
 
+  // id da aprire direttamente nel modal modifica
+  const [
+    editAttivitaId,
+    setEditAttivitaId,
+  ] = useState<string | undefined>(
+    undefined
+  );
+
   // =========================
   // STATS
   // =========================
 
   const [stats, setStats] =
     useState({
-
       salette: 0,
-
       stazioni: 0,
-
       pending: 0,
-
       attivita: 0,
     });
+
+  // =========================
+  // DATI QUALITÀ
+  // =========================
+
+  const [attivitaAll, setAttivitaAll] =
+    useState<AttivitaQualita[]>([]);
+
+  const [stazioniMap, setStazioniMap] =
+    useState<Record<string, string>>({});
+
+  // modal qualità aperto
+  const [modalQualita, setModalQualita] =
+    useState<ModalQualita | null>(null);
 
   // =========================
   // LOAD
@@ -80,16 +162,16 @@ export default function AdminScreen() {
         head: true,
       });
 
-    // STAZIONI
+    // STAZIONI (per nomi)
     const {
-      data: stazioni,
+      data: stazioniData,
     } = await supabase
       .from('salette')
       .select('stazione');
 
     const uniqueStations =
       new Set(
-        (stazioni ?? []).map(
+        (stazioniData ?? []).map(
           (s) => s.stazione
         )
       );
@@ -105,7 +187,7 @@ export default function AdminScreen() {
       })
       .eq('stato', 'pending');
 
-    // ATTIVITA ATTIVE
+    // ATTIVITA ATTIVE (counter)
     const {
       count: attivitaCount,
     } = await supabase
@@ -116,20 +198,44 @@ export default function AdminScreen() {
       })
       .eq('is_active', true);
 
+    // TUTTE LE ATTIVITA (qualità dati)
+    const {
+      data: attivitaData,
+    } = await supabase
+      .from('attivita_stazione')
+      .select(
+        'id,stazione_id,nome,categoria,convenzionato,is_active,maps_query,indirizzo,fasce_orarie,note'
+      )
+      .order('nome', {
+        ascending: true,
+      });
+
+    // STAZIONI (per nomi nel modal)
+    const {
+      data: stazioniNomiData,
+    } = await supabase
+      .from('stazioni')
+      .select('id,nome');
+
+    // mappa id → nome stazione
+    const map: Record<string, string> =
+      {};
+
+    for (const s of stazioniNomiData ??
+      []) {
+      map[s.id] = s.nome;
+    }
+
     setStats({
-
-      salette:
-        saletteCount ?? 0,
-
-      stazioni:
-        uniqueStations.size,
-
-      pending:
-        pendingCount ?? 0,
-
-      attivita:
-        attivitaCount ?? 0,
+      salette: saletteCount ?? 0,
+      stazioni: uniqueStations.size,
+      pending: pendingCount ?? 0,
+      attivita: attivitaCount ?? 0,
     });
+
+    setAttivitaAll(attivitaData ?? []);
+
+    setStazioniMap(map);
 
     setLoading(false);
   }
@@ -141,7 +247,136 @@ export default function AdminScreen() {
   }, []);
 
   // =========================
-  // ATTIVITA MANAGER
+  // CALCOLI QUALITÀ (memo)
+  // =========================
+
+  const qualita = useMemo(() => {
+
+    // 1. Senza maps_query
+    const senzaMaps =
+      attivitaAll.filter(
+        (a) =>
+          a.is_active &&
+          (!a.maps_query ||
+            a.maps_query.trim() === '')
+      );
+
+    // 2. Senza indirizzo
+    const senzaIndirizzo =
+      attivitaAll.filter(
+        (a) =>
+          a.is_active &&
+          (!a.indirizzo ||
+            a.indirizzo.trim() === '')
+      );
+
+    // 3. Senza orari
+    const senzaOrari =
+      attivitaAll.filter(
+        (a) =>
+          a.is_active &&
+          (!a.fasce_orarie ||
+            !Array.isArray(
+              a.fasce_orarie
+            ) ||
+            a.fasce_orarie.length === 0)
+      );
+
+    // 4. Senza note
+    const senzaNote =
+      attivitaAll.filter(
+        (a) =>
+          a.is_active &&
+          (!a.note ||
+            a.note.trim() === '')
+      );
+
+    // 5. Eliminate
+    const eliminate =
+      attivitaAll.filter(
+        (a) => a.is_active === false
+      );
+
+    // 6. Possibili duplicati
+    // Raggruppa per stazione_id + nome normalizzato
+    const gruppi: Record<
+      string,
+      AttivitaQualita[]
+    > = {};
+
+    for (const a of attivitaAll) {
+
+      const chiave = `${
+        a.stazione_id
+      }__${a.nome
+        .toLowerCase()
+        .trim()}`;
+
+      if (!gruppi[chiave]) {
+        gruppi[chiave] = [];
+      }
+
+      gruppi[chiave].push(a);
+    }
+
+    // Tieni solo i gruppi con più di 1 elemento
+    const duplicati = Object.values(
+      gruppi
+    )
+      .filter((g) => g.length > 1)
+      .flat();
+
+    return {
+      senzaMaps,
+      senzaIndirizzo,
+      senzaOrari,
+      senzaNote,
+      eliminate,
+      duplicati,
+    };
+
+  }, [attivitaAll]);
+
+  // =========================
+  // HELPERS QUALITÀ
+  // =========================
+
+  function apriModalQualita(
+    tipo: TipoControllo,
+    titolo: string,
+    lista: AttivitaQualita[]
+  ) {
+
+    setModalQualita({
+      tipo,
+      titolo,
+      lista,
+    });
+  }
+
+  function getNomeStazione(
+    stazioneId: string
+  ): string {
+
+    return (
+      stazioniMap[stazioneId] ??
+      stazioneId
+    );
+  }
+
+  function apriModificaDaQualita(
+    attivitaId: string
+  ) {
+
+    setModalQualita(null);
+
+    setEditAttivitaId(attivitaId);
+
+    setShowAttivitaManager(true);
+  }
+
+  // =========================
+  // NAVIGAZIONE MANAGER
   // =========================
 
   if (showAttivitaManager) {
@@ -152,11 +387,12 @@ export default function AdminScreen() {
 
         {/* BACK */}
         <button
-          onClick={() =>
+          onClick={() => {
             setShowAttivitaManager(
               false
-            )
-          }
+            );
+            setEditAttivitaId(undefined);
+          }}
           className="self-start flex items-center gap-2 px-3 py-2 rounded-xl bg-white border border-gray-200 text-sm text-gray-700 hover:bg-gray-50"
         >
 
@@ -166,15 +402,13 @@ export default function AdminScreen() {
 
         </button>
 
-        <AdminAttivitaScreen />
+        <AdminAttivitaScreen
+          initialEditId={editAttivitaId}
+        />
 
       </div>
     );
   }
-
-  // =========================
-  // CONTRIBUTI MANAGER
-  // =========================
 
   if (showContributiManager) {
 
@@ -204,10 +438,6 @@ export default function AdminScreen() {
     );
   }
 
-  // =========================
-  // SALETTE MANAGER
-  // =========================
-
   if (showSaletteManager) {
 
     return (
@@ -217,9 +447,7 @@ export default function AdminScreen() {
         {/* BACK */}
         <button
           onClick={() =>
-            setShowSaletteManager(
-              false
-            )
+            setShowSaletteManager(false)
           }
           className="self-start flex items-center gap-2 px-3 py-2 rounded-xl bg-white border border-gray-200 text-sm text-gray-700 hover:bg-gray-50"
         >
@@ -242,267 +470,871 @@ export default function AdminScreen() {
 
   return (
 
-    <div className="flex flex-col gap-5">
+    <>
 
-      {/* TITLE */}
-      <div>
+      <div className="flex flex-col gap-5">
 
-        <div className="flex items-center gap-2">
+        {/* TITLE */}
+        <div>
 
-          <ShieldCheck className="w-6 h-6 text-trenord-green" />
+          <div className="flex items-center gap-2">
 
-          <h1 className="text-2xl font-bold text-gray-900">
+            <ShieldCheck className="w-6 h-6 text-trenord-green" />
 
-            Dashboard Admin
+            <h1 className="text-2xl font-bold text-gray-900">
 
-          </h1>
+              Dashboard Admin
 
-        </div>
+            </h1>
 
-        <p className="text-sm text-gray-500 mt-1">
+          </div>
 
-          Gestione salette e moderazione sistema
+          <p className="text-sm text-gray-500 mt-1">
 
-        </p>
+            Gestione salette e moderazione sistema
 
-      </div>
-
-      {/* LOADING */}
-      {loading && (
-
-        <div className="text-sm text-gray-500">
-
-          Caricamento...
+          </p>
 
         </div>
-      )}
 
-      {/* STATS */}
-      {!loading && (
+        {/* LOADING */}
+        {loading && (
 
-        <div className="grid grid-cols-2 gap-3">
+          <div className="text-sm text-gray-500">
+
+            Caricamento...
+
+          </div>
+        )}
+
+        {/* STATS */}
+        {!loading && (
+
+          <div className="grid grid-cols-2 gap-3">
+
+            {/* SALETTE */}
+            <div className="bg-white rounded-2xl border border-gray-100 p-4 shadow-sm">
+
+              <div className="flex items-center justify-between">
+
+                <Building2 className="w-5 h-5 text-trenord-green" />
+
+                <span className="text-2xl font-bold text-gray-900">
+
+                  {stats.salette}
+
+                </span>
+
+              </div>
+
+              <p className="text-xs text-gray-500 mt-3 uppercase tracking-wide">
+
+                Salette
+
+              </p>
+
+            </div>
+
+            {/* STAZIONI */}
+            <div className="bg-white rounded-2xl border border-gray-100 p-4 shadow-sm">
+
+              <div className="flex items-center justify-between">
+
+                <MapPin className="w-5 h-5 text-blue-500" />
+
+                <span className="text-2xl font-bold text-gray-900">
+
+                  {stats.stazioni}
+
+                </span>
+
+              </div>
+
+              <p className="text-xs text-gray-500 mt-3 uppercase tracking-wide">
+
+                Stazioni
+
+              </p>
+
+            </div>
+
+            {/* ATTIVITA */}
+            <button
+              onClick={() =>
+                setShowAttivitaManager(
+                  true
+                )
+              }
+              className="bg-white rounded-2xl border border-gray-100 p-4 shadow-sm hover:border-trenord-green/40 transition-colors text-left"
+            >
+
+              <div className="flex items-center justify-between">
+
+                <Store className="w-5 h-5 text-trenord-green" />
+
+                <span className="text-2xl font-bold text-gray-900">
+
+                  {stats.attivita}
+
+                </span>
+
+              </div>
+
+              <p className="text-xs text-gray-500 mt-3 uppercase tracking-wide">
+
+                Attività attive
+
+              </p>
+
+            </button>
+
+            {/* PENDING */}
+            <button
+              onClick={() =>
+                setShowContributiManager(
+                  true
+                )
+              }
+              className="bg-white rounded-2xl border border-gray-100 p-4 shadow-sm hover:border-amber-300 transition-colors text-left"
+            >
+
+              <div className="flex items-center justify-between">
+
+                <MessageSquareWarning className="w-5 h-5 text-amber-500" />
+
+                <span className="text-2xl font-bold text-gray-900">
+
+                  {stats.pending}
+
+                </span>
+
+              </div>
+
+              <p className="text-xs text-gray-500 mt-3 uppercase tracking-wide">
+
+                Pending
+
+              </p>
+
+            </button>
+
+          </div>
+        )}
+
+        {/* QUICK ACTIONS */}
+        <div className="bg-white rounded-2xl border border-gray-100 p-4 shadow-sm flex flex-col gap-3">
+
+          <h2 className="font-semibold text-gray-900">
+
+            Azioni rapide
+
+          </h2>
 
           {/* SALETTE */}
-          <div className="bg-white rounded-2xl border border-gray-100 p-4 shadow-sm">
+          <button
+            onClick={() =>
+              setShowSaletteManager(true)
+            }
+            className="flex items-center gap-3 p-3 rounded-xl bg-trenord-green text-white hover:opacity-90 transition-opacity"
+          >
 
-            <div className="flex items-center justify-between">
+            <Plus className="w-5 h-5" />
 
-              <Building2 className="w-5 h-5 text-trenord-green" />
+            <span className="font-medium">
 
-              <span className="text-2xl font-bold text-gray-900">
+              Gestione salette
 
-                {stats.salette}
+            </span>
 
-              </span>
-
-            </div>
-
-            <p className="text-xs text-gray-500 mt-3 uppercase tracking-wide">
-
-              Salette
-
-            </p>
-
-          </div>
-
-          {/* STAZIONI */}
-          <div className="bg-white rounded-2xl border border-gray-100 p-4 shadow-sm">
-
-            <div className="flex items-center justify-between">
-
-              <MapPin className="w-5 h-5 text-blue-500" />
-
-              <span className="text-2xl font-bold text-gray-900">
-
-                {stats.stazioni}
-
-              </span>
-
-            </div>
-
-            <p className="text-xs text-gray-500 mt-3 uppercase tracking-wide">
-
-              Stazioni
-
-            </p>
-
-          </div>
+          </button>
 
           {/* ATTIVITA */}
           <button
             onClick={() =>
-              setShowAttivitaManager(
-                true
-              )
+              setShowAttivitaManager(true)
             }
-            className="bg-white rounded-2xl border border-gray-100 p-4 shadow-sm hover:border-trenord-green/40 transition-colors text-left"
+            className="flex items-center gap-3 p-3 rounded-xl bg-purple-600 text-white hover:opacity-90 transition-opacity"
           >
 
-            <div className="flex items-center justify-between">
+            <Store className="w-5 h-5" />
 
-              <Store className="w-5 h-5 text-trenord-green" />
+            <span className="font-medium">
 
-              <span className="text-2xl font-bold text-gray-900">
+              Gestione attività
 
-                {stats.attivita}
-
-              </span>
-
-            </div>
-
-            <p className="text-xs text-gray-500 mt-3 uppercase tracking-wide">
-
-              Attività attive
-
-            </p>
+            </span>
 
           </button>
 
-          {/* PENDING */}
+          {/* CONTRIBUTI */}
           <button
             onClick={() =>
-              setShowContributiManager(
-                true
-              )
+              setShowContributiManager(true)
             }
-            className="bg-white rounded-2xl border border-gray-100 p-4 shadow-sm hover:border-amber-300 transition-colors text-left"
+            className="flex items-center gap-3 p-3 rounded-xl bg-blue-600 text-white hover:opacity-90 transition-opacity"
           >
+
+            <FileJson className="w-5 h-5" />
+
+            <span className="font-medium">
+
+              Modera contributi
+
+            </span>
+
+          </button>
+
+        </div>
+
+        {/* ========================= */}
+        {/* QUALITÀ DATI              */}
+        {/* ========================= */}
+
+        {!loading && (
+
+          <div className="bg-white rounded-2xl border border-gray-100 p-4 shadow-sm flex flex-col gap-4">
+
+            <div>
+
+              <h2 className="font-semibold text-gray-900">
+
+                Qualità dati
+
+              </h2>
+
+              <p className="text-xs text-gray-400 mt-0.5">
+
+                Attività con dati mancanti o potenzialmente errati
+
+              </p>
+
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+
+              {/* 1. SENZA MAPS QUERY — ROSSO */}
+              <button
+                type="button"
+                onClick={() =>
+                  apriModalQualita(
+                    'maps_query',
+                    'Senza Maps Query',
+                    qualita.senzaMaps
+                  )
+                }
+                className={`
+                  rounded-2xl
+                  border
+                  p-4
+                  text-left
+                  shadow-sm
+                  transition-colors
+                  ${
+                    qualita.senzaMaps
+                      .length === 0
+                      ? 'bg-emerald-50 border-emerald-100 hover:border-emerald-300'
+                      : 'bg-white border-red-100 hover:border-red-300'
+                  }
+                `}
+              >
+
+                <div className="flex items-center justify-between">
+
+                  <MapPin
+                    className={`w-5 h-5 ${
+                      qualita.senzaMaps
+                        .length === 0
+                        ? 'text-emerald-500'
+                        : 'text-red-500'
+                    }`}
+                  />
+
+                  <span
+                    className={`text-2xl font-bold ${
+                      qualita.senzaMaps
+                        .length === 0
+                        ? 'text-emerald-600'
+                        : 'text-red-600'
+                    }`}
+                  >
+
+                    {
+                      qualita.senzaMaps
+                        .length
+                    }
+
+                  </span>
+
+                </div>
+
+                <p className="text-xs text-gray-500 mt-3 uppercase tracking-wide">
+
+                  Senza Maps Query
+
+                </p>
+
+              </button>
+
+              {/* 2. SENZA INDIRIZZO — ROSSO */}
+              <button
+                type="button"
+                onClick={() =>
+                  apriModalQualita(
+                    'indirizzo',
+                    'Senza indirizzo',
+                    qualita.senzaIndirizzo
+                  )
+                }
+                className={`
+                  rounded-2xl
+                  border
+                  p-4
+                  text-left
+                  shadow-sm
+                  transition-colors
+                  ${
+                    qualita.senzaIndirizzo
+                      .length === 0
+                      ? 'bg-emerald-50 border-emerald-100 hover:border-emerald-300'
+                      : 'bg-white border-red-100 hover:border-red-300'
+                  }
+                `}
+              >
+
+                <div className="flex items-center justify-between">
+
+                  <AlertCircle
+                    className={`w-5 h-5 ${
+                      qualita.senzaIndirizzo
+                        .length === 0
+                        ? 'text-emerald-500'
+                        : 'text-red-500'
+                    }`}
+                  />
+
+                  <span
+                    className={`text-2xl font-bold ${
+                      qualita.senzaIndirizzo
+                        .length === 0
+                        ? 'text-emerald-600'
+                        : 'text-red-600'
+                    }`}
+                  >
+
+                    {
+                      qualita
+                        .senzaIndirizzo
+                        .length
+                    }
+
+                  </span>
+
+                </div>
+
+                <p className="text-xs text-gray-500 mt-3 uppercase tracking-wide">
+
+                  Senza indirizzo
+
+                </p>
+
+              </button>
+
+              {/* 3. SENZA ORARI — ROSSO */}
+              <button
+                type="button"
+                onClick={() =>
+                  apriModalQualita(
+                    'orari',
+                    'Senza orari',
+                    qualita.senzaOrari
+                  )
+                }
+                className={`
+                  rounded-2xl
+                  border
+                  p-4
+                  text-left
+                  shadow-sm
+                  transition-colors
+                  ${
+                    qualita.senzaOrari
+                      .length === 0
+                      ? 'bg-emerald-50 border-emerald-100 hover:border-emerald-300'
+                      : 'bg-white border-red-100 hover:border-red-300'
+                  }
+                `}
+              >
+
+                <div className="flex items-center justify-between">
+
+                  <Clock
+                    className={`w-5 h-5 ${
+                      qualita.senzaOrari
+                        .length === 0
+                        ? 'text-emerald-500'
+                        : 'text-red-500'
+                    }`}
+                  />
+
+                  <span
+                    className={`text-2xl font-bold ${
+                      qualita.senzaOrari
+                        .length === 0
+                        ? 'text-emerald-600'
+                        : 'text-red-600'
+                    }`}
+                  >
+
+                    {
+                      qualita.senzaOrari
+                        .length
+                    }
+
+                  </span>
+
+                </div>
+
+                <p className="text-xs text-gray-500 mt-3 uppercase tracking-wide">
+
+                  Senza orari
+
+                </p>
+
+              </button>
+
+              {/* 4. SENZA NOTE — GIALLO */}
+              <button
+                type="button"
+                onClick={() =>
+                  apriModalQualita(
+                    'note',
+                    'Senza note',
+                    qualita.senzaNote
+                  )
+                }
+                className={`
+                  rounded-2xl
+                  border
+                  p-4
+                  text-left
+                  shadow-sm
+                  transition-colors
+                  ${
+                    qualita.senzaNote
+                      .length === 0
+                      ? 'bg-emerald-50 border-emerald-100 hover:border-emerald-300'
+                      : 'bg-white border-amber-100 hover:border-amber-300'
+                  }
+                `}
+              >
+
+                <div className="flex items-center justify-between">
+
+                  <FileText
+                    className={`w-5 h-5 ${
+                      qualita.senzaNote
+                        .length === 0
+                        ? 'text-emerald-500'
+                        : 'text-amber-500'
+                    }`}
+                  />
+
+                  <span
+                    className={`text-2xl font-bold ${
+                      qualita.senzaNote
+                        .length === 0
+                        ? 'text-emerald-600'
+                        : 'text-amber-600'
+                    }`}
+                  >
+
+                    {
+                      qualita.senzaNote
+                        .length
+                    }
+
+                  </span>
+
+                </div>
+
+                <p className="text-xs text-gray-500 mt-3 uppercase tracking-wide">
+
+                  Senza note
+
+                </p>
+
+              </button>
+
+              {/* 5. ELIMINATE — GRIGIO */}
+              <button
+                type="button"
+                onClick={() =>
+                  apriModalQualita(
+                    'eliminate',
+                    'Attività eliminate',
+                    qualita.eliminate
+                  )
+                }
+                className="
+                  rounded-2xl
+                  border
+                  border-gray-100
+                  bg-white
+                  p-4
+                  text-left
+                  shadow-sm
+                  transition-colors
+                  hover:border-gray-300
+                "
+              >
+
+                <div className="flex items-center justify-between">
+
+                  <Trash2 className="w-5 h-5 text-gray-400" />
+
+                  <span className="text-2xl font-bold text-gray-500">
+
+                    {
+                      qualita.eliminate
+                        .length
+                    }
+
+                  </span>
+
+                </div>
+
+                <p className="text-xs text-gray-500 mt-3 uppercase tracking-wide">
+
+                  Eliminate
+
+                </p>
+
+              </button>
+
+              {/* 6. DUPLICATI — GIALLO */}
+              <button
+                type="button"
+                onClick={() =>
+                  apriModalQualita(
+                    'duplicati',
+                    'Possibili duplicati',
+                    qualita.duplicati
+                  )
+                }
+                className={`
+                  rounded-2xl
+                  border
+                  p-4
+                  text-left
+                  shadow-sm
+                  transition-colors
+                  ${
+                    qualita.duplicati
+                      .length === 0
+                      ? 'bg-emerald-50 border-emerald-100 hover:border-emerald-300'
+                      : 'bg-white border-amber-100 hover:border-amber-300'
+                  }
+                `}
+              >
+
+                <div className="flex items-center justify-between">
+
+                  <Copy
+                    className={`w-5 h-5 ${
+                      qualita.duplicati
+                        .length === 0
+                        ? 'text-emerald-500'
+                        : 'text-amber-500'
+                    }`}
+                  />
+
+                  <span
+                    className={`text-2xl font-bold ${
+                      qualita.duplicati
+                        .length === 0
+                        ? 'text-emerald-600'
+                        : 'text-amber-600'
+                    }`}
+                  >
+
+                    {
+                      qualita.duplicati
+                        .length
+                    }
+
+                  </span>
+
+                </div>
+
+                <p className="text-xs text-gray-500 mt-3 uppercase tracking-wide">
+
+                  Possibili duplicati
+
+                </p>
+
+              </button>
+
+            </div>
+
+          </div>
+        )}
+
+        {/* INFO / SISTEMA */}
+        <div className="bg-white rounded-2xl border border-gray-100 p-4 shadow-sm">
+
+          <h2 className="font-semibold text-gray-900 mb-3">
+
+            Sistema
+
+          </h2>
+
+          <div className="flex flex-col gap-2 text-sm text-gray-600">
 
             <div className="flex items-center justify-between">
 
-              <MessageSquareWarning className="w-5 h-5 text-amber-500" />
+              <span>
 
-              <span className="text-2xl font-bold text-gray-900">
+                Modalità admin
 
-                {stats.pending}
+              </span>
+
+              <span className="text-emerald-600 font-semibold">
+
+                Attiva
 
               </span>
 
             </div>
 
-            <p className="text-xs text-gray-500 mt-3 uppercase tracking-wide">
+            <div className="flex items-center justify-between">
 
-              Pending
+              <span>
 
-            </p>
+                Database
 
-          </button>
+              </span>
+
+              <span className="text-emerald-600 font-semibold">
+
+                Online
+
+              </span>
+
+            </div>
+
+          </div>
+
+        </div>
+
+      </div>
+
+      {/* ========================= */}
+      {/* MODAL QUALITÀ DATI        */}
+      {/* ========================= */}
+
+      {modalQualita && (
+
+        <div
+          className="
+            fixed
+            inset-0
+            bg-black/40
+            z-50
+            flex
+            items-center
+            justify-center
+            p-4
+          "
+          onClick={(e) => {
+            if (
+              e.target ===
+              e.currentTarget
+            ) {
+              setModalQualita(null);
+            }
+          }}
+        >
+
+          <div
+            className="
+              bg-white
+              rounded-3xl
+              w-full
+              max-w-2xl
+              flex
+              flex-col
+              max-h-[85vh]
+              overflow-hidden
+            "
+          >
+
+            {/* HEADER MODAL */}
+            <div className="flex items-center justify-between px-6 pt-6 pb-4 border-b border-gray-100 flex-shrink-0">
+
+              <div>
+
+                <h2 className="text-xl font-bold text-gray-900">
+
+                  {modalQualita.titolo}
+
+                </h2>
+
+                <p className="text-sm text-gray-400 mt-0.5">
+
+                  {
+                    modalQualita.lista
+                      .length
+                  }{' '}
+
+                  {modalQualita.lista
+                    .length === 1
+                    ? 'attività'
+                    : 'attività'}
+
+                </p>
+
+              </div>
+
+              <button
+                type="button"
+                onClick={() =>
+                  setModalQualita(null)
+                }
+                className="w-9 h-9 rounded-xl bg-gray-100 flex items-center justify-center hover:bg-gray-200 transition-colors"
+              >
+
+                <X className="w-5 h-5 text-gray-500" />
+
+              </button>
+
+            </div>
+
+            {/* LISTA */}
+            <div className="overflow-y-auto flex-1 px-6 py-4 flex flex-col gap-3">
+
+              {modalQualita.lista
+                .length === 0 && (
+
+                <div className="text-center py-8 text-gray-400 text-sm">
+
+                  Nessuna attività in questa categoria.
+
+                </div>
+              )}
+
+              {modalQualita.lista.map(
+                (a) => (
+
+                  <div
+                    key={a.id}
+                    className="bg-gray-50 rounded-2xl p-4 flex items-start justify-between gap-3"
+                  >
+
+                    <div className="flex-1 min-w-0">
+
+                      {/* NOME + BADGE */}
+                      <div className="flex items-center gap-2 flex-wrap">
+
+                        <span className="font-semibold text-gray-900">
+
+                          {a.nome}
+
+                        </span>
+
+                        {/* BADGE STATO */}
+                        <span
+                          className={`
+                            px-2
+                            py-0.5
+                            rounded-full
+                            text-xs
+                            font-semibold
+                            ${
+                              a.is_active
+                                ? 'bg-emerald-100 text-emerald-700'
+                                : 'bg-red-100 text-red-600'
+                            }
+                          `}
+                        >
+
+                          {a.is_active
+                            ? 'Attiva'
+                            : 'Eliminata'}
+
+                        </span>
+
+                        {/* BADGE CONVENZIONATO */}
+                        {a.convenzionato && (
+
+                          <span className="px-2 py-0.5 rounded-full text-xs font-semibold bg-trenord-green/10 text-trenord-green">
+
+                            Convenzionato
+
+                          </span>
+                        )}
+
+                      </div>
+
+                      {/* STAZIONE */}
+                      <p className="text-sm text-gray-500 mt-0.5">
+
+                        {getNomeStazione(
+                          a.stazione_id
+                        )}
+
+                      </p>
+
+                      {/* CATEGORIA */}
+                      <p className="text-xs text-gray-400 mt-0.5">
+
+                        {a.categoria}
+
+                      </p>
+
+                    </div>
+
+                    {/* PULSANTE MODIFICA */}
+                    <button
+                      type="button"
+                      onClick={() =>
+                        apriModificaDaQualita(
+                          a.id
+                        )
+                      }
+                      className="
+                        flex-shrink-0
+                        flex
+                        items-center
+                        gap-1.5
+                        px-3
+                        py-2
+                        rounded-xl
+                        bg-blue-600
+                        text-white
+                        text-sm
+                        font-medium
+                        hover:opacity-90
+                        transition-opacity
+                      "
+                    >
+
+                      <Pencil className="w-3.5 h-3.5" />
+
+                      Modifica
+
+                    </button>
+
+                  </div>
+                )
+              )}
+
+            </div>
+
+          </div>
 
         </div>
       )}
 
-      {/* QUICK ACTIONS */}
-      <div className="bg-white rounded-2xl border border-gray-100 p-4 shadow-sm flex flex-col gap-3">
-
-        <h2 className="font-semibold text-gray-900">
-
-          Azioni rapide
-
-        </h2>
-
-        {/* SALETTE */}
-        <button
-          onClick={() =>
-            setShowSaletteManager(true)
-          }
-          className="flex items-center gap-3 p-3 rounded-xl bg-trenord-green text-white hover:opacity-90 transition-opacity"
-        >
-
-          <Plus className="w-5 h-5" />
-
-          <span className="font-medium">
-
-            Gestione salette
-
-          </span>
-
-        </button>
-
-        {/* ATTIVITA */}
-        <button
-          onClick={() =>
-            setShowAttivitaManager(true)
-          }
-          className="flex items-center gap-3 p-3 rounded-xl bg-purple-600 text-white hover:opacity-90 transition-opacity"
-        >
-
-          <Store className="w-5 h-5" />
-
-          <span className="font-medium">
-
-            Gestione attività
-
-          </span>
-
-        </button>
-
-        {/* CONTRIBUTI */}
-        <button
-          onClick={() =>
-            setShowContributiManager(true)
-          }
-          className="flex items-center gap-3 p-3 rounded-xl bg-blue-600 text-white hover:opacity-90 transition-opacity"
-        >
-
-          <FileJson className="w-5 h-5" />
-
-          <span className="font-medium">
-
-            Modera contributi
-
-          </span>
-
-        </button>
-
-      </div>
-
-      {/* INFO */}
-      <div className="bg-white rounded-2xl border border-gray-100 p-4 shadow-sm">
-
-        <h2 className="font-semibold text-gray-900 mb-3">
-
-          Sistema
-
-        </h2>
-
-        <div className="flex flex-col gap-2 text-sm text-gray-600">
-
-          <div className="flex items-center justify-between">
-
-            <span>
-
-              Modalità admin
-
-            </span>
-
-            <span className="text-emerald-600 font-semibold">
-
-              Attiva
-
-            </span>
-
-          </div>
-
-          <div className="flex items-center justify-between">
-
-            <span>
-
-              Database
-
-            </span>
-
-            <span className="text-emerald-600 font-semibold">
-
-              Online
-
-            </span>
-
-          </div>
-
-        </div>
-
-      </div>
-
-    </div>
+    </>
   );
 }

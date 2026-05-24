@@ -9,6 +9,10 @@ import {
   X,
   Clock3,
   FileJson,
+  Microwave,
+  Coffee,
+  Droplets,
+  Snowflake,
 } from 'lucide-react';
 
 import { supabase } from '../lib/supabase';
@@ -56,6 +60,21 @@ export default function AdminContributiScreen() {
     'Ven',
     'Sab',
     'Dom',
+  ];
+
+  const tipiSaletta = [
+    'Equipaggi',
+    'Bagni',
+    'Cancelletto',
+    'Trenitalia',
+    'Sala Relax',
+  ];
+
+  const statiSaletta = [
+    'Aperta',
+    'Chiusa',
+    'Pulizie',
+    'Guasto',
   ];
 
   // =========================
@@ -1111,122 +1130,560 @@ export default function AdminContributiScreen() {
 
             </div>
 
-            <div className="grid gap-3">
+            {/* ========================= */}
+            {/* MODAL SALETTA             */}
+            {/* ========================= */}
 
-              {Object.entries(
-                editingContributo.dati || {}
-              ).map(
-                ([key, value], entryIndex) => {
+            {editingContributo.tipo === 'saletta' && (
 
-                  if (
-                    key === 'stazione_id'
-                  ) {
+              <div className="flex flex-col gap-4">
 
-                    const stazione =
-                      stazioni.find(
-                        (s) =>
-                          s.id === value
-                      );
+                {/* STAZIONE sola lettura */}
+                <div>
 
-                    return (
+                  <label className="text-xs font-semibold text-gray-400 uppercase">
 
-                      <div
-                        key={key}
-                        className="
-                          flex
-                          flex-col
-                          gap-1
-                        "
-                      >
+                    Stazione
 
-                        <label className="text-xs text-gray-500">
+                  </label>
 
-                          Stazione
+                  <input
+                    value={
+                      editingContributo.dati?.stazione || ''
+                    }
+                    disabled
+                    className="mt-1 border border-gray-200 rounded-xl px-3 py-2 w-full bg-gray-100 text-gray-500"
+                  />
 
-                        </label>
+                </div>
 
-                        <input
-                          value={
-                            stazione?.nome || ''
-                          }
-                          disabled
-                          className="
-                            border
-                            rounded-xl
-                            px-3
-                            py-2
-                            bg-gray-100
-                          "
-                        />
+                {/* TIPO */}
+                <div>
 
-                      </div>
+                  <label className="text-xs font-semibold text-gray-400 uppercase">
 
-                    );
-                  }
+                    Tipo
 
-                  if (
-                    key === 'fasce_orarie' ||
-                    key === 'convenzionato' ||
-                    key === 'categoria' ||
-                    key === 'distanza_piedi' ||
-                    key === 'maps_query'
-                  ) {
-                    return null;
-                  }
+                  </label>
 
-                  const isFirst =
-                    entryIndex === 0;
+                  <select
+                    value={
+                      editingContributo.dati?.tipo || ''
+                    }
+                    onChange={(e) =>
+                      setEditingContributo({
+                        ...editingContributo,
+                        dati: {
+                          ...editingContributo.dati,
+                          tipo: e.target.value,
+                        },
+                      })
+                    }
+                    className="mt-1 border border-gray-200 rounded-xl px-3 py-2 w-full"
+                  >
 
-                  return (
+                    {tipiSaletta.map(
+                      (t) => (
 
-                    <div
-                      key={key}
-                      className="
-                        flex
-                        flex-col
-                        gap-1
-                      "
-                    >
+                        <option
+                          key={t}
+                          value={t}
+                        >
 
-                      <label className="text-xs text-gray-500">
+                          {t}
 
-                        {key}
+                        </option>
+                      )
+                    )}
 
-                      </label>
+                  </select>
 
-                      <input
-                        ref={
-                          isFirst
-                            ? firstInputRef
-                            : undefined
-                        }
-                        value={
-                          String(value ?? '')
-                        }
-                        onChange={(e) => {
-                          setEditingContributo({
-                            ...editingContributo,
-                            dati: {
-                              ...editingContributo.dati,
-                              [key]: e.target.value,
-                            },
-                          });
-                        }}
-                        className="
-                          border
-                          rounded-xl
-                          px-3
-                          py-2
-                        "
-                      />
+                </div>
+
+                {/* CODICE ACCESSO */}
+                <div>
+
+                  <label className="text-xs font-semibold text-gray-400 uppercase">
+
+                    Codice accesso
+
+                  </label>
+
+                  <input
+                    value={
+                      editingContributo.dati?.codice_accesso || ''
+                    }
+                    onChange={(e) =>
+                      setEditingContributo({
+                        ...editingContributo,
+                        dati: {
+                          ...editingContributo.dati,
+                          codice_accesso:
+                            e.target.value,
+                        },
+                      })
+                    }
+                    placeholder="Es. 14579B"
+                    className="mt-1 border border-gray-200 rounded-xl px-3 py-2 w-full"
+                  />
+
+                </div>
+
+                {/* UBICAZIONE */}
+                <div>
+
+                  <label className="text-xs font-semibold text-gray-400 uppercase">
+
+                    Ubicazione
+
+                  </label>
+
+                  <input
+                    value={
+                      editingContributo.dati?.ubicazione || ''
+                    }
+                    onChange={(e) =>
+                      setEditingContributo({
+                        ...editingContributo,
+                        dati: {
+                          ...editingContributo.dati,
+                          ubicazione:
+                            e.target.value,
+                        },
+                      })
+                    }
+                    placeholder="Es. Binario 1 lato Milano"
+                    className="mt-1 border border-gray-200 rounded-xl px-3 py-2 w-full"
+                  />
+
+                </div>
+
+                {/* STATO */}
+                <div>
+
+                  <label className="text-xs font-semibold text-gray-400 uppercase">
+
+                    Stato
+
+                  </label>
+
+                  <select
+                    value={
+                      editingContributo.dati?.stato || ''
+                    }
+                    onChange={(e) =>
+                      setEditingContributo({
+                        ...editingContributo,
+                        dati: {
+                          ...editingContributo.dati,
+                          stato: e.target.value,
+                        },
+                      })
+                    }
+                    className="mt-1 border border-gray-200 rounded-xl px-3 py-2 w-full"
+                  >
+
+                    {statiSaletta.map(
+                      (s) => (
+
+                        <option
+                          key={s}
+                          value={s}
+                        >
+
+                          {s}
+
+                        </option>
+                      )
+                    )}
+
+                  </select>
+
+                </div>
+
+                {/* DOTAZIONI */}
+                <div className="flex flex-col gap-3">
+
+                  <label className="text-xs font-semibold text-gray-400 uppercase">
+
+                    Servizi
+
+                  </label>
+
+                  {/* MICROONDE */}
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setEditingContributo({
+                        ...editingContributo,
+                        dati: {
+                          ...editingContributo.dati,
+                          microonde: !(
+                            editingContributo.dati?.microonde ??
+                            editingContributo.dati?.servizi?.microonde ??
+                            false
+                          ),
+                        },
+                      })
+                    }
+                    className={`flex items-center justify-between rounded-xl border px-4 py-3 transition-colors ${
+                      (
+                        editingContributo.dati?.microonde ??
+                        editingContributo.dati?.servizi?.microonde ??
+                        false
+                      )
+                        ? 'bg-trenord-green text-white border-trenord-green'
+                        : 'bg-white border-gray-200 text-gray-700'
+                    }`}
+                  >
+
+                    <div className="flex items-center gap-3">
+
+                      <Microwave className="w-5 h-5" />
+
+                      Microonde
 
                     </div>
 
-                  );
-                })
-              }
+                    <span>
 
-            </div>
+                      {(
+                        editingContributo.dati?.microonde ??
+                        editingContributo.dati?.servizi?.microonde ??
+                        false
+                      )
+                        ? 'SI'
+                        : 'NO'}
+
+                    </span>
+
+                  </button>
+
+                  {/* DISTRIBUTORI */}
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setEditingContributo({
+                        ...editingContributo,
+                        dati: {
+                          ...editingContributo.dati,
+                          distributori: !(
+                            editingContributo.dati?.distributori ??
+                            editingContributo.dati?.servizi?.distributori ??
+                            false
+                          ),
+                        },
+                      })
+                    }
+                    className={`flex items-center justify-between rounded-xl border px-4 py-3 transition-colors ${
+                      (
+                        editingContributo.dati?.distributori ??
+                        editingContributo.dati?.servizi?.distributori ??
+                        false
+                      )
+                        ? 'bg-trenord-green text-white border-trenord-green'
+                        : 'bg-white border-gray-200 text-gray-700'
+                    }`}
+                  >
+
+                    <div className="flex items-center gap-3">
+
+                      <Coffee className="w-5 h-5" />
+
+                      Distributori
+
+                    </div>
+
+                    <span>
+
+                      {(
+                        editingContributo.dati?.distributori ??
+                        editingContributo.dati?.servizi?.distributori ??
+                        false
+                      )
+                        ? 'SI'
+                        : 'NO'}
+
+                    </span>
+
+                  </button>
+
+                  {/* ACQUA */}
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setEditingContributo({
+                        ...editingContributo,
+                        dati: {
+                          ...editingContributo.dati,
+                          acqua: !(
+                            editingContributo.dati?.acqua ??
+                            editingContributo.dati?.servizi?.acqua ??
+                            false
+                          ),
+                        },
+                      })
+                    }
+                    className={`flex items-center justify-between rounded-xl border px-4 py-3 transition-colors ${
+                      (
+                        editingContributo.dati?.acqua ??
+                        editingContributo.dati?.servizi?.acqua ??
+                        false
+                      )
+                        ? 'bg-trenord-green text-white border-trenord-green'
+                        : 'bg-white border-gray-200 text-gray-700'
+                    }`}
+                  >
+
+                    <div className="flex items-center gap-3">
+
+                      <Droplets className="w-5 h-5" />
+
+                      Acqua
+
+                    </div>
+
+                    <span>
+
+                      {(
+                        editingContributo.dati?.acqua ??
+                        editingContributo.dati?.servizi?.acqua ??
+                        false
+                      )
+                        ? 'SI'
+                        : 'NO'}
+
+                    </span>
+
+                  </button>
+
+                  {/* CLIMATIZZATA */}
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setEditingContributo({
+                        ...editingContributo,
+                        dati: {
+                          ...editingContributo.dati,
+                          climatizzata: !(
+                            editingContributo.dati?.climatizzata ??
+                            editingContributo.dati?.servizi?.climatizzata ??
+                            false
+                          ),
+                        },
+                      })
+                    }
+                    className={`flex items-center justify-between rounded-xl border px-4 py-3 transition-colors ${
+                      (
+                        editingContributo.dati?.climatizzata ??
+                        editingContributo.dati?.servizi?.climatizzata ??
+                        false
+                      )
+                        ? 'bg-trenord-green text-white border-trenord-green'
+                        : 'bg-white border-gray-200 text-gray-700'
+                    }`}
+                  >
+
+                    <div className="flex items-center gap-3">
+
+                      <Snowflake className="w-5 h-5" />
+
+                      Climatizzata
+
+                    </div>
+
+                    <span>
+
+                      {(
+                        editingContributo.dati?.climatizzata ??
+                        editingContributo.dati?.servizi?.climatizzata ??
+                        false
+                      )
+                        ? 'SI'
+                        : 'NO'}
+
+                    </span>
+
+                  </button>
+
+                </div>
+
+                {/* NOTE */}
+                <div>
+
+                  <label className="text-xs font-semibold text-gray-400 uppercase">
+
+                    Note
+
+                  </label>
+
+                  <textarea
+                    value={
+                      editingContributo.dati?.note || ''
+                    }
+                    onChange={(e) =>
+                      setEditingContributo({
+                        ...editingContributo,
+                        dati: {
+                          ...editingContributo.dati,
+                          note: e.target.value,
+                        },
+                      })
+                    }
+                    placeholder="Inserisci eventuali informazioni aggiuntive..."
+                    className="mt-1 border border-gray-200 rounded-xl px-3 py-2 w-full min-h-[120px]"
+                  />
+
+                </div>
+
+              </div>
+            )}
+
+            {/* ========================= */}
+            {/* MODAL ATTIVITA            */}
+            {/* ========================= */}
+
+            {editingContributo.tipo === 'attivita' && (
+
+              <div className="grid gap-3">
+
+                {/* STAZIONE (sola lettura) */}
+                <div className="flex flex-col gap-1">
+
+                  <label className="text-xs text-gray-500">
+
+                    Stazione
+
+                  </label>
+
+                  <input
+                    value={
+                      stazioni.find(
+                        (s) =>
+                          s.id ===
+                          editingContributo.dati?.stazione_id
+                      )?.nome || ''
+                    }
+                    disabled
+                    className="border rounded-xl px-3 py-2 bg-gray-100"
+                  />
+
+                </div>
+
+                {/* NOME */}
+                <div className="flex flex-col gap-1">
+
+                  <label className="text-xs text-gray-500">
+
+                    nome
+
+                  </label>
+
+                  <input
+                    value={
+                      editingContributo.dati?.nome || ''
+                    }
+                    onChange={(e) =>
+                      setEditingContributo({
+                        ...editingContributo,
+                        dati: {
+                          ...editingContributo.dati,
+                          nome: e.target.value,
+                        },
+                      })
+                    }
+                    className="border rounded-xl px-3 py-2"
+                  />
+
+                </div>
+
+                {/* INDIRIZZO */}
+                <div className="flex flex-col gap-1">
+
+                  <label className="text-xs text-gray-500">
+
+                    indirizzo
+
+                  </label>
+
+                  <input
+                    value={
+                      editingContributo.dati?.indirizzo || ''
+                    }
+                    onChange={(e) =>
+                      setEditingContributo({
+                        ...editingContributo,
+                        dati: {
+                          ...editingContributo.dati,
+                          indirizzo: e.target.value,
+                        },
+                      })
+                    }
+                    className="border rounded-xl px-3 py-2"
+                  />
+
+                </div>
+
+                {/* UBICAZIONE */}
+                <div className="flex flex-col gap-1">
+
+                  <label className="text-xs text-gray-500">
+
+                    ubicazione
+
+                  </label>
+
+                  <input
+                    value={
+                      editingContributo.dati?.ubicazione || ''
+                    }
+                    onChange={(e) =>
+                      setEditingContributo({
+                        ...editingContributo,
+                        dati: {
+                          ...editingContributo.dati,
+                          ubicazione: e.target.value,
+                        },
+                      })
+                    }
+                    className="border rounded-xl px-3 py-2"
+                  />
+
+                </div>
+
+                {/* NOTE */}
+                <div className="flex flex-col gap-1">
+
+                  <label className="text-xs text-gray-500">
+
+                    note
+
+                  </label>
+
+                  <input
+                    value={
+                      editingContributo.dati?.note || ''
+                    }
+                    onChange={(e) =>
+                      setEditingContributo({
+                        ...editingContributo,
+                        dati: {
+                          ...editingContributo.dati,
+                          note: e.target.value,
+                        },
+                      })
+                    }
+                    className="border rounded-xl px-3 py-2"
+                  />
+
+                </div>
+
+              </div>
+            )}
+
+            {editingContributo.tipo === 'attivita' && (
+
+              <>
 
             {/* FASCE ORARIE */}
             <div className="flex flex-col gap-4">
@@ -1592,6 +2049,9 @@ export default function AdminContributiScreen() {
               />
 
             </div>
+
+              </>
+            )}
 
             <button
               onClick={

@@ -7,6 +7,8 @@ import {
   RotateCcw,
   Trash2,
   Store,
+  Pencil,
+  X,
 } from 'lucide-react';
 
 import { supabase } from '../lib/supabase';
@@ -20,6 +22,15 @@ type FiltroMode =
   | 'attive'
   | 'eliminate';
 
+interface FasciaOraria {
+
+  giorni: string[];
+
+  apertura: string;
+
+  chiusura: string;
+}
+
 interface AttivitaRow {
 
   id: string;
@@ -30,6 +41,12 @@ interface AttivitaRow {
 
   categoria: string;
 
+  indirizzo: string | null;
+
+  ubicazione: string | null;
+
+  maps_query: string | null;
+
   distanza_piedi: string | null;
 
   convenzionato: boolean;
@@ -39,6 +56,8 @@ interface AttivitaRow {
   deleted_at: string | null;
 
   note: string | null;
+
+  fasce_orarie: FasciaOraria[] | null;
 }
 
 interface StazioneRow {
@@ -49,7 +68,7 @@ interface StazioneRow {
 }
 
 // =========================
-// FILTRO OPTIONS
+// COSTANTI
 // =========================
 
 const FILTRO_OPTIONS: {
@@ -74,11 +93,50 @@ const FILTRO_OPTIONS: {
 
 ];
 
+const GIORNI_SETTIMANA = [
+  'Lun',
+  'Mar',
+  'Mer',
+  'Gio',
+  'Ven',
+  'Sab',
+  'Dom',
+];
+
+const CATEGORIE = [
+  'Bar',
+  'Fast Food',
+  'Market',
+  'Ristorante',
+  'Farmacia',
+  'Tabacchi',
+  'Hotel',
+  'Altro',
+];
+
+const DISTANZE = [
+  'Entro 2 minuti',
+  'Entro 5 minuti',
+  'Entro 10 minuti',
+  'Oltre 10 minuti',
+];
+
 // =========================
 // COMPONENTE
 // =========================
 
-export default function AdminAttivitaScreen() {
+// =========================
+// PROPS
+// =========================
+
+interface Props {
+
+  initialEditId?: string;
+}
+
+export default function AdminAttivitaScreen({
+  initialEditId,
+}: Props) {
 
   const [loading, setLoading] =
     useState(true);
@@ -89,7 +147,6 @@ export default function AdminAttivitaScreen() {
   const [stazioni, setStazioni] =
     useState<StazioneRow[]>([]);
 
-  // Default: Attive (punto 3)
   const [filtro, setFiltro] =
     useState<FiltroMode>('attive');
 
@@ -99,6 +156,20 @@ export default function AdminAttivitaScreen() {
   ] = useState<string | null>(null);
 
   // =========================
+  // STATO MODAL MODIFICA
+  // =========================
+
+  const [
+    editingAttivita,
+    setEditingAttivita,
+  ] = useState<AttivitaRow | null>(
+    null
+  );
+
+  const [saving, setSaving] =
+    useState(false);
+
+  // =========================
   // LOAD
   // =========================
 
@@ -106,9 +177,6 @@ export default function AdminAttivitaScreen() {
 
     setLoading(true);
 
-    // Fetch TUTTE le attività
-    // senza filtro is_active —
-    // l'admin vede tutto
     const {
       data: attivitaData,
       error: attivitaError,
@@ -121,13 +189,9 @@ export default function AdminAttivitaScreen() {
 
     if (attivitaError) {
 
-      console.error(
-        attivitaError
-      );
+      console.error(attivitaError);
 
-      alert(
-        'Operazione non riuscita'
-      );
+      alert('Operazione non riuscita');
 
       setLoading(false);
 
@@ -143,18 +207,12 @@ export default function AdminAttivitaScreen() {
 
     if (stazioniError) {
 
-      console.error(
-        stazioniError
-      );
+      console.error(stazioniError);
     }
 
-    setAttivita(
-      attivitaData ?? []
-    );
+    setAttivita(attivitaData ?? []);
 
-    setStazioni(
-      stazioniData ?? []
-    );
+    setStazioni(stazioniData ?? []);
 
     setLoading(false);
   }
@@ -166,13 +224,70 @@ export default function AdminAttivitaScreen() {
   }, []);
 
   // =========================
-  // SOFT DELETE (punto 1)
-  // update is_active + deleted_at
-  // NO .delete()
+  // APRI MODAL DA PROP
+  // =========================
+
+  useEffect(() => {
+
+    if (
+      !initialEditId ||
+      loading ||
+      attivita.length === 0
+    ) {
+      return;
+    }
+
+    const target =
+      attivita.find(
+        (a) => a.id === initialEditId
+      );
+
+    if (target) {
+
+      apriModifica(target);
+    }
+
+  }, [
+    initialEditId,
+    loading,
+    attivita,
+  ]);
+
+  // =========================
+  // ESC CHIUDE MODAL
+  // =========================
+
+  useEffect(() => {
+
+    function onKey(e: KeyboardEvent) {
+
+      if (
+        e.key === 'Escape' &&
+        editingAttivita
+      ) {
+        setEditingAttivita(null);
+      }
+    }
+
+    window.addEventListener(
+      'keydown',
+      onKey
+    );
+
+    return () =>
+      window.removeEventListener(
+        'keydown',
+        onKey
+      );
+
+  }, [editingAttivita]);
+
+  // =========================
+  // SOFT DELETE
   // =========================
 
   async function softDelete(
-    attivita: AttivitaRow
+    a: AttivitaRow
   ) {
 
     const confermato =
@@ -180,11 +295,9 @@ export default function AdminAttivitaScreen() {
         `Eliminare questa attività?\n\nL'attività verrà nascosta agli utenti ma potrà essere ripristinata.`
       );
 
-    if (!confermato) {
-      return;
-    }
+    if (!confermato) return;
 
-    setProcessingId(attivita.id);
+    setProcessingId(a.id);
 
     const { error } =
       await supabase
@@ -194,34 +307,29 @@ export default function AdminAttivitaScreen() {
           deleted_at:
             new Date().toISOString(),
         })
-        .eq('id', attivita.id);
+        .eq('id', a.id);
 
     if (error) {
 
       console.error(error);
 
-      alert(
-        'Operazione non riuscita'
-      );
+      alert('Operazione non riuscita');
 
       setProcessingId(null);
 
       return;
     }
 
-    // Aggiorna UI immediatamente
-    // senza fare reload completo
     setAttivita((prev) =>
-      prev.map((a) =>
-        a.id === attivita.id
+      prev.map((item) =>
+        item.id === a.id
           ? {
-              ...a,
+              ...item,
               is_active: false,
               deleted_at:
-                new Date()
-                  .toISOString(),
+                new Date().toISOString(),
             }
-          : a
+          : item
       )
     );
 
@@ -229,24 +337,21 @@ export default function AdminAttivitaScreen() {
   }
 
   // =========================
-  // RIPRISTINA (punto 2)
-  // update is_active + deleted_at
+  // RIPRISTINA
   // =========================
 
   async function ripristina(
-    attivita: AttivitaRow
+    a: AttivitaRow
   ) {
 
     const confermato =
       window.confirm(
-        `Ripristinare "${attivita.nome}"?\n\nL'attività tornerà visibile agli utenti.`
+        `Ripristinare "${a.nome}"?\n\nL'attività tornerà visibile agli utenti.`
       );
 
-    if (!confermato) {
-      return;
-    }
+    if (!confermato) return;
 
-    setProcessingId(attivita.id);
+    setProcessingId(a.id);
 
     const { error } =
       await supabase
@@ -255,35 +360,261 @@ export default function AdminAttivitaScreen() {
           is_active: true,
           deleted_at: null,
         })
-        .eq('id', attivita.id);
+        .eq('id', a.id);
 
     if (error) {
 
       console.error(error);
 
-      alert(
-        'Operazione non riuscita'
-      );
+      alert('Operazione non riuscita');
 
       setProcessingId(null);
 
       return;
     }
 
-    // Aggiorna UI immediatamente
     setAttivita((prev) =>
-      prev.map((a) =>
-        a.id === attivita.id
+      prev.map((item) =>
+        item.id === a.id
           ? {
-              ...a,
+              ...item,
               is_active: true,
               deleted_at: null,
             }
-          : a
+          : item
       )
     );
 
     setProcessingId(null);
+  }
+
+  // =========================
+  // APRI MODAL MODIFICA
+  // =========================
+
+  function apriModifica(
+    a: AttivitaRow
+  ) {
+
+    setEditingAttivita({
+      ...a,
+      fasce_orarie:
+        Array.isArray(a.fasce_orarie)
+          ? a.fasce_orarie.map(
+              (f) => ({
+                ...f,
+                giorni: Array.isArray(
+                  f.giorni
+                )
+                  ? [...f.giorni]
+                  : [],
+              })
+            )
+          : [],
+    });
+  }
+
+  // =========================
+  // FASCE ORARIE — HELPERS
+  // =========================
+
+  function updateFascia(
+    index: number,
+    field: string,
+    value: any
+  ) {
+
+    if (!editingAttivita) return;
+
+    const nuove = [
+      ...(editingAttivita.fasce_orarie ??
+        []),
+    ];
+
+    nuove[index] = {
+      ...nuove[index],
+      [field]: value,
+    };
+
+    setEditingAttivita({
+      ...editingAttivita,
+      fasce_orarie: nuove,
+    });
+  }
+
+  function toggleGiorno(
+    fasciaIndex: number,
+    giorno: string
+  ) {
+
+    if (!editingAttivita) return;
+
+    const fascia =
+      editingAttivita.fasce_orarie?.[
+        fasciaIndex
+      ];
+
+    if (!fascia) return;
+
+    const giorni = Array.isArray(
+      fascia.giorni
+    )
+      ? fascia.giorni
+      : [];
+
+    const nuovi = giorni.includes(
+      giorno
+    )
+      ? giorni.filter(
+          (g) => g !== giorno
+        )
+      : [...giorni, giorno];
+
+    updateFascia(
+      fasciaIndex,
+      'giorni',
+      nuovi
+    );
+  }
+
+  function addFascia() {
+
+    if (!editingAttivita) return;
+
+    setEditingAttivita({
+      ...editingAttivita,
+      fasce_orarie: [
+        ...(editingAttivita.fasce_orarie ??
+          []),
+        {
+          giorni: [],
+          apertura: '',
+          chiusura: '',
+        },
+      ],
+    });
+  }
+
+  function removeFascia(
+    index: number
+  ) {
+
+    if (!editingAttivita) return;
+
+    setEditingAttivita({
+      ...editingAttivita,
+      fasce_orarie: (
+        editingAttivita.fasce_orarie ??
+        []
+      ).filter((_, i) => i !== index),
+    });
+  }
+
+  // =========================
+  // SALVA MODIFICA
+  // =========================
+
+  async function salvaModifica() {
+
+    if (!editingAttivita) return;
+
+    // VALIDAZIONE (punto 8)
+    if (!editingAttivita.nome?.trim()) {
+
+      alert(
+        'Compila i campi obbligatori: nome'
+      );
+
+      return;
+    }
+
+    if (
+      !editingAttivita.categoria?.trim()
+    ) {
+
+      alert(
+        'Compila i campi obbligatori: categoria'
+      );
+
+      return;
+    }
+
+    setSaving(true);
+
+    const { error } =
+      await supabase
+        .from('attivita_stazione')
+        .update({
+          nome:
+            editingAttivita.nome.trim(),
+          categoria:
+            editingAttivita.categoria,
+          indirizzo:
+            editingAttivita.indirizzo,
+          ubicazione:
+            editingAttivita.ubicazione,
+          maps_query:
+            editingAttivita.maps_query,
+          distanza_piedi:
+            editingAttivita.distanza_piedi,
+          convenzionato:
+            editingAttivita.convenzionato,
+          note:
+            editingAttivita.note,
+          fasce_orarie:
+            editingAttivita.fasce_orarie ??
+            [],
+        })
+        .eq('id', editingAttivita.id);
+
+    if (error) {
+
+      console.error(error);
+
+      alert(
+        'Errore durante il salvataggio'
+      );
+
+      setSaving(false);
+
+      return;
+    }
+
+    // Aggiorna lista senza reload
+    setAttivita((prev) =>
+      prev.map((item) =>
+        item.id === editingAttivita.id
+          ? {
+              ...item,
+              nome:
+                editingAttivita.nome.trim(),
+              categoria:
+                editingAttivita.categoria,
+              indirizzo:
+                editingAttivita.indirizzo,
+              ubicazione:
+                editingAttivita.ubicazione,
+              maps_query:
+                editingAttivita.maps_query,
+              distanza_piedi:
+                editingAttivita.distanza_piedi,
+              convenzionato:
+                editingAttivita.convenzionato,
+              note:
+                editingAttivita.note,
+              fasce_orarie:
+                editingAttivita.fasce_orarie ??
+                [],
+            }
+          : item
+      )
+    );
+
+    setSaving(false);
+
+    setEditingAttivita(null);
+
+    alert('Modifiche salvate');
   }
 
   // =========================
@@ -319,23 +650,20 @@ export default function AdminAttivitaScreen() {
   }
 
   // =========================
-  // COMPUTED (punto 3 e 5)
+  // COMPUTED
   // =========================
 
   const attivitaFiltrate =
     attivita.filter((a) => {
 
       if (filtro === 'attive') {
-        // is_active === true
         return a.is_active === true;
       }
 
       if (filtro === 'eliminate') {
-        // is_active === false
         return a.is_active === false;
       }
 
-      // 'tutte'
       return true;
     });
 
@@ -355,459 +683,1174 @@ export default function AdminAttivitaScreen() {
 
   return (
 
-    <div className="flex flex-col gap-4">
+    <>
 
-      {/* TITLE */}
-      <div>
+      <div className="flex flex-col gap-4">
 
-        <h1 className="text-2xl font-bold text-gray-900">
+        {/* TITLE */}
+        <div>
 
-          Gestione Attività
+          <h1 className="text-2xl font-bold text-gray-900">
 
-        </h1>
+            Gestione Attività
 
-        <p className="text-sm text-gray-500 mt-1">
+          </h1>
 
-          Visualizza e gestisci le attività delle stazioni
+          <p className="text-sm text-gray-500 mt-1">
 
-        </p>
+            Visualizza e gestisci le attività delle stazioni
 
-      </div>
-
-      {/* LOADING */}
-      {loading && (
-
-        <div className="text-sm text-gray-500">
-
-          Caricamento...
+          </p>
 
         </div>
-      )}
 
-      {/* CONTATORI */}
-      {!loading && (
+        {/* LOADING */}
+        {loading && (
 
-        <div className="grid grid-cols-3 gap-3">
+          <div className="text-sm text-gray-500">
 
-          <div className="bg-white rounded-2xl border border-gray-100 p-3 shadow-sm text-center">
+            Caricamento...
 
-            <div className="text-2xl font-bold text-gray-900">
+          </div>
+        )}
 
-              {attivita.length}
+        {/* CONTATORI */}
+        {!loading && (
+
+          <div className="grid grid-cols-3 gap-3">
+
+            <div className="bg-white rounded-2xl border border-gray-100 p-3 shadow-sm text-center">
+
+              <div className="text-2xl font-bold text-gray-900">
+
+                {attivita.length}
+
+              </div>
+
+              <div className="text-xs text-gray-500 mt-1 uppercase tracking-wide">
+
+                Totali
+
+              </div>
 
             </div>
 
-            <div className="text-xs text-gray-500 mt-1 uppercase tracking-wide">
+            <div className="bg-white rounded-2xl border border-emerald-100 p-3 shadow-sm text-center">
 
-              Totali
+              <div className="text-2xl font-bold text-emerald-600">
+
+                {conteggioAttive}
+
+              </div>
+
+              <div className="text-xs text-gray-500 mt-1 uppercase tracking-wide">
+
+                Attive
+
+              </div>
+
+            </div>
+
+            <div className="bg-white rounded-2xl border border-red-100 p-3 shadow-sm text-center">
+
+              <div className="text-2xl font-bold text-red-500">
+
+                {conteggioEliminate}
+
+              </div>
+
+              <div className="text-xs text-gray-500 mt-1 uppercase tracking-wide">
+
+                Eliminate
+
+              </div>
 
             </div>
 
           </div>
+        )}
 
-          <div className="bg-white rounded-2xl border border-emerald-100 p-3 shadow-sm text-center">
+        {/* FILTRI */}
+        {!loading && (
 
-            <div className="text-2xl font-bold text-emerald-600">
+          <div className="flex gap-2">
 
-              {conteggioAttive}
+            {FILTRO_OPTIONS.map(
+              (opt) => (
 
-            </div>
-
-            <div className="text-xs text-gray-500 mt-1 uppercase tracking-wide">
-
-              Attive
-
-            </div>
-
-          </div>
-
-          <div className="bg-white rounded-2xl border border-red-100 p-3 shadow-sm text-center">
-
-            <div className="text-2xl font-bold text-red-500">
-
-              {conteggioEliminate}
-
-            </div>
-
-            <div className="text-xs text-gray-500 mt-1 uppercase tracking-wide">
-
-              Eliminate
-
-            </div>
-
-          </div>
-
-        </div>
-      )}
-
-      {/* FILTRI (punto 3) */}
-      {!loading && (
-
-        <div className="flex gap-2">
-
-          {FILTRO_OPTIONS.map(
-            (opt) => (
-
-              <button
-                key={opt.mode}
-                type="button"
-                onClick={() =>
-                  setFiltro(opt.mode)
-                }
-                className={`
-                  px-4
-                  py-2
-                  rounded-xl
-                  text-sm
-                  font-medium
-                  border
-                  transition-colors
-                  ${
-                    filtro === opt.mode
-                      ? 'bg-trenord-green text-white border-trenord-green'
-                      : 'bg-white text-gray-600 border-gray-200 hover:border-trenord-green hover:text-trenord-green'
+                <button
+                  key={opt.mode}
+                  type="button"
+                  onClick={() =>
+                    setFiltro(opt.mode)
                   }
-                `}
-              >
-
-                {opt.label}
-
-                {opt.mode === 'attive' && (
-
-                  <span
-                    className={`
-                      ml-1.5
-                      text-xs
-                      px-1.5
-                      py-0.5
-                      rounded-full
-                      ${
-                        filtro === 'attive'
-                          ? 'bg-white/20'
-                          : 'bg-emerald-100 text-emerald-700'
-                      }
-                    `}
-                  >
-
-                    {conteggioAttive}
-
-                  </span>
-                )}
-
-                {opt.mode === 'eliminate' && (
-
-                  <span
-                    className={`
-                      ml-1.5
-                      text-xs
-                      px-1.5
-                      py-0.5
-                      rounded-full
-                      ${
-                        filtro === 'eliminate'
-                          ? 'bg-white/20'
-                          : 'bg-red-100 text-red-600'
-                      }
-                    `}
-                  >
-
-                    {conteggioEliminate}
-
-                  </span>
-                )}
-
-              </button>
-            )
-          )}
-
-        </div>
-      )}
-
-      {/* EMPTY */}
-      {!loading &&
-        attivitaFiltrate.length === 0 && (
-
-        <div className="bg-white rounded-2xl border border-gray-100 p-6 text-sm text-gray-500 text-center">
-
-          {filtro === 'eliminate'
-            ? 'Nessuna attività eliminata'
-            : filtro === 'attive'
-            ? 'Nessuna attività attiva'
-            : 'Nessuna attività presente'}
-
-        </div>
-      )}
-
-      {/* LIST */}
-      {!loading && (
-
-        <div className="flex flex-col gap-3">
-
-          {attivitaFiltrate.map(
-            (a) => {
-
-              const isActive =
-                a.is_active === true;
-
-              const isProcessing =
-                processingId === a.id;
-
-              return (
-
-                <div
-                  key={a.id}
                   className={`
-                    bg-white
-                    rounded-2xl
+                    px-4
+                    py-2
+                    rounded-xl
+                    text-sm
+                    font-medium
                     border
-                    p-4
-                    shadow-sm
-                    flex
-                    flex-col
-                    gap-3
-                    transition-opacity
+                    transition-colors
                     ${
-                      isActive
-                        ? 'border-gray-100'
-                        : 'border-red-100 opacity-70'
+                      filtro === opt.mode
+                        ? 'bg-trenord-green text-white border-trenord-green'
+                        : 'bg-white text-gray-600 border-gray-200 hover:border-trenord-green hover:text-trenord-green'
                     }
                   `}
                 >
 
-                  {/* TOP */}
-                  <div className="flex items-start gap-3">
+                  {opt.label}
 
-                    {/* ICON */}
-                    <div
+                  {opt.mode === 'attive' && (
+
+                    <span
                       className={`
-                        flex-shrink-0
-                        w-10
-                        h-10
-                        rounded-2xl
-                        flex
-                        items-center
-                        justify-center
+                        ml-1.5
+                        text-xs
+                        px-1.5
+                        py-0.5
+                        rounded-full
                         ${
-                          isActive
-                            ? 'bg-trenord-green/10'
-                            : 'bg-red-50'
+                          filtro === 'attive'
+                            ? 'bg-white/20'
+                            : 'bg-emerald-100 text-emerald-700'
                         }
                       `}
                     >
 
-                      <Store
+                      {conteggioAttive}
+
+                    </span>
+                  )}
+
+                  {opt.mode === 'eliminate' && (
+
+                    <span
+                      className={`
+                        ml-1.5
+                        text-xs
+                        px-1.5
+                        py-0.5
+                        rounded-full
+                        ${
+                          filtro === 'eliminate'
+                            ? 'bg-white/20'
+                            : 'bg-red-100 text-red-600'
+                        }
+                      `}
+                    >
+
+                      {conteggioEliminate}
+
+                    </span>
+                  )}
+
+                </button>
+              )
+            )}
+
+          </div>
+        )}
+
+        {/* EMPTY */}
+        {!loading &&
+          attivitaFiltrate.length === 0 && (
+
+          <div className="bg-white rounded-2xl border border-gray-100 p-6 text-sm text-gray-500 text-center">
+
+            {filtro === 'eliminate'
+              ? 'Nessuna attività eliminata'
+              : filtro === 'attive'
+              ? 'Nessuna attività attiva'
+              : 'Nessuna attività presente'}
+
+          </div>
+        )}
+
+        {/* LIST */}
+        {!loading && (
+
+          <div className="flex flex-col gap-3">
+
+            {attivitaFiltrate.map(
+              (a) => {
+
+                const isActive =
+                  a.is_active === true;
+
+                const isProcessing =
+                  processingId === a.id;
+
+                return (
+
+                  <div
+                    key={a.id}
+                    className={`
+                      bg-white
+                      rounded-2xl
+                      border
+                      p-4
+                      shadow-sm
+                      flex
+                      flex-col
+                      gap-3
+                      transition-opacity
+                      ${
+                        isActive
+                          ? 'border-gray-100'
+                          : 'border-red-100 opacity-70'
+                      }
+                    `}
+                  >
+
+                    {/* TOP */}
+                    <div className="flex items-start gap-3">
+
+                      {/* ICON */}
+                      <div
                         className={`
-                          w-5 h-5
+                          flex-shrink-0
+                          w-10
+                          h-10
+                          rounded-2xl
+                          flex
+                          items-center
+                          justify-center
                           ${
                             isActive
-                              ? 'text-trenord-green'
-                              : 'text-red-400'
+                              ? 'bg-trenord-green/10'
+                              : 'bg-red-50'
                           }
                         `}
-                      />
+                      >
 
-                    </div>
-
-                    {/* INFO */}
-                    <div className="flex-1 min-w-0">
-
-                      <div className="flex items-center gap-2 flex-wrap">
-
-                        <h3 className="font-semibold text-gray-900">
-
-                          {a.nome}
-
-                        </h3>
-
-                        {/* BADGE STATO (punto 4) */}
-                        <span
+                        <Store
                           className={`
-                            px-2
-                            py-0.5
-                            rounded-full
-                            text-xs
-                            font-semibold
+                            w-5 h-5
                             ${
                               isActive
-                                ? 'bg-emerald-100 text-emerald-700'
-                                : 'bg-red-100 text-red-600'
+                                ? 'text-trenord-green'
+                                : 'text-red-400'
                             }
                           `}
-                        >
-
-                          {isActive
-                            ? '🟢 Attiva'
-                            : '🔴 Eliminata'}
-
-                        </span>
-
-                        {a.convenzionato && (
-
-                          <span className="px-2 py-0.5 rounded-full text-xs font-semibold bg-trenord-green/10 text-trenord-green">
-
-                            Convenzionato
-
-                          </span>
-                        )}
+                        />
 
                       </div>
 
-                      <p className="text-sm text-gray-500 mt-0.5">
+                      {/* INFO */}
+                      <div className="flex-1 min-w-0">
 
-                        {getNomeStazione(
-                          a.stazione_id
-                        )}
+                        <div className="flex items-center gap-2 flex-wrap">
 
-                      </p>
+                          <h3 className="font-semibold text-gray-900">
 
-                      <div className="flex items-center gap-3 mt-1 flex-wrap">
+                            {a.nome}
 
-                        <span className="text-xs text-gray-400">
+                          </h3>
 
-                          {a.categoria}
+                          {/* BADGE STATO */}
+                          <span
+                            className={`
+                              px-2
+                              py-0.5
+                              rounded-full
+                              text-xs
+                              font-semibold
+                              ${
+                                isActive
+                                  ? 'bg-emerald-100 text-emerald-700'
+                                  : 'bg-red-100 text-red-600'
+                              }
+                            `}
+                          >
 
-                        </span>
-
-                        {a.distanza_piedi && (
-
-                          <span className="text-xs text-gray-400">
-
-                            🚶 {a.distanza_piedi}
+                            {isActive
+                              ? '🟢 Attiva'
+                              : '🔴 Eliminata'}
 
                           </span>
-                        )}
 
-                      </div>
+                          {a.convenzionato && (
 
-                      {/* DATA ELIMINAZIONE */}
-                      {!isActive &&
-                        a.deleted_at && (
+                            <span className="px-2 py-0.5 rounded-full text-xs font-semibold bg-trenord-green/10 text-trenord-green">
 
-                        <p className="text-xs text-red-400 mt-1">
+                              Convenzionato
 
-                          Eliminata il{' '}
-                          {formatDeletedAt(
-                            a.deleted_at
+                            </span>
+                          )}
+
+                        </div>
+
+                        <p className="text-sm text-gray-500 mt-0.5">
+
+                          {getNomeStazione(
+                            a.stazione_id
                           )}
 
                         </p>
-                      )}
 
-                      {a.note && (
+                        <div className="flex items-center gap-3 mt-1 flex-wrap">
 
-                        <p className="text-xs text-gray-400 italic mt-1">
+                          <span className="text-xs text-gray-400">
 
-                          {a.note}
+                            {a.categoria}
 
-                        </p>
+                          </span>
+
+                          {a.distanza_piedi && (
+
+                            <span className="text-xs text-gray-400">
+
+                              🚶 {a.distanza_piedi}
+
+                            </span>
+                          )}
+
+                        </div>
+
+                        {/* DATA ELIMINAZIONE */}
+                        {!isActive &&
+                          a.deleted_at && (
+
+                          <p className="text-xs text-red-400 mt-1">
+
+                            Eliminata il{' '}
+                            {formatDeletedAt(
+                              a.deleted_at
+                            )}
+
+                          </p>
+                        )}
+
+                        {a.note && (
+
+                          <p className="text-xs text-gray-400 italic mt-1">
+
+                            {a.note}
+
+                          </p>
+                        )}
+
+                      </div>
+
+                    </div>
+
+                    {/* AZIONI */}
+                    <div className="flex gap-2 flex-wrap">
+
+                      {isActive ? (
+
+                        <>
+
+                          {/* MODIFICA */}
+                          <button
+                            type="button"
+                            onClick={() =>
+                              apriModifica(a)
+                            }
+                            disabled={
+                              isProcessing
+                            }
+                            className="
+                              flex
+                              items-center
+                              gap-2
+                              px-4
+                              py-2
+                              rounded-xl
+                              bg-blue-600
+                              text-white
+                              text-sm
+                              font-medium
+                              hover:opacity-90
+                              disabled:opacity-50
+                              disabled:cursor-not-allowed
+                              transition-opacity
+                            "
+                          >
+
+                            <Pencil className="w-4 h-4" />
+
+                            Modifica
+
+                          </button>
+
+                          {/* SOFT DELETE */}
+                          <button
+                            type="button"
+                            onClick={() =>
+                              softDelete(a)
+                            }
+                            disabled={
+                              isProcessing
+                            }
+                            className="
+                              flex
+                              items-center
+                              gap-2
+                              px-4
+                              py-2
+                              rounded-xl
+                              bg-red-600
+                              text-white
+                              text-sm
+                              font-medium
+                              hover:opacity-90
+                              disabled:opacity-50
+                              disabled:cursor-not-allowed
+                              transition-opacity
+                            "
+                          >
+
+                            {isProcessing ? (
+
+                              <span className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />
+
+                            ) : (
+
+                              <Trash2 className="w-4 h-4" />
+                            )}
+
+                            {isProcessing
+                              ? 'Eliminazione...'
+                              : 'Elimina'}
+
+                          </button>
+
+                        </>
+
+                      ) : (
+
+                        <>
+
+                          {/* RIPRISTINA */}
+                          <button
+                            type="button"
+                            onClick={() =>
+                              ripristina(a)
+                            }
+                            disabled={
+                              isProcessing
+                            }
+                            className="
+                              flex
+                              items-center
+                              gap-2
+                              px-4
+                              py-2
+                              rounded-xl
+                              bg-emerald-600
+                              text-white
+                              text-sm
+                              font-medium
+                              hover:opacity-90
+                              disabled:opacity-50
+                              disabled:cursor-not-allowed
+                              transition-opacity
+                            "
+                          >
+
+                            {isProcessing ? (
+
+                              <span className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />
+
+                            ) : (
+
+                              <RotateCcw className="w-4 h-4" />
+                            )}
+
+                            {isProcessing
+                              ? 'Ripristino...'
+                              : 'Ripristina'}
+
+                          </button>
+
+                          {/* MODIFICA anche per eliminate */}
+                          <button
+                            type="button"
+                            onClick={() =>
+                              apriModifica(a)
+                            }
+                            disabled={
+                              isProcessing
+                            }
+                            className="
+                              flex
+                              items-center
+                              gap-2
+                              px-4
+                              py-2
+                              rounded-xl
+                              bg-blue-600
+                              text-white
+                              text-sm
+                              font-medium
+                              hover:opacity-90
+                              disabled:opacity-50
+                              disabled:cursor-not-allowed
+                              transition-opacity
+                            "
+                          >
+
+                            <Pencil className="w-4 h-4" />
+
+                            Modifica
+
+                          </button>
+
+                        </>
                       )}
 
                     </div>
 
                   </div>
+                );
+              }
+            )}
 
-                  {/* AZIONI (punto 7: disabilita durante operazione) */}
-                  <div className="flex gap-2">
+          </div>
+        )}
 
-                    {isActive ? (
+      </div>
 
-                      // SOFT DELETE (punto 1)
-                      <button
-                        type="button"
-                        onClick={() =>
-                          softDelete(a)
-                        }
-                        disabled={
-                          isProcessing
-                        }
-                        className="
-                          flex
-                          items-center
-                          gap-2
-                          px-4
-                          py-2
-                          rounded-xl
-                          bg-red-600
-                          text-white
-                          text-sm
-                          font-medium
-                          hover:opacity-90
-                          disabled:opacity-50
-                          disabled:cursor-not-allowed
-                          transition-opacity
-                        "
-                      >
+      {/* MODAL MODIFICA */}
+      {editingAttivita && (
 
-                        {isProcessing ? (
-
-                          <span className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />
-
-                        ) : (
-
-                          <Trash2 className="w-4 h-4" />
-                        )}
-
-                        {isProcessing
-                          ? 'Eliminazione...'
-                          : 'Elimina'}
-
-                      </button>
-
-                    ) : (
-
-                      // RIPRISTINA (punto 2)
-                      <button
-                        type="button"
-                        onClick={() =>
-                          ripristina(a)
-                        }
-                        disabled={
-                          isProcessing
-                        }
-                        className="
-                          flex
-                          items-center
-                          gap-2
-                          px-4
-                          py-2
-                          rounded-xl
-                          bg-emerald-600
-                          text-white
-                          text-sm
-                          font-medium
-                          hover:opacity-90
-                          disabled:opacity-50
-                          disabled:cursor-not-allowed
-                          transition-opacity
-                        "
-                      >
-
-                        {isProcessing ? (
-
-                          <span className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />
-
-                        ) : (
-
-                          <RotateCcw className="w-4 h-4" />
-                        )}
-
-                        {isProcessing
-                          ? 'Ripristino...'
-                          : 'Ripristina'}
-
-                      </button>
-                    )}
-
-                  </div>
-
-                </div>
-              );
+        <div
+          className="
+            fixed
+            inset-0
+            bg-black/40
+            z-50
+            flex
+            items-center
+            justify-center
+            p-4
+          "
+          onClick={(e) => {
+            if (
+              e.target ===
+              e.currentTarget
+            ) {
+              setEditingAttivita(null);
             }
-          )}
+          }}
+        >
+
+          <div
+            className="
+              bg-white
+              rounded-3xl
+              w-full
+              max-w-2xl
+              p-6
+              pb-24
+              flex
+              flex-col
+              gap-4
+              max-h-[90vh]
+              overflow-y-auto
+            "
+          >
+
+            {/* HEADER MODAL */}
+            <div className="flex items-center justify-between">
+
+              <h2 className="text-xl font-bold">
+
+                Modifica attività
+
+              </h2>
+
+              <button
+                type="button"
+                onClick={() =>
+                  setEditingAttivita(null)
+                }
+              >
+
+                <X className="w-5 h-5 text-gray-400" />
+
+              </button>
+
+            </div>
+
+            {/* STAZIONE (sola lettura) */}
+            <div className="flex flex-col gap-1">
+
+              <label className="text-xs text-gray-500">
+
+                Stazione
+
+              </label>
+
+              <input
+                value={
+                  getNomeStazione(
+                    editingAttivita.stazione_id
+                  )
+                }
+                disabled
+                className="
+                  border
+                  rounded-xl
+                  px-3
+                  py-2
+                  bg-gray-100
+                  text-gray-500
+                "
+              />
+
+            </div>
+
+            {/* NOME */}
+            <div className="flex flex-col gap-1">
+
+              <label className="text-xs text-gray-500">
+
+                Nome *
+
+              </label>
+
+              <input
+                value={
+                  editingAttivita.nome
+                }
+                onChange={(e) =>
+                  setEditingAttivita({
+                    ...editingAttivita,
+                    nome: e.target.value,
+                  })
+                }
+                className="
+                  border
+                  rounded-xl
+                  px-3
+                  py-2
+                "
+              />
+
+            </div>
+
+            {/* CATEGORIA */}
+            <div className="flex flex-col gap-1">
+
+              <label className="text-xs text-gray-500">
+
+                Categoria *
+
+              </label>
+
+              <select
+                value={
+                  editingAttivita.categoria ||
+                  ''
+                }
+                onChange={(e) =>
+                  setEditingAttivita({
+                    ...editingAttivita,
+                    categoria:
+                      e.target.value,
+                  })
+                }
+                className="
+                  border
+                  rounded-xl
+                  px-3
+                  py-2
+                "
+              >
+
+                <option value="">
+                  Seleziona categoria
+                </option>
+
+                {CATEGORIE.map(
+                  (c) => (
+
+                    <option
+                      key={c}
+                      value={c}
+                    >
+
+                      {c}
+
+                    </option>
+                  )
+                )}
+
+              </select>
+
+            </div>
+
+            {/* INDIRIZZO */}
+            <div className="flex flex-col gap-1">
+
+              <label className="text-xs text-gray-500">
+
+                Indirizzo
+
+              </label>
+
+              <input
+                value={
+                  editingAttivita.indirizzo ||
+                  ''
+                }
+                onChange={(e) =>
+                  setEditingAttivita({
+                    ...editingAttivita,
+                    indirizzo:
+                      e.target.value,
+                  })
+                }
+                className="
+                  border
+                  rounded-xl
+                  px-3
+                  py-2
+                "
+              />
+
+            </div>
+
+            {/* UBICAZIONE */}
+            <div className="flex flex-col gap-1">
+
+              <label className="text-xs text-gray-500">
+
+                Ubicazione
+
+              </label>
+
+              <input
+                value={
+                  editingAttivita.ubicazione ||
+                  ''
+                }
+                onChange={(e) =>
+                  setEditingAttivita({
+                    ...editingAttivita,
+                    ubicazione:
+                      e.target.value,
+                  })
+                }
+                className="
+                  border
+                  rounded-xl
+                  px-3
+                  py-2
+                "
+              />
+
+            </div>
+
+            {/* MAPS QUERY */}
+            <div className="flex flex-col gap-1">
+
+              <label className="text-xs text-gray-500">
+
+                Maps Query
+
+              </label>
+
+              <input
+                value={
+                  editingAttivita.maps_query ||
+                  ''
+                }
+                onChange={(e) =>
+                  setEditingAttivita({
+                    ...editingAttivita,
+                    maps_query:
+                      e.target.value,
+                  })
+                }
+                className="
+                  border
+                  rounded-xl
+                  px-3
+                  py-2
+                "
+              />
+
+            </div>
+
+            {/* DISTANZA A PIEDI */}
+            <div className="flex flex-col gap-1">
+
+              <label className="text-xs text-gray-500">
+
+                Distanza a piedi
+
+              </label>
+
+              <select
+                value={
+                  editingAttivita.distanza_piedi ||
+                  ''
+                }
+                onChange={(e) =>
+                  setEditingAttivita({
+                    ...editingAttivita,
+                    distanza_piedi:
+                      e.target.value ||
+                      null,
+                  })
+                }
+                className="
+                  border
+                  rounded-xl
+                  px-3
+                  py-2
+                "
+              >
+
+                <option value="">
+                  Non specificata
+                </option>
+
+                {DISTANZE.map(
+                  (d) => (
+
+                    <option
+                      key={d}
+                      value={d}
+                    >
+
+                      {d}
+
+                    </option>
+                  )
+                )}
+
+              </select>
+
+            </div>
+
+            {/* CONVENZIONATO */}
+            <div className="flex items-center gap-3">
+
+              <input
+                type="checkbox"
+                id="convenzionato-edit"
+                checked={
+                  Boolean(
+                    editingAttivita.convenzionato
+                  )
+                }
+                onChange={(e) =>
+                  setEditingAttivita({
+                    ...editingAttivita,
+                    convenzionato:
+                      e.target.checked,
+                  })
+                }
+                className="w-4 h-4"
+              />
+
+              <label
+                htmlFor="convenzionato-edit"
+                className="font-medium text-sm cursor-pointer"
+              >
+
+                Convenzionato Trenord
+
+              </label>
+
+            </div>
+
+            {/* FASCE ORARIE */}
+            <div className="flex flex-col gap-4">
+
+              <div className="flex items-center justify-between">
+
+                <h3 className="font-semibold">
+
+                  Fasce orarie
+
+                </h3>
+
+                <button
+                  type="button"
+                  onClick={addFascia}
+                  className="text-sm text-trenord-green font-medium"
+                >
+
+                  + Aggiungi fascia
+
+                </button>
+
+              </div>
+
+              {(
+                editingAttivita.fasce_orarie ??
+                []
+              ).map(
+                (
+                  fascia,
+                  index
+                ) => {
+
+                  const giorni =
+                    Array.isArray(
+                      fascia.giorni
+                    )
+                      ? fascia.giorni
+                      : [];
+
+                  return (
+
+                    <div
+                      key={index}
+                      className="
+                        border
+                        rounded-2xl
+                        p-4
+                        flex
+                        flex-col
+                        gap-4
+                      "
+                    >
+
+                      <div className="flex items-center justify-between">
+
+                        <div className="font-medium text-sm">
+
+                          Fascia {index + 1}
+
+                        </div>
+
+                        {(
+                          editingAttivita
+                            .fasce_orarie
+                            ?.length ?? 0
+                        ) > 1 && (
+
+                          <button
+                            type="button"
+                            onClick={() =>
+                              removeFascia(
+                                index
+                              )
+                            }
+                            className="
+                              text-red-600
+                              text-sm
+                            "
+                          >
+
+                            Elimina
+
+                          </button>
+                        )}
+
+                      </div>
+
+                      {/* GIORNI */}
+                      <div className="grid grid-cols-4 gap-2">
+
+                        {GIORNI_SETTIMANA.map(
+                          (giorno) => {
+
+                            const active =
+                              giorni.includes(
+                                giorno
+                              );
+
+                            return (
+
+                              <button
+                                key={giorno}
+                                type="button"
+                                onClick={() =>
+                                  toggleGiorno(
+                                    index,
+                                    giorno
+                                  )
+                                }
+                                className={`
+                                  rounded-xl
+                                  border
+                                  py-2
+                                  text-sm
+                                  ${
+                                    active
+                                      ? 'bg-trenord-green text-white border-trenord-green'
+                                      : 'bg-white text-gray-700 border-gray-200'
+                                  }
+                                `}
+                              >
+
+                                {giorno}
+
+                              </button>
+                            );
+                          }
+                        )}
+
+                      </div>
+
+                      {/* ORARI */}
+                      <div className="grid grid-cols-2 gap-3">
+
+                        <div className="flex flex-col gap-1">
+
+                          <label className="text-xs text-gray-500">
+
+                            Apertura
+
+                          </label>
+
+                          <input
+                            type="time"
+                            value={
+                              fascia.apertura ||
+                              ''
+                            }
+                            onChange={(e) =>
+                              updateFascia(
+                                index,
+                                'apertura',
+                                e.target.value
+                              )
+                            }
+                            className="
+                              border
+                              rounded-xl
+                              px-3
+                              py-2
+                            "
+                          />
+
+                        </div>
+
+                        <div className="flex flex-col gap-1">
+
+                          <label className="text-xs text-gray-500">
+
+                            Chiusura
+
+                          </label>
+
+                          <input
+                            type="time"
+                            value={
+                              fascia.chiusura ||
+                              ''
+                            }
+                            onChange={(e) =>
+                              updateFascia(
+                                index,
+                                'chiusura',
+                                e.target.value
+                              )
+                            }
+                            className="
+                              border
+                              rounded-xl
+                              px-3
+                              py-2
+                            "
+                          />
+
+                        </div>
+
+                      </div>
+
+                    </div>
+                  );
+                }
+              )}
+
+              {(
+                editingAttivita.fasce_orarie
+                  ?.length ?? 0
+              ) === 0 && (
+
+                <p className="text-sm text-gray-400 text-center py-2">
+
+                  Nessuna fascia. Clicca "+ Aggiungi fascia" per aggiungerne una.
+
+                </p>
+              )}
+
+            </div>
+
+            {/* NOTE */}
+            <div className="flex flex-col gap-1">
+
+              <label className="text-xs text-gray-500">
+
+                Note
+
+              </label>
+
+              <textarea
+                value={
+                  editingAttivita.note ||
+                  ''
+                }
+                onChange={(e) =>
+                  setEditingAttivita({
+                    ...editingAttivita,
+                    note:
+                      e.target.value ||
+                      null,
+                  })
+                }
+                rows={3}
+                className="
+                  border
+                  rounded-xl
+                  px-3
+                  py-2
+                  resize-none
+                "
+                placeholder="Note aggiuntive..."
+              />
+
+            </div>
+
+            {/* SALVA */}
+            <button
+              type="button"
+              onClick={salvaModifica}
+              disabled={saving}
+              className="
+                bg-blue-600
+                text-white
+                rounded-xl
+                py-3
+                font-medium
+                flex
+                items-center
+                justify-center
+                gap-2
+                disabled:opacity-50
+                disabled:cursor-not-allowed
+                hover:opacity-90
+                transition-opacity
+              "
+            >
+
+              {saving && (
+
+                <span className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />
+              )}
+
+              {saving
+                ? 'Salvataggio...'
+                : 'Salva modifiche'}
+
+            </button>
+
+          </div>
 
         </div>
       )}
 
-    </div>
+    </>
   );
 }
