@@ -69,9 +69,9 @@ export default function ContributoAttivitaForm({
     useState('');
 
   const [
-  distanzaPiedi,
-  setDistanzaPiedi,
-] = useState('');
+    distanzaPiedi,
+    setDistanzaPiedi,
+  ] = useState('');
 
   const [
     convenzionato,
@@ -87,9 +87,7 @@ export default function ContributoAttivitaForm({
   const [
     fasceOrarie,
     setFasceOrarie,
-  ] = useState<
-    FasciaOraria[]
-  >([
+  ] = useState<FasciaOraria[]>([
     {
       giorni: [],
       apertura: '',
@@ -109,11 +107,8 @@ export default function ContributoAttivitaForm({
         data,
         error,
       } = await supabase
-
         .from('stazioni')
-
         .select('*')
-
         .order('nome', {
           ascending: true,
         });
@@ -129,9 +124,7 @@ export default function ContributoAttivitaForm({
         return;
       }
 
-      setStazioni(
-        data ?? []
-      );
+      setStazioni(data ?? []);
     }
 
     loadStazioni();
@@ -146,7 +139,6 @@ export default function ContributoAttivitaForm({
 
     setFasceOrarie([
       ...fasceOrarie,
-
       {
         giorni: [],
         apertura: '',
@@ -161,8 +153,7 @@ export default function ContributoAttivitaForm({
 
     setFasceOrarie(
       fasceOrarie.filter(
-        (_, i) =>
-          i !== index
+        (_, i) => i !== index
       )
     );
   }
@@ -173,20 +164,14 @@ export default function ContributoAttivitaForm({
     value: any
   ) {
 
-    const updated = [
-      ...fasceOrarie,
-    ];
+    const updated = [...fasceOrarie];
 
     updated[index] = {
-
       ...updated[index],
-
       [field]: value,
     };
 
-    setFasceOrarie(
-      updated
-    );
+    setFasceOrarie(updated);
   }
 
   function toggleGiorno(
@@ -195,25 +180,14 @@ export default function ContributoAttivitaForm({
   ) {
 
     const fascia =
-      fasceOrarie[
-        fasciaIndex
-      ];
-
-    const exists =
-      fascia.giorni.includes(
-        giorno
-      );
+      fasceOrarie[fasciaIndex];
 
     const nuoviGiorni =
-      exists
+      fascia.giorni.includes(giorno)
         ? fascia.giorni.filter(
-            (g) =>
-              g !== giorno
+            (g) => g !== giorno
           )
-        : [
-            ...fascia.giorni,
-            giorno,
-          ];
+        : [...fascia.giorni, giorno];
 
     updateFascia(
       fasciaIndex,
@@ -227,10 +201,6 @@ export default function ContributoAttivitaForm({
   // =========================
 
   async function submit() {
-
-    console.log(
-      'SUBMIT START'
-    );
 
     if (!stazioneId) {
 
@@ -268,7 +238,7 @@ export default function ContributoAttivitaForm({
           indirizzo.trim(),
 
         distanza_piedi:
-    distanzaPiedi,
+          distanzaPiedi,
 
         ubicazione:
           ubicazione.trim(),
@@ -282,30 +252,12 @@ export default function ContributoAttivitaForm({
           fasceOrarie,
       };
 
-      console.log(
-        'PAYLOAD ATTIVITA',
-        payload
-      );
-
-      alert(
-        JSON.stringify(
-          payload,
-          null,
-          2
-        )
-      );
-
       const { error } =
         await supabase
-
           .from('contributi')
-
           .insert({
-
             tipo: 'attivita',
-
             dati: payload,
-
             stato: 'pending',
           });
 
@@ -417,9 +369,7 @@ export default function ContributoAttivitaForm({
         <input
           value={nome}
           onChange={(e) =>
-            setNome(
-              e.target.value
-            )
+            setNome(e.target.value)
           }
           placeholder="Nome attività"
           className="border border-gray-200 rounded-xl px-3 py-2"
@@ -429,21 +379,17 @@ export default function ContributoAttivitaForm({
         <select
           value={categoria}
           onChange={(e) =>
-            setCategoria(
-              e.target.value
-            )
+            setCategoria(e.target.value)
           }
           className="border border-gray-200 rounded-xl px-3 py-2"
         >
 
           {categorie.map(
-            (categoria) => (
+            (cat) => (
 
-              <option
-                key={categoria}
-              >
+              <option key={cat}>
 
-                {categoria}
+                {cat}
 
               </option>
             )
@@ -455,54 +401,60 @@ export default function ContributoAttivitaForm({
         <input
           value={indirizzo}
           onChange={(e) =>
-            setIndirizzo(
-              e.target.value
-            )
+            setIndirizzo(e.target.value)
           }
           placeholder="Indirizzo"
           className="border border-gray-200 rounded-xl px-3 py-2"
         />
 
-       {/* DISTANZA DALLA STAZIONE */}
-<select
-  value={distanzaPiedi}
-  onChange={(e) =>
-    setDistanzaPiedi(
-      e.target.value
-    )
-  }
-  className="border border-gray-200 rounded-xl px-3 py-2"
->
+        {/* DISTANZA DALLA STAZIONE */}
+        <select
+          value={distanzaPiedi}
+          onChange={(e) =>
+            setDistanzaPiedi(
+              e.target.value
+            )
+          }
+          className="border border-gray-200 rounded-xl px-3 py-2"
+        >
 
-  <option value="">
-    Distanza dalla stazione
-  </option>
+          <option value="">
 
-  <option value="Entro 2 minuti">
-    Entro 2 minuti
-  </option>
+            Distanza dalla stazione
 
-  <option value="Entro 5 minuti">
-    Entro 5 minuti
-  </option>
+          </option>
 
-  <option value="Entro 10 minuti">
-    Entro 10 minuti
-  </option>
+          <option value="Entro 2 minuti">
 
-  <option value="Oltre 10 minuti">
-    Oltre 10 minuti
-  </option>
+            Entro 2 minuti
 
-</select>
+          </option>
+
+          <option value="Entro 5 minuti">
+
+            Entro 5 minuti
+
+          </option>
+
+          <option value="Entro 10 minuti">
+
+            Entro 10 minuti
+
+          </option>
+
+          <option value="Oltre 10 minuti">
+
+            Oltre 10 minuti
+
+          </option>
+
+        </select>
 
         {/* UBICAZIONE */}
         <input
           value={ubicazione}
           onChange={(e) =>
-            setUbicazione(
-              e.target.value
-            )
+            setUbicazione(e.target.value)
           }
           placeholder="Ubicazione"
           className="border border-gray-200 rounded-xl px-3 py-2"
@@ -513,9 +465,7 @@ export default function ContributoAttivitaForm({
 
           <input
             type="checkbox"
-            checked={
-              convenzionato
-            }
+            checked={convenzionato}
             onChange={(e) =>
               setConvenzionato(
                 e.target.checked
@@ -557,10 +507,7 @@ export default function ContributoAttivitaForm({
           </div>
 
           {fasceOrarie.map(
-            (
-              fascia,
-              index
-            ) => (
+            (fascia, index) => (
 
               <div
                 key={index}
@@ -632,9 +579,7 @@ export default function ContributoAttivitaForm({
 
                   <input
                     type="time"
-                    value={
-                      fascia.apertura
-                    }
+                    value={fascia.apertura}
                     onChange={(e) =>
                       updateFascia(
                         index,
@@ -647,9 +592,7 @@ export default function ContributoAttivitaForm({
 
                   <input
                     type="time"
-                    value={
-                      fascia.chiusura
-                    }
+                    value={fascia.chiusura}
                     onChange={(e) =>
                       updateFascia(
                         index,
@@ -672,9 +615,7 @@ export default function ContributoAttivitaForm({
         <textarea
           value={note}
           onChange={(e) =>
-            setNote(
-              e.target.value
-            )
+            setNote(e.target.value)
           }
           placeholder="Note"
           className="border border-gray-200 rounded-xl px-3 py-2 min-h-[120px]"
@@ -683,14 +624,7 @@ export default function ContributoAttivitaForm({
         {/* SUBMIT */}
         <button
           type="button"
-          onClick={() => {
-
-            console.log(
-              'CLICK SUBMIT'
-            );
-
-            submit();
-          }}
+          onClick={submit}
           disabled={loading}
           className="bg-trenord-green text-white rounded-xl py-3 font-medium"
         >

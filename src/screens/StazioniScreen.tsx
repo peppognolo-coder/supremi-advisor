@@ -51,6 +51,19 @@ interface Props {
   refreshKey?: number;
 }
 
+// =========================
+// TIPI RATING
+// =========================
+
+interface Valutazione {
+
+  id: string;
+
+  voto: number;
+
+  device_id: string;
+}
+
 export default function StazioniScreen({
   refreshKey = 0,
 }: Props) {
@@ -159,7 +172,7 @@ export default function StazioniScreen({
       const {
         data: valutazioniData,
       } = await supabase
-        .from('attivita_rating')
+        .from('attivita_valutazioni')
         .select('*');
 
       const merged =
@@ -303,13 +316,21 @@ export default function StazioniScreen({
     attivitaId: string
   ) {
 
-    const { data } =
+    const { data, error } =
       await supabase
-        .from('attivita_rating')
+        .from('attivita_valutazioni')
         .select('*')
         .eq('attivita_id', attivitaId);
 
-    const voti = data || [];
+    if (error) {
+
+      console.error(error);
+
+      return;
+    }
+
+    const voti =
+      (data ?? []) as Valutazione[];
 
     const media =
       voti.length > 0
@@ -342,15 +363,13 @@ export default function StazioniScreen({
 
     const { error } =
       await supabase
-        .from('attivita_rating')
+        .from('attivita_valutazioni')
         .upsert(
           {
             attivita_id:
               selectedAttivita.id,
             device_id: getDeviceId(),
             voto,
-            updated_at:
-              new Date().toISOString(),
           },
           {
             onConflict:
@@ -393,7 +412,7 @@ export default function StazioniScreen({
 
       } catch {
 
-        console.log(
+        console.warn(
           'Geolocalizzazione non disponibile'
         );
 

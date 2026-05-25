@@ -9,8 +9,6 @@ import {
   Coffee,
   Droplets,
   Snowflake,
-  Check,
-  X,
   MessageSquarePlus,
 } from 'lucide-react';
 
@@ -152,29 +150,25 @@ export default function SalettaCard({
                   </div>
                 )}
 
-                {/* SERVIZI */}
-                <div className="grid grid-cols-2 gap-3">
+                {/* DOTAZIONI */}
+                <div className="grid grid-cols-2 gap-2">
 
                   {/* MICROONDE */}
                   <div
-                    className={`flex items-center gap-2 text-sm ${
+                    className={`flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-medium transition-colors ${
                       saletta.microonde
-                        ? 'text-emerald-600'
-                        : 'text-gray-400'
+                        ? 'bg-emerald-50 text-emerald-700 border border-emerald-100'
+                        : 'bg-gray-50 text-gray-400 border border-gray-100'
                     }`}
                   >
 
-                    <Microwave className="w-4 h-4" />
-
-                    {saletta.microonde ? (
-
-                      <Check className="w-4 h-4" />
-
-                    ) : (
-
-                      <X className="w-4 h-4" />
-
-                    )}
+                    <Microwave
+                      className={`w-4 h-4 flex-shrink-0 ${
+                        saletta.microonde
+                          ? 'text-emerald-600'
+                          : 'text-gray-300'
+                      }`}
+                    />
 
                     <span>
 
@@ -186,24 +180,20 @@ export default function SalettaCard({
 
                   {/* DISTRIBUTORI */}
                   <div
-                    className={`flex items-center gap-2 text-sm ${
+                    className={`flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-medium transition-colors ${
                       saletta.distributori
-                        ? 'text-emerald-600'
-                        : 'text-gray-400'
+                        ? 'bg-emerald-50 text-emerald-700 border border-emerald-100'
+                        : 'bg-gray-50 text-gray-400 border border-gray-100'
                     }`}
                   >
 
-                    <Coffee className="w-4 h-4" />
-
-                    {saletta.distributori ? (
-
-                      <Check className="w-4 h-4" />
-
-                    ) : (
-
-                      <X className="w-4 h-4" />
-
-                    )}
+                    <Coffee
+                      className={`w-4 h-4 flex-shrink-0 ${
+                        saletta.distributori
+                          ? 'text-emerald-600'
+                          : 'text-gray-300'
+                      }`}
+                    />
 
                     <span>
 
@@ -215,24 +205,20 @@ export default function SalettaCard({
 
                   {/* ACQUA */}
                   <div
-                    className={`flex items-center gap-2 text-sm ${
+                    className={`flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-medium transition-colors ${
                       saletta.acqua
-                        ? 'text-emerald-600'
-                        : 'text-gray-400'
+                        ? 'bg-emerald-50 text-emerald-700 border border-emerald-100'
+                        : 'bg-gray-50 text-gray-400 border border-gray-100'
                     }`}
                   >
 
-                    <Droplets className="w-4 h-4" />
-
-                    {saletta.acqua ? (
-
-                      <Check className="w-4 h-4" />
-
-                    ) : (
-
-                      <X className="w-4 h-4" />
-
-                    )}
+                    <Droplets
+                      className={`w-4 h-4 flex-shrink-0 ${
+                        saletta.acqua
+                          ? 'text-emerald-600'
+                          : 'text-gray-300'
+                      }`}
+                    />
 
                     <span>
 
@@ -244,24 +230,20 @@ export default function SalettaCard({
 
                   {/* CLIMATIZZATA */}
                   <div
-                    className={`flex items-center gap-2 text-sm ${
+                    className={`flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-medium transition-colors ${
                       saletta.climatizzata
-                        ? 'text-emerald-600'
-                        : 'text-gray-400'
+                        ? 'bg-emerald-50 text-emerald-700 border border-emerald-100'
+                        : 'bg-gray-50 text-gray-400 border border-gray-100'
                     }`}
                   >
 
-                    <Snowflake className="w-4 h-4" />
-
-                    {saletta.climatizzata ? (
-
-                      <Check className="w-4 h-4" />
-
-                    ) : (
-
-                      <X className="w-4 h-4" />
-
-                    )}
+                    <Snowflake
+                      className={`w-4 h-4 flex-shrink-0 ${
+                        saletta.climatizzata
+                          ? 'text-emerald-600'
+                          : 'text-gray-300'
+                      }`}
+                    />
 
                     <span>
 

@@ -56,6 +56,8 @@ interface AttivitaQualita {
   fasce_orarie: any[] | null;
 
   note: string | null;
+
+  distanza_piedi: string | null;
 }
 
 interface StazioneNome {
@@ -204,7 +206,7 @@ export default function AdminScreen() {
     } = await supabase
       .from('attivita_stazione')
       .select(
-        'id,stazione_id,nome,categoria,convenzionato,is_active,maps_query,indirizzo,fasce_orarie,note'
+        'id,stazione_id,nome,categoria,convenzionato,is_active,maps_query,indirizzo,fasce_orarie,note,distanza_piedi'
       )
       .order('nome', {
         ascending: true,
@@ -298,33 +300,75 @@ export default function AdminScreen() {
       );
 
     // 6. Possibili duplicati
-    // Raggruppa per stazione_id + nome normalizzato
-    const gruppi: Record<
+    // Stessa stazione + stesso indirizzo o stessa maps_query
+    const duplicatiMap: Record<
       string,
       AttivitaQualita[]
     > = {};
 
     for (const a of attivitaAll) {
 
-      const chiave = `${
-        a.stazione_id
-      }__${a.nome
-        .toLowerCase()
-        .trim()}`;
+      if (!a.is_active) continue;
 
-      if (!gruppi[chiave]) {
-        gruppi[chiave] = [];
+      if (
+        a.indirizzo &&
+        a.indirizzo.trim() !== ''
+      ) {
+
+        const chiaveIndirizzo = `${
+          a.stazione_id
+        }__indirizzo__${a.indirizzo
+          .toLowerCase()
+          .trim()}`;
+
+        if (!duplicatiMap[chiaveIndirizzo]) {
+          duplicatiMap[chiaveIndirizzo] = [];
+        }
+
+        duplicatiMap[chiaveIndirizzo].push(a);
       }
 
-      gruppi[chiave].push(a);
+      if (
+        a.maps_query &&
+        a.maps_query.trim() !== ''
+      ) {
+
+        const chiaveMaps = `${
+          a.stazione_id
+        }__maps__${a.maps_query
+          .toLowerCase()
+          .trim()}`;
+
+        if (!duplicatiMap[chiaveMaps]) {
+          duplicatiMap[chiaveMaps] = [];
+        }
+
+        duplicatiMap[chiaveMaps].push(a);
+      }
     }
 
-    // Tieni solo i gruppi con più di 1 elemento
-    const duplicati = Object.values(
-      gruppi
-    )
-      .filter((g) => g.length > 1)
-      .flat();
+    // Tieni solo i gruppi con più di 1 elemento, deduplica per id
+    const duplicatiIds = new Set<string>();
+
+    const duplicati: AttivitaQualita[] = [];
+
+    for (const gruppo of Object.values(
+      duplicatiMap
+    )) {
+
+      if (gruppo.length > 1) {
+
+        for (const a of gruppo) {
+
+          if (!duplicatiIds.has(a.id)) {
+
+            duplicatiIds.add(a.id);
+
+            duplicati.push(a);
+          }
+        }
+      }
+    }
 
     return {
       senzaMaps,
@@ -333,6 +377,70 @@ export default function AdminScreen() {
       senzaNote,
       eliminate,
       duplicati,
+    };
+
+  }, [attivitaAll]);
+
+  // =========================
+  // STATO DATABASE (memo)
+  // =========================
+
+  const statoDb = useMemo(() => {
+
+    const attive = attivitaAll.filter(
+      (a) => a.is_active
+    );
+
+    const totale = attive.length;
+
+    const convenzionate = attive.filter(
+      (a) => a.convenzionato
+    ).length;
+
+    const conOrari = attive.filter(
+      (a) =>
+        Array.isArray(a.fasce_orarie) &&
+        a.fasce_orarie.length > 0
+    ).length;
+
+    const conMaps = attive.filter(
+      (a) =>
+        a.maps_query &&
+        a.maps_query.trim() !== ''
+    ).length;
+
+    const conIndirizzo = attive.filter(
+      (a) =>
+        a.indirizzo &&
+        a.indirizzo.trim() !== ''
+    ).length;
+
+    const complete = attive.filter(
+      (a) =>
+        a.nome?.trim() &&
+        a.categoria?.trim() &&
+        a.indirizzo?.trim() &&
+        a.maps_query?.trim() &&
+        a.distanza_piedi?.trim() &&
+        Array.isArray(a.fasce_orarie) &&
+        a.fasce_orarie.length > 0
+    ).length;
+
+    const percentualeCompleta =
+      totale > 0
+        ? Math.round(
+            (complete / totale) * 100
+          )
+        : 0;
+
+    return {
+      totale,
+      convenzionate,
+      conOrari,
+      conMaps,
+      conIndirizzo,
+      complete,
+      percentualeCompleta,
     };
 
   }, [attivitaAll]);
@@ -902,7 +1010,7 @@ export default function AdminScreen() {
 
               </button>
 
-              {/* 4. SENZA NOTE — GIALLO */}
+              {/* 4. SENZA NOTE — GRIGIO */}
               <button
                 type="button"
                 onClick={() =>
@@ -912,41 +1020,24 @@ export default function AdminScreen() {
                     qualita.senzaNote
                   )
                 }
-                className={`
+                className="
                   rounded-2xl
                   border
+                  border-gray-100
+                  bg-white
                   p-4
                   text-left
                   shadow-sm
                   transition-colors
-                  ${
-                    qualita.senzaNote
-                      .length === 0
-                      ? 'bg-emerald-50 border-emerald-100 hover:border-emerald-300'
-                      : 'bg-white border-amber-100 hover:border-amber-300'
-                  }
-                `}
+                  hover:border-gray-300
+                "
               >
 
                 <div className="flex items-center justify-between">
 
-                  <FileText
-                    className={`w-5 h-5 ${
-                      qualita.senzaNote
-                        .length === 0
-                        ? 'text-emerald-500'
-                        : 'text-amber-500'
-                    }`}
-                  />
+                  <FileText className="w-5 h-5 text-gray-400" />
 
-                  <span
-                    className={`text-2xl font-bold ${
-                      qualita.senzaNote
-                        .length === 0
-                        ? 'text-emerald-600'
-                        : 'text-amber-600'
-                    }`}
-                  >
+                  <span className="text-2xl font-bold text-gray-500">
 
                     {
                       qualita.senzaNote
@@ -1072,7 +1163,190 @@ export default function AdminScreen() {
 
                 </p>
 
+                <p className="text-xs text-gray-400 mt-0.5">
+
+                  Stesso indirizzo o maps_query
+
+                </p>
+
               </button>
+
+            </div>
+
+          </div>
+        )}
+
+        {/* ========================= */}
+        {/* STATO DATABASE            */}
+        {/* ========================= */}
+
+        {!loading && (
+
+          <div className="bg-white rounded-2xl border border-gray-100 p-4 shadow-sm flex flex-col gap-4">
+
+            <div>
+
+              <h2 className="font-semibold text-gray-900">
+
+                Stato database
+
+              </h2>
+
+              <p className="text-xs text-gray-400 mt-0.5">
+
+                Copertura e completezza delle attività attive
+
+              </p>
+
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+
+              {/* ATTIVITÀ ATTIVE */}
+              <div className="rounded-2xl border border-gray-100 bg-gray-50 p-4 flex flex-col gap-3">
+
+                <div className="flex items-center justify-between">
+
+                  <Store className="w-5 h-5 text-gray-400" />
+
+                  <span className="text-2xl font-bold text-gray-700">
+
+                    {statoDb.totale}
+
+                  </span>
+
+                </div>
+
+                <p className="text-xs text-gray-500 uppercase tracking-wide">
+
+                  Attività attive
+
+                </p>
+
+              </div>
+
+              {/* CONVENZIONATE */}
+              <div className="rounded-2xl border border-gray-100 bg-gray-50 p-4 flex flex-col gap-3">
+
+                <div className="flex items-center justify-between">
+
+                  <ShieldCheck className="w-5 h-5 text-gray-400" />
+
+                  <span className="text-2xl font-bold text-gray-700">
+
+                    {statoDb.convenzionate}
+
+                  </span>
+
+                </div>
+
+                <p className="text-xs text-gray-500 uppercase tracking-wide">
+
+                  Convenzionate
+
+                </p>
+
+              </div>
+
+              {/* CON ORARI */}
+              <div className="rounded-2xl border border-gray-100 bg-gray-50 p-4 flex flex-col gap-3">
+
+                <div className="flex items-center justify-between">
+
+                  <Clock className="w-5 h-5 text-gray-400" />
+
+                  <span className="text-2xl font-bold text-gray-700">
+
+                    {statoDb.conOrari}
+
+                  </span>
+
+                </div>
+
+                <p className="text-xs text-gray-500 uppercase tracking-wide">
+
+                  Con orari
+
+                </p>
+
+              </div>
+
+              {/* CON MAPS QUERY */}
+              <div className="rounded-2xl border border-gray-100 bg-gray-50 p-4 flex flex-col gap-3">
+
+                <div className="flex items-center justify-between">
+
+                  <MapPin className="w-5 h-5 text-gray-400" />
+
+                  <span className="text-2xl font-bold text-gray-700">
+
+                    {statoDb.conMaps}
+
+                  </span>
+
+                </div>
+
+                <p className="text-xs text-gray-500 uppercase tracking-wide">
+
+                  Con Maps Query
+
+                </p>
+
+              </div>
+
+              {/* CON INDIRIZZO */}
+              <div className="rounded-2xl border border-gray-100 bg-gray-50 p-4 flex flex-col gap-3">
+
+                <div className="flex items-center justify-between">
+
+                  <Building2 className="w-5 h-5 text-gray-400" />
+
+                  <span className="text-2xl font-bold text-gray-700">
+
+                    {statoDb.conIndirizzo}
+
+                  </span>
+
+                </div>
+
+                <p className="text-xs text-gray-500 uppercase tracking-wide">
+
+                  Con indirizzo
+
+                </p>
+
+              </div>
+
+              {/* ATTIVITÀ COMPLETE */}
+              <div className="rounded-2xl border border-emerald-100 bg-emerald-50 p-4 flex flex-col gap-3">
+
+                <div className="flex items-center justify-between">
+
+                  <AlertCircle className="w-5 h-5 text-emerald-500" />
+
+                  <span className="text-2xl font-bold text-emerald-700">
+
+                    {statoDb.complete}
+
+                  </span>
+
+                </div>
+
+                <p className="text-xs text-gray-500 uppercase tracking-wide">
+
+                  Complete
+
+                </p>
+
+                <p className="text-xs text-emerald-600 font-medium">
+
+                  {statoDb.complete} / {statoDb.totale}
+                  {' '}
+                  ({statoDb.percentualeCompleta}%)
+
+                </p>
+
+              </div>
 
             </div>
 
