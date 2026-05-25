@@ -424,6 +424,12 @@ export default function ContributoAttivitaForm({
 
           </option>
 
+          <option value="In stazione">
+
+            In stazione
+
+          </option>
+
           <option value="Entro 2 minuti">
 
             Entro 2 minuti
