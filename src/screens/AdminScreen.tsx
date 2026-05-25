@@ -9,6 +9,7 @@ import {
   MapPin,
   MessageSquareWarning,
   ShieldCheck,
+  Check,
   Plus,
   ArrowLeft,
   FileJson,
@@ -145,6 +146,65 @@ export default function AdminScreen() {
   // modal qualità aperto
   const [modalQualita, setModalQualita] =
     useState<ModalQualita | null>(null);
+
+  // duplicati ignorati (persistiti in localStorage)
+  const [duplicatiIgnorati, setDuplicatiIgnorati] =
+    useState<Set<string>>(() => {
+
+      try {
+
+        const stored = localStorage.getItem(
+          'supremi_duplicati_ignorati'
+        );
+
+        return stored
+          ? new Set(JSON.parse(stored))
+          : new Set();
+
+      } catch {
+
+        return new Set();
+      }
+    });
+
+  function ignoraDuplicato(id: string) {
+
+    setDuplicatiIgnorati((prev) => {
+
+      const next = new Set(prev);
+
+      next.add(id);
+
+      try {
+
+        localStorage.setItem(
+          'supremi_duplicati_ignorati',
+          JSON.stringify(Array.from(next))
+        );
+
+      } catch {
+
+        // ignore
+      }
+
+      return next;
+    });
+
+    // Aggiorna la lista nel modal senza chiuderlo
+    setModalQualita((prev) => {
+
+      if (!prev || prev.tipo !== 'duplicati') {
+        return prev;
+      }
+
+      return {
+        ...prev,
+        lista: prev.lista.filter(
+          (a) => a.id !== id
+        ),
+      };
+    });
+  }
 
   // =========================
   // LOAD
@@ -360,7 +420,10 @@ export default function AdminScreen() {
 
         for (const a of gruppo) {
 
-          if (!duplicatiIds.has(a.id)) {
+          if (
+            !duplicatiIds.has(a.id) &&
+            !duplicatiIgnorati.has(a.id)
+          ) {
 
             duplicatiIds.add(a.id);
 
@@ -379,7 +442,7 @@ export default function AdminScreen() {
       duplicati,
     };
 
-  }, [attivitaAll]);
+  }, [attivitaAll, duplicatiIgnorati]);
 
   // =========================
   // STATO DATABASE (memo)
@@ -1567,36 +1630,71 @@ export default function AdminScreen() {
 
                     </div>
 
-                    {/* PULSANTE MODIFICA */}
-                    <button
-                      type="button"
-                      onClick={() =>
-                        apriModificaDaQualita(
-                          a.id
-                        )
-                      }
-                      className="
-                        flex-shrink-0
-                        flex
-                        items-center
-                        gap-1.5
-                        px-3
-                        py-2
-                        rounded-xl
-                        bg-blue-600
-                        text-white
-                        text-sm
-                        font-medium
-                        hover:opacity-90
-                        transition-opacity
-                      "
-                    >
+                    {/* PULSANTI AZIONE */}
+                    <div className="flex-shrink-0 flex flex-col gap-2">
 
-                      <Pencil className="w-3.5 h-3.5" />
+                      {/* SEGNA COME OK (solo duplicati) */}
+                      {modalQualita.tipo === 'duplicati' && (
 
-                      Modifica
+                        <button
+                          type="button"
+                          onClick={() =>
+                            ignoraDuplicato(a.id)
+                          }
+                          className="
+                            flex
+                            items-center
+                            gap-1.5
+                            px-3
+                            py-2
+                            rounded-xl
+                            bg-emerald-600
+                            text-white
+                            text-sm
+                            font-medium
+                            hover:opacity-90
+                            transition-opacity
+                          "
+                        >
 
-                    </button>
+                          <Check className="w-3.5 h-3.5" />
+
+                          OK
+
+                        </button>
+                      )}
+
+                      {/* MODIFICA */}
+                      <button
+                        type="button"
+                        onClick={() =>
+                          apriModificaDaQualita(
+                            a.id
+                          )
+                        }
+                        className="
+                          flex
+                          items-center
+                          gap-1.5
+                          px-3
+                          py-2
+                          rounded-xl
+                          bg-blue-600
+                          text-white
+                          text-sm
+                          font-medium
+                          hover:opacity-90
+                          transition-opacity
+                        "
+                      >
+
+                        <Pencil className="w-3.5 h-3.5" />
+
+                        Modifica
+
+                      </button>
+
+                    </div>
 
                   </div>
                 )
