@@ -1998,6 +1998,10 @@ export default function AdminContributiScreen() {
                 "
               >
 
+                <option value="In stazione">
+                  In stazione
+                </option>
+
                 <option value="Entro 2 minuti">
                   Entro 2 minuti
                 </option>
