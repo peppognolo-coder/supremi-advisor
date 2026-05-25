@@ -68,6 +68,9 @@ function distanzaRank(
 
   switch (distanza_piedi) {
 
+    case 'In stazione':
+      return 0;
+
     case 'Entro 2 minuti':
       return 1;
 
