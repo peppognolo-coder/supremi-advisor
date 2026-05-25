@@ -58,6 +58,9 @@ export default function StazioneCard({
   const [sortMode, setSortMode] =
     useState<SortMode>('aperte');
 
+  const [categoriaFilter, setCategoriaFilter] =
+    useState<string | null>(null);
+
   const [
     showAddForm,
     setShowAddForm,
@@ -187,6 +190,23 @@ export default function StazioneCard({
     )
       ? liveStazione.attivita_stazione
       : [];
+
+  // Categorie disponibili in questa stazione (deduplicate, ordinate)
+  const categorieDisponibili: string[] = Array.from(
+    new Set(
+      locali
+        .filter((l: any) => l.categoria)
+        .map((l: any) => l.categoria as string)
+    )
+  ).sort((a, b) => a.localeCompare(b, 'it'));
+
+  // Locali filtrati per categoria (poi ordinati dal sortAttivita)
+  const localiFiltrati =
+    categoriaFilter
+      ? locali.filter(
+          (l: any) => l.categoria === categoriaFilter
+        )
+      : locali;
 
   const aperte =
     salette.filter(
@@ -539,7 +559,7 @@ export default function StazioneCard({
                           sortMode ===
                           opt.mode
                             ? 'bg-trenord-green text-white border-trenord-green'
-                            : 'bg-white text-gray-600 border-gray-200 hover:border-trenord-green hover:text-trenord-green'
+                            : 'bg-white text-gray-900 border-gray-300 hover:border-trenord-green hover:text-trenord-green'
                         }
                       `}
                     >
@@ -558,8 +578,51 @@ export default function StazioneCard({
 
               </div>
 
+              {/* CATEGORIA FILTER */}
+              {categorieDisponibili.length > 1 && (
+
+                <div className="flex gap-2 flex-wrap">
+
+                  {categorieDisponibili.map(
+                    (cat) => (
+
+                      <button
+                        key={cat}
+                        type="button"
+                        onClick={() =>
+                          setCategoriaFilter(
+                            categoriaFilter === cat
+                              ? null
+                              : cat
+                          )
+                        }
+                        className={`
+                          px-3
+                          py-1.5
+                          rounded-xl
+                          text-xs
+                          font-medium
+                          border
+                          transition-colors
+                          ${
+                            categoriaFilter === cat
+                              ? 'bg-gray-800 text-white border-gray-800'
+                              : 'bg-white text-gray-900 border-gray-300 hover:border-gray-600 hover:text-gray-900'
+                          }
+                        `}
+                      >
+
+                        {cat}
+
+                      </button>
+                    )
+                  )}
+
+                </div>
+              )}
+
               {sortAttivita(
-                locali,
+                localiFiltrati,
                 sortMode
               ).map(
                 (locale: any) => {
