@@ -120,6 +120,30 @@ export default function StazioniScreen({
       Record<string, SortMode>
     >({});
 
+  // categoriaFilter per stazione: Map<stazioneId, string | null>
+  const [categoriaFilters, setCategoriaFilters] =
+    useState<
+      Record<string, string | null>
+    >({});
+
+  function getCategoriaFilter(
+    stazioneId: string
+  ): string | null {
+
+    return categoriaFilters[stazioneId] ?? null;
+  }
+
+  function setCategoriaFilterForStazione(
+    stazioneId: string,
+    cat: string | null
+  ) {
+
+    setCategoriaFilters((prev) => ({
+      ...prev,
+      [stazioneId]: cat,
+    }));
+  }
+
   function getSortMode(
     stazioneId: string
   ): SortMode {
@@ -745,7 +769,7 @@ export default function StazioniScreen({
                               stazione.id
                             ) === opt.mode
                               ? 'bg-trenord-green text-white border-trenord-green'
-                              : 'bg-white text-gray-600 border-gray-200 hover:border-trenord-green hover:text-trenord-green'
+                              : 'bg-white text-gray-900 border-gray-300 hover:border-trenord-green hover:text-trenord-green'
                           }
                         `}
                       >
@@ -764,8 +788,71 @@ export default function StazioniScreen({
 
                 </div>
 
+                {/* CATEGORIA FILTER */}
+                {(() => {
+
+                  const cats = Array.from(
+                    new Set(
+                      stazione.attivita_stazione
+                        .filter((a: any) => a.categoria)
+                        .map((a: any) => a.categoria as string)
+                    )
+                  ).sort((a, b) =>
+                    a.localeCompare(b, 'it')
+                  );
+
+                  if (cats.length <= 1) return null;
+
+                  return (
+
+                    <div className="flex gap-2 flex-wrap">
+
+                      {cats.map((cat) => (
+
+                        <button
+                          key={cat}
+                          type="button"
+                          onClick={() =>
+                            setCategoriaFilterForStazione(
+                              stazione.id,
+                              getCategoriaFilter(stazione.id) === cat
+                                ? null
+                                : cat
+                            )
+                          }
+                          className={`
+                            px-3
+                            py-1.5
+                            rounded-xl
+                            text-xs
+                            font-medium
+                            border
+                            transition-colors
+                            ${
+                              getCategoriaFilter(stazione.id) === cat
+                                ? 'bg-gray-800 text-white border-gray-800'
+                                : 'bg-white text-gray-900 border-gray-300 hover:border-gray-600 hover:text-gray-900'
+                            }
+                          `}
+                        >
+
+                          {cat}
+
+                        </button>
+                      ))}
+
+                    </div>
+                  );
+                })()}
+
                 {sortAttivita(
-                  stazione.attivita_stazione,
+                  getCategoriaFilter(stazione.id)
+                    ? stazione.attivita_stazione.filter(
+                        (a: any) =>
+                          a.categoria ===
+                          getCategoriaFilter(stazione.id)
+                      )
+                    : stazione.attivita_stazione,
                   getSortMode(stazione.id)
                 ).map(
                   (attivita: any) => {
