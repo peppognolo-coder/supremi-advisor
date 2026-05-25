@@ -115,6 +115,7 @@ const CATEGORIE = [
 ];
 
 const DISTANZE = [
+  'In stazione',
   'Entro 2 minuti',
   'Entro 5 minuti',
   'Entro 10 minuti',
@@ -125,18 +126,7 @@ const DISTANZE = [
 // COMPONENTE
 // =========================
 
-// =========================
-// PROPS
-// =========================
-
-interface Props {
-
-  initialEditId?: string;
-}
-
-export default function AdminAttivitaScreen({
-  initialEditId,
-}: Props) {
+export default function AdminAttivitaScreen() {
 
   const [loading, setLoading] =
     useState(true);
@@ -222,36 +212,6 @@ export default function AdminAttivitaScreen({
     load();
 
   }, []);
-
-  // =========================
-  // APRI MODAL DA PROP
-  // =========================
-
-  useEffect(() => {
-
-    if (
-      !initialEditId ||
-      loading ||
-      attivita.length === 0
-    ) {
-      return;
-    }
-
-    const target =
-      attivita.find(
-        (a) => a.id === initialEditId
-      );
-
-    if (target) {
-
-      apriModifica(target);
-    }
-
-  }, [
-    initialEditId,
-    loading,
-    attivita,
-  ]);
 
   // =========================
   // ESC CHIUDE MODAL
