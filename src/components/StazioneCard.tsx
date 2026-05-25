@@ -200,6 +200,8 @@ export default function StazioneCard({
     )
   ).sort((a, b) => a.localeCompare(b, 'it'));
 
+  console.log('[StazioneCard] locali:', locali.length, 'categorie:', categorieDisponibili);
+
   // Locali filtrati per categoria (poi ordinati dal sortAttivita)
   const localiFiltrati =
     categoriaFilter
