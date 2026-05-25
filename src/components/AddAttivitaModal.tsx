@@ -63,9 +63,9 @@ export default function AddAttivitaModal({
     useState('');
 
   const [
-  distanzaPiedi,
-  setDistanzaPiedi,
-] = useState('');
+    distanzaPiedi,
+    setDistanzaPiedi,
+  ] = useState('');
 
   const [note, setNote] =
     useState('');
@@ -82,9 +82,7 @@ export default function AddAttivitaModal({
   const [
     fasceOrarie,
     setFasceOrarie,
-  ] = useState<
-    FasciaOraria[]
-  >([
+  ] = useState<FasciaOraria[]>([
     {
       giorni: [],
       apertura: '',
@@ -92,15 +90,10 @@ export default function AddAttivitaModal({
     },
   ]);
 
-  // =========================
-  // ADD FASCIA
-  // =========================
-
   function addFascia() {
 
     setFasceOrarie([
       ...fasceOrarie,
-
       {
         giorni: [],
         apertura: '',
@@ -109,91 +102,51 @@ export default function AddAttivitaModal({
     ]);
   }
 
-  // =========================
-  // REMOVE FASCIA
-  // =========================
-
   function removeFascia(
     index: number
   ) {
 
     setFasceOrarie(
       fasceOrarie.filter(
-        (_, i) =>
-          i !== index
+        (_, i) => i !== index
       )
     );
   }
 
-  // =========================
-  // UPDATE FASCIA
-  // =========================
-
   function updateFascia(
-
     index: number,
-
     field: string,
-
     value: any
   ) {
 
-    const updated = [
-      ...fasceOrarie,
-    ];
+    const updated = [...fasceOrarie];
 
     updated[index] = {
-
       ...updated[index],
-
       [field]: value,
     };
 
-    setFasceOrarie(
-      updated
-    );
+    setFasceOrarie(updated);
   }
 
-  // =========================
-  // TOGGLE GIORNO
-  // =========================
-
   function toggleGiorno(
-
     fasciaIndex: number,
-
     giorno: string
   ) {
 
     const fascia =
-      fasceOrarie[
-        fasciaIndex
-      ];
-
-    const exists =
-      fascia.giorni.includes(
-        giorno
-      );
+      fasceOrarie[fasciaIndex];
 
     const nuoviGiorni =
-      exists
-
+      fascia.giorni.includes(giorno)
         ? fascia.giorni.filter(
-            (g) =>
-              g !== giorno
+            (g) => g !== giorno
           )
-
-        : [
-            ...fascia.giorni,
-            giorno,
-          ];
+        : [...fascia.giorni, giorno];
 
     updateFascia(
-
       fasciaIndex,
-
       'giorni',
-
       nuoviGiorni
     );
   }
@@ -217,44 +170,35 @@ export default function AddAttivitaModal({
 
       setLoading(true);
 
-const payload = {
+      const payload = {
 
-  stazione_id:
-    stazioneId,
+        stazione_id: stazioneId,
 
-  nome,
+        nome,
 
-  categoria,
+        categoria,
 
-  indirizzo,
+        indirizzo,
 
-  distanza_piedi:
-    distanzaPiedi,
+        distanza_piedi: distanzaPiedi,
 
-  ubicazione,
+        ubicazione,
 
-  note,
+        note,
 
-  convenzionato,
+        convenzionato,
 
-  fasce_orarie:
-    fasceOrarie,
-};
+        fasce_orarie: fasceOrarie,
+      };
 
-      const {
-        error,
-      } = await supabase
-
-        .from('contributi')
-
-        .insert({
-
-          tipo: 'attivita',
-
-          dati: payload,
-
-          stato: 'pending',
-        });
+      const { error } =
+        await supabase
+          .from('contributi')
+          .insert({
+            tipo: 'attivita',
+            dati: payload,
+            stato: 'pending',
+          });
 
       if (error) {
 
@@ -308,9 +252,7 @@ const payload = {
 
           </div>
 
-          <button
-            onClick={onClose}
-          >
+          <button onClick={onClose}>
 
             <X className="w-5 h-5 text-gray-400" />
 
@@ -323,9 +265,7 @@ const payload = {
           type="text"
           value={nome}
           onChange={(e) =>
-            setNome(
-              e.target.value
-            )
+            setNome(e.target.value)
           }
           className="border rounded-2xl px-3 py-3 text-sm"
           placeholder="Nome attività"
@@ -335,48 +275,17 @@ const payload = {
         <select
           value={categoria}
           onChange={(e) =>
-            setCategoria(
-              e.target.value
-            )
+            setCategoria(e.target.value)
           }
           className="border rounded-2xl px-3 py-3 text-sm"
         >
 
-          <option>
-
-            Bar
-
-          </option>
-
-          <option>
-
-            Ristorante
-
-          </option>
-
-          <option>
-
-            Fast Food
-
-          </option>
-
-          <option>
-
-            Market
-
-          </option>
-
-          <option>
-
-            Farmacia
-
-          </option>
-
-          <option>
-
-            Tabacchi
-
-          </option>
+          <option>Bar</option>
+          <option>Ristorante</option>
+          <option>Fast Food</option>
+          <option>Market</option>
+          <option>Farmacia</option>
+          <option>Tabacchi</option>
 
         </select>
 
@@ -385,55 +294,65 @@ const payload = {
           type="text"
           value={indirizzo}
           onChange={(e) =>
-            setIndirizzo(
-              e.target.value
-            )
+            setIndirizzo(e.target.value)
           }
           className="border rounded-2xl px-3 py-3 text-sm"
           placeholder="Indirizzo"
         />
 
-       {/* DISTANZA A PIEDI */}
-<select
-  value={distanzaPiedi}
-  onChange={(e) =>
-    setDistanzaPiedi(
-      e.target.value
-    )
-  }
-  className="border rounded-2xl px-3 py-3 text-sm"
->
+        {/* DISTANZA A PIEDI */}
+        <select
+          value={distanzaPiedi}
+          onChange={(e) =>
+            setDistanzaPiedi(e.target.value)
+          }
+          className="border rounded-2xl px-3 py-3 text-sm"
+        >
 
-  <option value="">
-    Distanza dalla stazione
-  </option>
+          <option value="">
 
-  <option value="Entro 2 minuti">
-    Entro 2 minuti
-  </option>
+            Distanza dalla stazione
 
-  <option value="Entro 5 minuti">
-    Entro 5 minuti
-  </option>
+          </option>
 
-  <option value="Entro 10 minuti">
-    Entro 10 minuti
-  </option>
+          <option value="In stazione">
 
-  <option value="Oltre 10 minuti">
-    Oltre 10 minuti
-  </option>
+            In stazione
 
-</select>
+          </option>
+
+          <option value="Entro 2 minuti">
+
+            Entro 2 minuti
+
+          </option>
+
+          <option value="Entro 5 minuti">
+
+            Entro 5 minuti
+
+          </option>
+
+          <option value="Entro 10 minuti">
+
+            Entro 10 minuti
+
+          </option>
+
+          <option value="Oltre 10 minuti">
+
+            Oltre 10 minuti
+
+          </option>
+
+        </select>
 
         {/* UBICAZIONE */}
         <input
           type="text"
           value={ubicazione}
           onChange={(e) =>
-            setUbicazione(
-              e.target.value
-            )
+            setUbicazione(e.target.value)
           }
           className="border rounded-2xl px-3 py-3 text-sm"
           placeholder="Ubicazione"
@@ -443,15 +362,11 @@ const payload = {
         <button
           type="button"
           onClick={() =>
-            setConvenzionato(
-              !convenzionato
-            )
+            setConvenzionato(!convenzionato)
           }
           className={`flex items-center justify-between px-4 py-3 rounded-2xl border transition-all ${
             convenzionato
-
               ? 'bg-emerald-50 border-emerald-200'
-
               : 'bg-white border-gray-200'
           }`}
         >
@@ -465,9 +380,7 @@ const payload = {
           <div
             className={`w-5 h-5 rounded-full border-2 ${
               convenzionato
-
                 ? 'bg-emerald-500 border-emerald-500'
-
                 : 'border-gray-300'
             }`}
           />
@@ -500,17 +413,13 @@ const payload = {
           </div>
 
           {fasceOrarie.map(
-            (
-              fascia,
-              index
-            ) => (
+            (fascia, index) => (
 
               <div
                 key={index}
                 className="border border-gray-200 rounded-2xl p-4 flex flex-col gap-4"
               >
 
-                {/* TOP */}
                 <div className="flex items-center justify-between">
 
                   <h4 className="font-medium text-gray-800">
@@ -519,15 +428,12 @@ const payload = {
 
                   </h4>
 
-                  {fasceOrarie.length >
-                    1 && (
+                  {fasceOrarie.length > 1 && (
 
                     <button
                       type="button"
                       onClick={() =>
-                        removeFascia(
-                          index
-                        )
+                        removeFascia(index)
                       }
                     >
 
@@ -538,47 +444,36 @@ const payload = {
 
                 </div>
 
-                {/* GIORNI */}
                 <div className="flex flex-wrap gap-2">
 
-                  {GIORNI.map(
-                    (giorno) => {
+                  {GIORNI.map((giorno) => {
 
-                      const active =
-                        fascia.giorni.includes(
-                          giorno
-                        );
+                    const active =
+                      fascia.giorni.includes(giorno);
 
-                      return (
+                    return (
 
-                        <button
-                          key={giorno}
-                          type="button"
-                          onClick={() =>
-                            toggleGiorno(
-                              index,
-                              giorno
-                            )
-                          }
-                          className={`px-3 py-2 rounded-xl text-xs font-semibold transition-all ${
-                            active
+                      <button
+                        key={giorno}
+                        type="button"
+                        onClick={() =>
+                          toggleGiorno(index, giorno)
+                        }
+                        className={`px-3 py-2 rounded-xl text-xs font-semibold transition-all ${
+                          active
+                            ? 'bg-trenord-green text-white'
+                            : 'bg-gray-100 text-gray-500'
+                        }`}
+                      >
 
-                              ? 'bg-trenord-green text-white'
+                        {giorno}
 
-                              : 'bg-gray-100 text-gray-500'
-                          }`}
-                        >
-
-                          {giorno}
-
-                        </button>
-                      );
-                    }
-                  )}
+                      </button>
+                    );
+                  })}
 
                 </div>
 
-                {/* ORARI */}
                 <div className="grid grid-cols-2 gap-3">
 
                   <div>
@@ -591,16 +486,11 @@ const payload = {
 
                     <input
                       type="time"
-                      value={
-                        fascia.apertura
-                      }
+                      value={fascia.apertura}
                       onChange={(e) =>
                         updateFascia(
-
                           index,
-
                           'apertura',
-
                           e.target.value
                         )
                       }
@@ -619,16 +509,11 @@ const payload = {
 
                     <input
                       type="time"
-                      value={
-                        fascia.chiusura
-                      }
+                      value={fascia.chiusura}
                       onChange={(e) =>
                         updateFascia(
-
                           index,
-
                           'chiusura',
-
                           e.target.value
                         )
                       }
@@ -649,9 +534,7 @@ const payload = {
         <textarea
           value={note}
           onChange={(e) =>
-            setNote(
-              e.target.value
-            )
+            setNote(e.target.value)
           }
           className="border rounded-2xl px-3 py-3 text-sm min-h-[100px]"
           placeholder="Note"
@@ -665,9 +548,7 @@ const payload = {
         >
 
           {loading
-
             ? 'Invio proposta...'
-
             : 'Invia proposta'}
 
         </button>
