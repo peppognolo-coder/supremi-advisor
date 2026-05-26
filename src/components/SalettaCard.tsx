@@ -20,6 +20,8 @@ import { formatTitle } from '../lib/format';
 
 import SegnalazioneModal from './SegnalazioneModal';
 
+import SalettaVerifica from './SalettaVerifica';
+
 interface Props {
   stazioneName?: string;
   salette?: Saletta[];
@@ -285,6 +287,11 @@ export default function SalettaCard({
                   Segnala modifica
 
                 </button>
+
+                {/* VERIFICA RAPIDA */}
+                <SalettaVerifica
+                  salettaId={saletta.id}
+                />
 
               </div>
             ))}
