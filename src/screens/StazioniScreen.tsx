@@ -7,6 +7,8 @@ import {
   ChevronDown,
   ChevronUp,
   Plus,
+  X,
+  MessageSquarePlus,
 } from 'lucide-react';
 
 import toast from 'react-hot-toast';
@@ -49,6 +51,8 @@ import {
 interface Props {
 
   refreshKey?: number;
+
+  onNavigateToContributi?: () => void;
 }
 
 // =========================
@@ -66,6 +70,7 @@ interface Valutazione {
 
 export default function StazioniScreen({
   refreshKey = 0,
+  onNavigateToContributi,
 }: Props) {
 
   const [stazioni, setStazioni] =
@@ -1045,8 +1050,20 @@ export default function StazioniScreen({
             onChange={(e) =>
               setSearch(e.target.value)
             }
-            className="w-full bg-white border border-gray-200 rounded-2xl pl-10 pr-4 py-3 text-sm"
+            className="w-full bg-white border border-gray-200 rounded-2xl pl-10 pr-9 py-3 text-sm"
           />
+
+          {search.length > 0 && (
+
+            <button
+              onClick={() => setSearch('')}
+              className="absolute right-3 top-1/2 -translate-y-1/2"
+            >
+
+              <X className="w-4 h-4 text-gray-400" />
+
+            </button>
+          )}
 
         </div>
 
@@ -1066,10 +1083,49 @@ export default function StazioniScreen({
         {!loading &&
           filtered.length === 0 && (
 
-          <EmptyState
-            title="Nessuna stazione trovata"
-            description="Prova a modificare la ricerca"
-          />
+          <div className="flex flex-col items-center justify-center py-16 px-6 gap-4 text-center">
+
+            <div className="w-14 h-14 rounded-2xl bg-gray-100 flex items-center justify-center">
+              <Search className="w-7 h-7 text-gray-400" />
+            </div>
+
+            <div>
+              <p className="font-semibold text-gray-700">
+
+                Nessuna stazione trovata
+
+              </p>
+
+              <p className="text-sm text-gray-400 mt-1 max-w-xs leading-relaxed">
+
+                Nessun risultato per "{search}". La stazione non è ancora in elenco?
+
+              </p>
+            </div>
+
+            <button
+              onClick={() => setSearch('')}
+              className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gray-100 text-gray-700 text-sm font-medium hover:bg-gray-200 transition-colors"
+            >
+
+              <X className="w-4 h-4" />
+
+              Cancella ricerca
+
+            </button>
+
+            <button
+              onClick={() => onNavigateToContributi?.()}
+              className="flex items-center gap-2 px-4 py-2 rounded-xl bg-trenord-green text-white text-sm font-medium hover:opacity-90 transition-opacity"
+            >
+
+              <MessageSquarePlus className="w-4 h-4" />
+
+              Segnala stazione mancante
+
+            </button>
+
+          </div>
         )}
 
         {/* FAVORITES */}
