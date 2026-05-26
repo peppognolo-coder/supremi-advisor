@@ -4,6 +4,8 @@ import {
   Search,
   DoorOpen,
   MapPin,
+  X,
+  MessageSquarePlus,
 } from 'lucide-react';
 
 import toast from 'react-hot-toast';
@@ -22,8 +24,6 @@ import type {
 import SalettaCard from '../components/SalettaCard';
 
 import LoadingSpinner from '../components/LoadingSpinner';
-
-import EmptyState from '../components/EmptyState';
 
 interface GroupedSaletta {
 
@@ -46,10 +46,13 @@ interface StazioneCoordinates {
 interface Props {
 
   refreshKey?: number;
+
+  onNavigateToContributi?: () => void;
 }
 
 export default function SaletteScreen({
   refreshKey = 0,
+  onNavigateToContributi,
 }: Props) {
 
   const [salette, setSalette] =
@@ -83,21 +86,17 @@ export default function SaletteScreen({
         const location =
           await getCurrentLocation();
 
-        setUserLocation(
-          location
-        );
+        setUserLocation(location);
 
       } catch {
 
-        console.log(
+        console.warn(
           'Geolocalizzazione non disponibile'
         );
 
       } finally {
 
-        setLocationReady(
-          true
-        );
+        setLocationReady(true);
       }
     }
 
@@ -111,36 +110,21 @@ export default function SaletteScreen({
 
   useEffect(() => {
 
-    // aspetta geolocalizzazione
-    if (!locationReady)
-      return;
+    if (!locationReady) return;
 
     async function load() {
 
       setLoading(true);
 
-      // =====================
-      // SALETTE
-      // =====================
+      const { data, error } =
+        await supabase
+          .from('salette')
+          .select('*');
 
-      const {
-        data,
-        error,
-      } = await supabase
-        .from('salette')
-        .select('*');
-
-      // =====================
-      // STAZIONI
-      // =====================
-
-      const {
-        data: stazioniData,
-      } = await supabase
-        .from('stazioni')
-        .select(
-          'nome, lat, lng'
-        );
+      const { data: stazioniData } =
+        await supabase
+          .from('stazioni')
+          .select('nome, lat, lng');
 
       if (error) {
 
@@ -155,221 +139,91 @@ export default function SaletteScreen({
         return;
       }
 
-      // =====================
-      // MAP STAZIONI
-      // =====================
-
       const stazioniCoordinates:
         StazioneCoordinates[] =
-        (
-          stazioniData ?? []
-        ).filter(
-          (s) =>
-            s.lat &&
-            s.lng
+        (stazioniData ?? []).filter(
+          (s) => s.lat && s.lng
         );
-
-      // =====================
-      // GROUP
-      // =====================
 
       const groupedMap =
-        new Map<
-          string,
-          GroupedSaletta
-        >();
+        new Map<string, GroupedSaletta>();
 
-      (data ?? []).forEach(
-        (saletta) => {
+      (data ?? []).forEach((saletta) => {
 
-          const normalizedKey =
-            saletta.stazione
-              ?.trim()
-              .toLowerCase();
+        const normalizedKey =
+          saletta.stazione
+            ?.trim()
+            .toLowerCase();
 
-          // CREATE GROUP
-          if (
-            !groupedMap.has(
-              normalizedKey
-            )
-          ) {
+        if (!groupedMap.has(normalizedKey)) {
 
-            groupedMap.set(
-              normalizedKey,
-              {
-
-                stazione:
-                  saletta.stazione,
-
-                salette: [],
-              }
-            );
-          }
-
-          // PUSH
-          groupedMap
-            .get(normalizedKey)
-            ?.salette.push(
-              saletta
-            );
+          groupedMap.set(normalizedKey, {
+            stazione: saletta.stazione,
+            salette: [],
+          });
         }
-      );
 
-      // =====================
-      // ARRAY
-      // =====================
+        groupedMap
+          .get(normalizedKey)
+          ?.salette.push(saletta);
+      });
 
       let grouped =
-        Array.from(
-          groupedMap.values()
-        );
-
-      // =====================
-      // DISTANCE SORT
-      // =====================
+        Array.from(groupedMap.values());
 
       if (userLocation) {
 
-        grouped = grouped.map(
-          (group) => {
+        grouped = grouped.map((group) => {
 
-            const first =
-              group.salette[0];
+          const first = group.salette[0];
 
-            let distanza:
-              | number
-              | undefined =
-              undefined;
+          let lat = first?.lat;
+          let lng = first?.lng;
 
-            // =================
-            // COORDINATE
-            // =================
+          if ((!lat || !lng) && first?.stazione) {
 
-            let lat =
-              first?.lat;
-
-            let lng =
-              first?.lng;
-
-            // =================
-            // FALLBACK STAZIONE
-            // =================
-
-            if (
-              (!lat ||
-                !lng) &&
-              first?.stazione
-            ) {
-
-              const stazioneMatch =
-                stazioniCoordinates.find(
-                  (s) =>
-                    s.nome
-                      ?.trim()
-                      .toLowerCase() ===
-                    first.stazione
-                      ?.trim()
-                      .toLowerCase()
-                );
-
-              if (
-                stazioneMatch
-              ) {
-
-                lat =
-                  stazioneMatch.lat;
-
-                lng =
-                  stazioneMatch.lng;
-              }
-            }
-
-            // =================
-            // DISTANCE
-            // =================
-
-            if (
-              lat &&
-              lng
-            ) {
-
-              distanza =
-                calculateDistance(
-
-                  userLocation.lat,
-                  userLocation.lng,
-
-                  Number(lat),
-
-                  Number(lng)
-                );
-            }
-
-            return {
-              ...group,
-              distanza,
-            };
-          }
-        );
-
-        // ===================
-        // SORT
-        // ===================
-
-        grouped.sort(
-          (a, b) => {
-
-            // nearest first
-            if (
-              a.distanza !=
-                null &&
-              b.distanza !=
-                null
-            ) {
-
-              return (
-                a.distanza -
-                b.distanza
+            const stazioneMatch =
+              stazioniCoordinates.find(
+                (s) =>
+                  s.nome?.trim().toLowerCase() ===
+                  first.stazione?.trim().toLowerCase()
               );
+
+            if (stazioneMatch) {
+              lat = stazioneMatch.lat;
+              lng = stazioneMatch.lng;
             }
+          }
 
-            // no coords
-            if (
-              a.distanza ==
-                null &&
-              b.distanza !=
-                null
-            ) {
+          let distanza: number | undefined;
 
-              return 1;
-            }
+          if (lat && lng) {
 
-            if (
-              a.distanza !=
-                null &&
-              b.distanza ==
-                null
-            ) {
-
-              return -1;
-            }
-
-            // fallback alpha
-            return a.stazione.localeCompare(
-              b.stazione,
-              'it'
+            distanza = calculateDistance(
+              userLocation.lat,
+              userLocation.lng,
+              Number(lat),
+              Number(lng)
             );
           }
-        );
+
+          return { ...group, distanza };
+        });
+
+        grouped.sort((a, b) => {
+
+          if (a.distanza != null && b.distanza != null) {
+            return a.distanza - b.distanza;
+          }
+          if (a.distanza == null && b.distanza != null) return 1;
+          if (a.distanza != null && b.distanza == null) return -1;
+          return a.stazione.localeCompare(b.stazione, 'it');
+        });
 
       } else {
 
-        grouped.sort(
-          (a, b) =>
-            a.stazione.localeCompare(
-              b.stazione,
-              'it'
-            )
+        grouped.sort((a, b) =>
+          a.stazione.localeCompare(b.stazione, 'it')
         );
       }
 
@@ -380,67 +234,32 @@ export default function SaletteScreen({
 
     load();
 
-  }, [
-    userLocation,
-    locationReady,
-    refreshKey,
-  ]);
+  }, [userLocation, locationReady, refreshKey]);
 
   // =========================
   // SEARCH
   // =========================
 
-  const filtered =
-    salette.filter(
-      (group) => {
+  const filtered = salette.filter((group) => {
 
-        const q =
-          search
-            .trim()
-            .toLowerCase();
+    const q = search.trim().toLowerCase();
 
-        return (
-          !q ||
-
-          group.stazione
-            .toLowerCase()
-            .includes(q) ||
-
-          group.salette.some(
-            (s) =>
-              s.tipo
-                ?.toLowerCase()
-                .includes(q)
-          )
-        );
-      }
+    return (
+      !q ||
+      group.stazione.toLowerCase().includes(q) ||
+      group.salette.some(
+        (s) => s.tipo?.toLowerCase().includes(q)
+      )
     );
+  });
 
   // =========================
   // LOADING
   // =========================
 
-  if (
-    loading ||
-    !locationReady
-  ) {
+  if (loading || !locationReady) {
 
     return <LoadingSpinner />;
-  }
-
-  // =========================
-  // EMPTY
-  // =========================
-
-  if (filtered.length === 0) {
-
-    return (
-      <EmptyState
-        icon={DoorOpen}
-        title="Nessuna saletta trovata"
-        description="Prova a modificare la ricerca."
-      />
-    );
   }
 
   // =========================
@@ -463,30 +282,92 @@ export default function SaletteScreen({
             placeholder="Cerca stazione o tipo..."
             value={search}
             onChange={(e) =>
-              setSearch(
-                e.target.value
-              )
+              setSearch(e.target.value)
             }
-            className="w-full bg-white border border-gray-200 rounded-xl pl-9 pr-4 py-2.5 text-sm"
+            className="w-full bg-white border border-gray-200 rounded-xl pl-9 pr-9 py-2.5 text-sm"
           />
+
+          {/* X per cancellare */}
+          {search.length > 0 && (
+
+            <button
+              onClick={() => setSearch('')}
+              className="absolute right-3 top-1/2 -translate-y-1/2"
+            >
+
+              <X className="w-4 h-4 text-gray-400" />
+
+            </button>
+          )}
 
         </div>
 
       </div>
 
-      {/* LISTA */}
-      <div className="flex flex-col gap-3">
+      {/* EMPTY */}
+      {filtered.length === 0 && (
 
-        {filtered.map(
-          (
-            group,
-            index
-          ) => (
+        <div className="flex flex-col items-center justify-center py-16 px-6 gap-4 text-center">
+
+          <div className="w-14 h-14 rounded-2xl bg-gray-100 flex items-center justify-center">
+
+            <DoorOpen className="w-7 h-7 text-gray-400" />
+
+          </div>
+
+          <div>
+
+            <p className="font-semibold text-gray-700">
+
+              Nessuna saletta trovata
+
+            </p>
+
+            <p className="text-sm text-gray-400 mt-1 max-w-xs leading-relaxed">
+
+              Nessun risultato per "{search}". La saletta non è ancora in elenco?
+
+            </p>
+
+          </div>
+
+          <button
+            onClick={() => setSearch('')}
+            className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gray-100 text-gray-700 text-sm font-medium hover:bg-gray-200 transition-colors"
+          >
+
+            <X className="w-4 h-4" />
+
+            Cancella ricerca
+
+          </button>
+
+          {onNavigateToContributi && (
+
+            <button
+              onClick={onNavigateToContributi}
+              className="flex items-center gap-2 px-4 py-2 rounded-xl bg-trenord-green text-white text-sm font-medium hover:opacity-90 transition-opacity"
+            >
+
+              <MessageSquarePlus className="w-4 h-4" />
+
+              Segnala saletta mancante
+
+            </button>
+          )}
+
+        </div>
+      )}
+
+      {/* LISTA */}
+      {filtered.length > 0 && (
+
+        <div className="flex flex-col gap-3">
+
+          {filtered.map((group, index) => (
 
             <div
-              key={
-                group.stazione
-              }
+              key={group.stazione}
               className={`rounded-3xl transition-all ${
                 index === 0
                   ? 'ring-2 ring-trenord-green/20'
@@ -494,10 +375,8 @@ export default function SaletteScreen({
               }`}
             >
 
-              {/* NEAREST */}
               {index === 0 &&
-                group.distanza !=
-                  null && (
+                group.distanza != null && (
 
                 <div className="mb-2 inline-flex items-center gap-2 px-3 py-1 rounded-full bg-trenord-green/10 text-trenord-green text-xs font-semibold">
 
@@ -507,11 +386,7 @@ export default function SaletteScreen({
 
                   <span>
 
-                    •{' '}
-                    {group.distanza.toFixed(
-                      1
-                    )}{' '}
-                    km
+                    • {group.distanza.toFixed(1)} km
 
                   </span>
 
@@ -519,19 +394,15 @@ export default function SaletteScreen({
               )}
 
               <SalettaCard
-                stazioneName={
-                  group.stazione
-                }
-                salette={
-                  group.salette
-                }
+                stazioneName={group.stazione}
+                salette={group.salette}
               />
 
             </div>
-          )
-        )}
+          ))}
 
-      </div>
+        </div>
+      )}
 
     </div>
   );
