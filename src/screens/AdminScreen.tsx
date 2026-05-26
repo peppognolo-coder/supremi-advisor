@@ -17,6 +17,7 @@ import {
   AlertCircle,
   AlertTriangle,
   Clock,
+  CheckCircle,
   FileText,
   Trash2,
   Copy,
@@ -142,6 +143,21 @@ export default function AdminScreen() {
 
   const [stazioniMap, setStazioniMap] =
     useState<Record<string, string>>({});
+
+  // =========================
+  // VERIFICHE STATS
+  // =========================
+
+  interface VerificheStats {
+    totaleConferme: number;
+    totaleProblemi: number;
+    ultimi7giorni: number;
+    saletteNonVerificate: number;
+    breakdownProblemi: Record<string, number>;
+  }
+
+  const [verificheStats, setVerificheStats] =
+    useState<VerificheStats | null>(null);
 
   // modal qualità aperto
   const [modalQualita, setModalQualita] =
@@ -298,6 +314,78 @@ export default function AdminScreen() {
     setAttivitaAll(attivitaData ?? []);
 
     setStazioniMap(map);
+
+    // =========================
+    // VERIFICHE STATS
+    // =========================
+
+    const { data: verificheData } =
+      await supabase
+        .from('saletta_verifiche')
+        .select('is_correct, tipo_problema, saletta_id, created_at');
+
+    if (verificheData) {
+
+      const ora = Date.now();
+      const setteGiorni =
+        7 * 24 * 60 * 60 * 1000;
+      const trentaGiorni =
+        30 * 24 * 60 * 60 * 1000;
+
+      const totaleConferme =
+        verificheData.filter(
+          (v) => v.is_correct
+        ).length;
+
+      const totaleProblemi =
+        verificheData.filter(
+          (v) => !v.is_correct
+        ).length;
+
+      const ultimi7giorni =
+        verificheData.filter(
+          (v) =>
+            ora - new Date(v.created_at).getTime() <
+            setteGiorni
+        ).length;
+
+      // Salette senza verifiche recenti (> 30 giorni o mai verificate)
+      const saletteVerificateRecente =
+        new Set(
+          verificheData
+            .filter(
+              (v) =>
+                v.is_correct &&
+                ora - new Date(v.created_at).getTime() <
+                trentaGiorni
+            )
+            .map((v) => v.saletta_id)
+        );
+
+      const saletteNonVerificate =
+        (saletteCount ?? 0) -
+        saletteVerificateRecente.size;
+
+      // Breakdown problemi
+      const breakdownProblemi: Record<string, number> = {};
+
+      verificheData
+        .filter((v) => !v.is_correct && v.tipo_problema)
+        .forEach((v) => {
+          const key = v.tipo_problema!;
+          breakdownProblemi[key] =
+            (breakdownProblemi[key] ?? 0) + 1;
+        });
+
+      setVerificheStats({
+        totaleConferme,
+        totaleProblemi,
+        ultimi7giorni,
+        saletteNonVerificate:
+          Math.max(0, saletteNonVerificate),
+        breakdownProblemi,
+      });
+    }
 
     setLoading(false);
   }
@@ -1412,6 +1500,198 @@ export default function AdminScreen() {
               </div>
 
             </div>
+
+          </div>
+        )}
+
+        {/* ========================= */}
+        {/* VERIFICHE SALETTE         */}
+        {/* ========================= */}
+
+        {!loading && verificheStats && (
+
+          <div className="bg-white rounded-2xl border border-gray-100 p-4 shadow-sm flex flex-col gap-4">
+
+            <div>
+
+              <h2 className="font-semibold text-gray-900">
+
+                Verifiche salette
+
+              </h2>
+
+              <p className="text-xs text-gray-400 mt-0.5">
+
+                Feedback della community sulla correttezza dei dati
+
+              </p>
+
+            </div>
+
+            {/* CARD METRICHE */}
+            <div className="grid grid-cols-2 gap-3">
+
+              {/* CONFERME */}
+              <div className="rounded-2xl border border-emerald-100 bg-emerald-50 p-4 flex flex-col gap-3">
+
+                <div className="flex items-center justify-between">
+
+                  <CheckCircle className="w-5 h-5 text-emerald-500" />
+
+                  <span className="text-2xl font-bold text-emerald-700">
+
+                    {verificheStats.totaleConferme}
+
+                  </span>
+
+                </div>
+
+                <p className="text-xs text-gray-500 uppercase tracking-wide">
+
+                  Conferme totali
+
+                </p>
+
+              </div>
+
+              {/* PROBLEMI */}
+              <div className={`rounded-2xl border p-4 flex flex-col gap-3 ${
+                verificheStats.totaleProblemi > 0
+                  ? 'border-amber-100 bg-amber-50'
+                  : 'border-gray-100 bg-gray-50'
+              }`}>
+
+                <div className="flex items-center justify-between">
+
+                  <AlertTriangle className={`w-5 h-5 ${
+                    verificheStats.totaleProblemi > 0
+                      ? 'text-amber-500'
+                      : 'text-gray-400'
+                  }`} />
+
+                  <span className={`text-2xl font-bold ${
+                    verificheStats.totaleProblemi > 0
+                      ? 'text-amber-700'
+                      : 'text-gray-500'
+                  }`}>
+
+                    {verificheStats.totaleProblemi}
+
+                  </span>
+
+                </div>
+
+                <p className="text-xs text-gray-500 uppercase tracking-wide">
+
+                  Problemi segnalati
+
+                </p>
+
+              </div>
+
+              {/* ULTIMI 7 GIORNI */}
+              <div className="rounded-2xl border border-gray-100 bg-gray-50 p-4 flex flex-col gap-3">
+
+                <div className="flex items-center justify-between">
+
+                  <Clock className="w-5 h-5 text-gray-400" />
+
+                  <span className="text-2xl font-bold text-gray-700">
+
+                    {verificheStats.ultimi7giorni}
+
+                  </span>
+
+                </div>
+
+                <p className="text-xs text-gray-500 uppercase tracking-wide">
+
+                  Ultimi 7 giorni
+
+                </p>
+
+              </div>
+
+              {/* NON VERIFICATE */}
+              <div className={`rounded-2xl border p-4 flex flex-col gap-3 ${
+                verificheStats.saletteNonVerificate > 0
+                  ? 'border-amber-100 bg-amber-50'
+                  : 'border-emerald-100 bg-emerald-50'
+              }`}>
+
+                <div className="flex items-center justify-between">
+
+                  <AlertCircle className={`w-5 h-5 ${
+                    verificheStats.saletteNonVerificate > 0
+                      ? 'text-amber-500'
+                      : 'text-emerald-500'
+                  }`} />
+
+                  <span className={`text-2xl font-bold ${
+                    verificheStats.saletteNonVerificate > 0
+                      ? 'text-amber-700'
+                      : 'text-emerald-700'
+                  }`}>
+
+                    {verificheStats.saletteNonVerificate}
+
+                  </span>
+
+                </div>
+
+                <p className="text-xs text-gray-500 uppercase tracking-wide">
+
+                  Non verificate (30+ gg)
+
+                </p>
+
+              </div>
+
+            </div>
+
+            {/* BREAKDOWN PROBLEMI */}
+            {Object.keys(verificheStats.breakdownProblemi).length > 0 && (
+
+              <div className="flex flex-col gap-2">
+
+                <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide">
+
+                  Tipo problemi segnalati
+
+                </p>
+
+                {Object.entries(
+                  verificheStats.breakdownProblemi
+                )
+                  .sort(([, a], [, b]) => b - a)
+                  .map(([tipo, count]) => (
+
+                  <div
+                    key={tipo}
+                    className="flex items-center justify-between px-3 py-2 rounded-xl bg-gray-50 border border-gray-100"
+                  >
+
+                    <span className="text-sm text-gray-600">
+
+                      {tipo
+                        .replace(/_/g, ' ')
+                        .replace(/\b\w/g, (c) =>
+                          c.toUpperCase()
+                        )}
+
+                    </span>
+
+                    <span className="text-sm font-semibold text-gray-900">
+
+                      {count}
+
+                    </span>
+
+                  </div>
+                ))}
+
+              </div>
+            )}
 
           </div>
         )}
