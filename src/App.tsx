@@ -45,6 +45,74 @@ export default function App() {
     useState<Tab>('salette');
 
   // =========================
+  // META TAGS PWA
+  // =========================
+
+  useEffect(() => {
+
+    // TITLE
+    document.title = 'Supremi Advisor';
+
+    // FAVICON
+    const favicon =
+      (document.querySelector(
+        "link[rel='icon']"
+      ) as HTMLLinkElement) ||
+      (() => {
+        const el =
+          document.createElement('link');
+        el.rel = 'icon';
+        document.head.appendChild(el);
+        return el;
+      })();
+    favicon.type = 'image/svg+xml';
+    favicon.href = '/favicon.svg';
+
+    // APPLE TOUCH ICON
+    const apple =
+      (document.querySelector(
+        "link[rel='apple-touch-icon']"
+      ) as HTMLLinkElement) ||
+      (() => {
+        const el =
+          document.createElement('link');
+        el.rel = 'apple-touch-icon';
+        document.head.appendChild(el);
+        return el;
+      })();
+    apple.href = '/icons/icon-192.png';
+
+    // THEME COLOR
+    const themeColor =
+      (document.querySelector(
+        "meta[name='theme-color']"
+      ) as HTMLMetaElement) ||
+      (() => {
+        const el =
+          document.createElement('meta');
+        el.name = 'theme-color';
+        document.head.appendChild(el);
+        return el;
+      })();
+    themeColor.content = '#007A3D';
+
+    // MANIFEST
+    const manifest =
+      (document.querySelector(
+        "link[rel='manifest']"
+      ) as HTMLLinkElement) ||
+      (() => {
+        const el =
+          document.createElement('link');
+        el.rel = 'manifest';
+        document.head.appendChild(el);
+        return el;
+      })();
+    manifest.href = '/manifest.json';
+
+  }, []);
+
+  // =========================
   // GLOBAL REFRESH
   // =========================
 
@@ -128,7 +196,6 @@ export default function App() {
         touchEndY.current -
         touchStartY.current;
 
-      // TRIGGER
       if (
         distance > 120 &&
         window.scrollY <= 10 &&
@@ -149,17 +216,13 @@ export default function App() {
     window.addEventListener(
       'touchstart',
       handleTouchStart,
-      {
-        passive: true,
-      }
+      { passive: true }
     );
 
     window.addEventListener(
       'touchmove',
       handleTouchMove,
-      {
-        passive: true,
-      }
+      { passive: true }
     );
 
     window.addEventListener(
@@ -218,7 +281,6 @@ export default function App() {
 
   function handleAdminAccess() {
 
-    // LOGOUT
     if (adminMode) {
 
       const confirmLogout =
@@ -234,9 +296,7 @@ export default function App() {
 
         setAdminMode(false);
 
-        setActiveTab(
-          'salette'
-        );
+        setActiveTab('salette');
 
         toast.success(
           'Modalità admin disattivata'
@@ -246,7 +306,6 @@ export default function App() {
       return;
     }
 
-    // LOGIN
     const pin =
       window.prompt(
         'Inserisci PIN admin'
@@ -265,13 +324,9 @@ export default function App() {
         'Modalità admin attivata'
       );
 
-    } else if (
-      pin != null
-    ) {
+    } else if (pin != null) {
 
-      toast.error(
-        'PIN errato'
-      );
+      toast.error('PIN errato');
     }
   }
 
@@ -309,26 +364,19 @@ export default function App() {
             ? 'Supremi Advisor • ADMIN'
             : 'Supremi Advisor'
         }
-        onAdminAccess={
-          handleAdminAccess
-        }
+        onAdminAccess={handleAdminAccess}
       />
 
-      {/* TITLE */}
+      {/* TITLE BAR */}
       <div className="fixed top-14 left-0 right-0 z-40 bg-white border-b border-gray-100 shadow-sm">
 
         <div className="max-w-2xl mx-auto px-4 py-3 flex items-center justify-between">
 
-          {/* LEFT */}
           <div className="flex items-center gap-3">
 
             <h1 className="text-lg font-bold text-gray-900">
 
-              {
-                screenTitles[
-                  activeTab
-                ]
-              }
+              {screenTitles[activeTab]}
 
             </h1>
 
@@ -343,7 +391,6 @@ export default function App() {
 
           </div>
 
-          {/* REFRESH */}
           <button
             onClick={refreshApp}
             className="w-10 h-10 rounded-2xl bg-gray-100 border border-gray-200 flex items-center justify-center hover:bg-gray-200 transition-colors"
@@ -351,9 +398,7 @@ export default function App() {
 
             <RefreshCw
               className={`w-4 h-4 text-gray-600 ${
-                refreshing
-                  ? 'animate-spin'
-                  : ''
+                refreshing ? 'animate-spin' : ''
               }`}
             />
 
@@ -368,53 +413,31 @@ export default function App() {
 
         <div className="max-w-2xl mx-auto px-4 py-4">
 
-          {activeTab ===
-            'salette' && (
-
+          {activeTab === 'salette' && (
             <SaletteScreen
-              refreshKey={
-                refreshKey
-              }
+              refreshKey={refreshKey}
+              onNavigateToContributi={() => setActiveTab('contributi')}
             />
           )}
 
-          {activeTab ===
-            'stazioni' && (
-
+          {activeTab === 'stazioni' && (
             <StazioniScreen
-              refreshKey={
-                refreshKey
-              }
+              refreshKey={refreshKey}
+              onNavigateToContributi={() => setActiveTab('contributi')}
             />
           )}
 
-          {activeTab ===
-            'contributi' && (
-
+          {activeTab === 'contributi' && (
             <ContributiScreen />
           )}
 
-          {activeTab ===
-            'segnalazioni' &&
-            adminMode && (
+          {activeTab === 'segnalazioni' && adminMode && (
+            <SegnalazioniScreen refreshKey={refreshKey} />
+          )}
 
-              <SegnalazioniScreen
-                refreshKey={
-                  refreshKey
-                }
-              />
-            )}
-
-          {activeTab ===
-            'admin' &&
-            adminMode && (
-
-              <AdminScreen
-                refreshKey={
-                  refreshKey
-                }
-              />
-            )}
+          {activeTab === 'admin' && adminMode && (
+            <AdminScreen refreshKey={refreshKey} />
+          )}
 
         </div>
 
@@ -427,37 +450,25 @@ export default function App() {
         adminMode={adminMode}
       />
 
-      {/* GLOBAL TOASTER */}
+      {/* TOASTER */}
       <Toaster
         position="top-center"
         toastOptions={{
           duration: 2500,
-
           style: {
-
             borderRadius: '16px',
-
             fontSize: '14px',
-
             padding: '12px 16px',
           },
-
           success: {
-
             style: {
-
               background: '#ECFDF5',
-
               color: '#065F46',
             },
           },
-
           error: {
-
             style: {
-
               background: '#FEF2F2',
-
               color: '#991B1B',
             },
           },
