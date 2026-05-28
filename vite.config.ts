@@ -11,7 +11,10 @@ export default defineConfig({
 
       injectRegister: 'auto',
 
-      includeAssets: ['favicon.svg'],
+      includeAssets: [
+        'favicon.svg',
+        'apple-touch-icon.png',
+      ],
 
       manifest: {
         name: 'Supremi Advisor',
@@ -35,11 +38,11 @@ export default defineConfig({
 
         icons: [
           {
-            src: '/favicon.svg',
+            src: '/apple-touch-icon.png',
 
             sizes: '512x512',
 
-            type: 'image/svg+xml',
+            type: 'image/png',
 
             purpose: 'any',
           },
@@ -47,7 +50,9 @@ export default defineConfig({
       },
 
       workbox: {
-        globPatterns: ['**/*.{js,css,html,svg}'],
+        globPatterns: [
+          '**/*.{js,css,html,svg,png,ico}',
+        ],
 
         cleanupOutdatedCaches: true,
 
