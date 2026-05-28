@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 
 import {
   Search,
@@ -871,8 +871,9 @@ export default function StazioniScreen({
 
                     return (
 
+                      <React.Fragment key={attivita.id}>
+
                       <button
-                        key={attivita.id}
                         type="button"
                         onClick={() => {
 
@@ -1030,6 +1031,8 @@ export default function StazioniScreen({
                         />
 
                       </div>
+
+                      </React.Fragment>
 
                     );
                   }
