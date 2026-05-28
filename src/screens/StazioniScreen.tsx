@@ -48,6 +48,8 @@ import {
   type SortMode,
 } from '../lib/sortAttivita';
 
+import AttivitaVerifica from '../components/AttivitaVerifica';
+
 interface Props {
 
   refreshKey?: number;
@@ -1019,6 +1021,16 @@ export default function StazioniScreen({
                         </div>
 
                       </button>
+
+                      {/* VERIFICA ATTIVITÀ */}
+                      <div className="px-4 pb-3 bg-white rounded-b-2xl border border-t-0 border-gray-200 -mt-2">
+
+                        <AttivitaVerifica
+                          attivitaId={attivita.id}
+                        />
+
+                      </div>
+
                     );
                   }
                 )}
