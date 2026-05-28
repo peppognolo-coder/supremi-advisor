@@ -15,6 +15,8 @@ import {
   Snowflake,
 } from 'lucide-react';
 
+import toast from 'react-hot-toast';
+
 import { supabase } from '../lib/supabase';
 
 interface Contributo {
@@ -333,27 +335,21 @@ export default function AdminContributiScreen() {
 
     if (!dati.nome?.trim()) {
 
-      alert(
-        'Compila i campi obbligatori: nome'
-      );
+      toast.error('Inserisci il nome attività');
 
       return false;
     }
 
     if (!dati.categoria?.trim()) {
 
-      alert(
-        'Compila i campi obbligatori: categoria'
-      );
+      toast.error('Inserisci la categoria');
 
       return false;
     }
 
     if (!dati.stazione_id) {
 
-      alert(
-        'Compila i campi obbligatori: stazione'
-      );
+      toast.error('Seleziona la stazione');
 
       return false;
     }
@@ -402,9 +398,7 @@ export default function AdminContributiScreen() {
 
       console.error(error);
 
-      alert(
-        'Errore durante il salvataggio'
-      );
+      toast.error('Errore durante il salvataggio');
 
       return;
     }
@@ -413,7 +407,7 @@ export default function AdminContributiScreen() {
 
     setEditingContributo(null);
 
-    alert('Modifiche salvate');
+    toast.success('Modifiche salvate');
   }
 
   // =========================
@@ -480,30 +474,72 @@ export default function AdminContributiScreen() {
     stato: string
   ) {
 
-    if (stato === 'approved') {
 
-      if (
-        !confirm(
-          'Approvare questo contributo?'
-        )
-      ) {
-        return;
-      }
-
-    } else {
-
-      if (
-        !confirm(
-          'Rifiutare questo contributo?'
-        )
-      ) {
-        return;
-      }
-    }
 
     setProcessingId(contributo.id);
 
     if (stato === 'approved') {
+
+      // =========================
+      // SEGNALAZIONE SALETTA
+      // =========================
+
+      if (
+        contributo.tipo === 'segnalazione_saletta'
+      ) {
+
+        const dati = contributo.dati;
+
+        // Aggiorna la saletta con il campo segnalato
+        const updatePayload: any = {};
+
+        if (dati.tipo === 'codice_accesso' && dati.valore) {
+          updatePayload.codice_accesso = dati.valore;
+        } else if (dati.tipo === 'ubicazione' && dati.valore) {
+          updatePayload.ubicazione = dati.valore;
+        } else if (dati.tipo === 'note' && dati.valore) {
+          updatePayload.note = dati.valore;
+        } else if (dati.tipo === 'climatizzata') {
+          updatePayload.climatizzata = true;
+        } else if (dati.tipo === 'remove_climatizzata') {
+          updatePayload.climatizzata = false;
+        } else if (dati.tipo === 'microonde') {
+          updatePayload.microonde = true;
+        } else if (dati.tipo === 'remove_microonde') {
+          updatePayload.microonde = false;
+        } else if (dati.tipo === 'fontana_acqua') {
+          updatePayload.acqua = true;
+        } else if (dati.tipo === 'remove_fontana_acqua') {
+          updatePayload.acqua = false;
+        } else if (dati.tipo === 'distributori') {
+          updatePayload.distributori = true;
+        } else if (dati.tipo === 'remove_distributori') {
+          updatePayload.distributori = false;
+        }
+
+        if (
+          Object.keys(updatePayload).length > 0 &&
+          dati.saletta_id
+        ) {
+
+          const { error } =
+            await supabase
+              .from('salette')
+              .update(updatePayload)
+              .eq('id', dati.saletta_id);
+
+          if (error) {
+
+            console.error(error);
+
+            toast.error('Errore aggiornamento saletta');
+
+            setProcessingId(null);
+
+            return;
+          }
+        }
+      }
 
       // =========================
       // SALETTA
@@ -569,9 +605,7 @@ export default function AdminContributiScreen() {
 
             console.error(error);
 
-            alert(
-              'Errore durante il salvataggio'
-            );
+            toast.error('Errore durante il salvataggio');
 
             setProcessingId(null);
 
@@ -626,9 +660,7 @@ export default function AdminContributiScreen() {
 
             console.error(error);
 
-            alert(
-              'Errore durante il salvataggio'
-            );
+            toast.error('Errore durante il salvataggio');
 
             setProcessingId(null);
 
@@ -703,9 +735,7 @@ export default function AdminContributiScreen() {
 
             console.error(error);
 
-            alert(
-              'Errore durante il salvataggio'
-            );
+            toast.error('Errore durante il salvataggio');
 
             setProcessingId(null);
 
@@ -760,9 +790,7 @@ export default function AdminContributiScreen() {
 
             console.error(error);
 
-            alert(
-              'Errore durante il salvataggio'
-            );
+            toast.error('Errore durante il salvataggio');
 
             setProcessingId(null);
 
@@ -786,9 +814,7 @@ export default function AdminContributiScreen() {
 
       console.error(statoError);
 
-      alert(
-        'Errore durante il salvataggio'
-      );
+      toast.error('Errore durante il salvataggio');
 
       setProcessingId(null);
 
@@ -799,11 +825,11 @@ export default function AdminContributiScreen() {
 
     if (stato === 'approved') {
 
-      alert('Contributo approvato');
+      toast.success('Contributo approvato');
 
     } else {
 
-      alert('Contributo rifiutato');
+      toast.error('Contributo rifiutato');
     }
 
     await load();
@@ -1129,6 +1155,62 @@ export default function AdminContributiScreen() {
               </button>
 
             </div>
+
+            {/* ========================= */}
+            {/* MODAL SEGNALAZIONE SALETTA*/}
+            {/* ========================= */}
+
+            {editingContributo.tipo === 'segnalazione_saletta' && (
+
+              <div className="flex flex-col gap-4">
+
+                <div className="bg-amber-50 border border-amber-200 rounded-xl p-3">
+
+                  <p className="text-xs font-semibold text-amber-700 uppercase tracking-wide mb-2">
+
+                    Segnalazione saletta
+
+                  </p>
+
+                  <div className="flex flex-col gap-2 text-sm">
+
+                    <div className="flex justify-between">
+                      <span className="text-gray-500">Tipo</span>
+                      <span className="font-medium text-gray-900">
+                        {editingContributo.dati?.tipo?.replace(/_/g, ' ')}
+                      </span>
+                    </div>
+
+                    {editingContributo.dati?.valore && (
+                      <div className="flex justify-between">
+                        <span className="text-gray-500">Valore</span>
+                        <span className="font-medium text-gray-900">
+                          {editingContributo.dati.valore}
+                        </span>
+                      </div>
+                    )}
+
+                    {editingContributo.dati?.nota && (
+                      <div className="flex flex-col gap-1">
+                        <span className="text-gray-500">Note</span>
+                        <span className="text-gray-900 bg-white rounded-lg p-2 border border-amber-100">
+                          {editingContributo.dati.nota}
+                        </span>
+                      </div>
+                    )}
+
+                  </div>
+
+                </div>
+
+                <p className="text-xs text-gray-400 text-center">
+
+                  Approvando questa segnalazione il campo indicato verrà aggiornato automaticamente nella saletta.
+
+                </p>
+
+              </div>
+            )}
 
             {/* ========================= */}
             {/* MODAL SALETTA             */}
