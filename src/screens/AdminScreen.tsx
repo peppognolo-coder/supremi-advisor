@@ -170,6 +170,49 @@ export default function AdminScreen() {
     useState<VerificheAttivitaStats | null>(null);
 
   // Modal segnalazioni attività
+  const [modalSegnalazioniSalette, setModalSegnalazioniSalette] =
+    useState<{
+      filtroTipo: string | null;
+      lista: any[];
+    } | null>(null);
+
+  async function apriSegnalazioniSalette(
+    filtroTipo: string | null = null
+  ) {
+
+    const { data } =
+      await supabase
+        .from('saletta_verifiche')
+        .select('*, salette(id, tipo, stazione)')
+        .eq('is_correct', false)
+        .order('created_at', { ascending: false });
+
+    const lista = (data ?? []).filter(
+      (v: any) =>
+        !filtroTipo || v.tipo_problema === filtroTipo
+    );
+
+    setModalSegnalazioniSalette({ filtroTipo, lista });
+  }
+
+  async function gestisciSegnalazioneSaletta(id: string) {
+
+    await supabase
+      .from('saletta_verifiche')
+      .delete()
+      .eq('id', id);
+
+    setModalSegnalazioniSalette((prev) => {
+      if (!prev) return null;
+      return {
+        ...prev,
+        lista: prev.lista.filter((v) => v.id !== id),
+      };
+    });
+
+    await load();
+  }
+
   const [modalSegnalazioniAttivita, setModalSegnalazioniAttivita] =
     useState<{
       filtroTipo: string | null;
@@ -1662,9 +1705,12 @@ export default function AdminScreen() {
               </div>
 
               {/* PROBLEMI */}
-              <div className={`rounded-2xl border p-4 flex flex-col gap-3 ${
+              <button
+                type="button"
+                onClick={() => apriSegnalazioniSalette(null)}
+                className={`rounded-2xl border p-4 flex flex-col gap-3 text-left w-full ${
                 verificheStats.totaleProblemi > 0
-                  ? 'border-amber-100 bg-amber-50'
+                  ? 'border-amber-100 bg-amber-50 hover:border-amber-300'
                   : 'border-gray-100 bg-gray-50'
               }`}>
 
@@ -1694,7 +1740,7 @@ export default function AdminScreen() {
 
                 </p>
 
-              </div>
+              </button>
 
               {/* ULTIMI 7 GIORNI */}
               <div className="rounded-2xl border border-gray-100 bg-gray-50 p-4 flex flex-col gap-3">
@@ -1773,9 +1819,11 @@ export default function AdminScreen() {
                   .sort(([, a], [, b]) => b - a)
                   .map(([tipo, count]) => (
 
-                  <div
+                  <button
                     key={tipo}
-                    className="flex items-center justify-between px-3 py-2 rounded-xl bg-gray-50 border border-gray-100"
+                    type="button"
+                    onClick={() => apriSegnalazioniSalette(tipo)}
+                    className="flex items-center justify-between px-3 py-2 rounded-xl bg-gray-50 border border-gray-100 hover:border-gray-300 w-full text-left transition-colors"
                   >
 
                     <span className="text-sm text-gray-600">
@@ -1794,7 +1842,7 @@ export default function AdminScreen() {
 
                     </span>
 
-                  </div>
+                  </button>
                 ))}
 
               </div>
@@ -1971,6 +2019,167 @@ export default function AdminScreen() {
 
           </div>
         )}
+
+      {/* MODAL SEGNALAZIONI SALETTE */}
+      {modalSegnalazioniSalette && (
+
+        <div
+          className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4"
+          onClick={() => setModalSegnalazioniSalette(null)}
+        >
+
+          <div
+            className="bg-white rounded-3xl w-full max-w-lg max-h-[80vh] overflow-y-auto p-5 flex flex-col gap-4 shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+
+            {/* HEADER */}
+            <div className="flex items-center justify-between">
+
+              <div>
+
+                <h2 className="text-lg font-bold text-gray-900">
+
+                  Segnalazioni salette
+
+                </h2>
+
+                <p className="text-xs text-gray-400 mt-0.5">
+
+                  {modalSegnalazioniSalette.filtroTipo
+                    ? modalSegnalazioniSalette.filtroTipo
+                        .replace(/_/g, ' ')
+                        .replace(/\b\w/g, (c) => c.toUpperCase())
+                    : 'Tutti i problemi'}
+
+                </p>
+
+              </div>
+
+              <button
+                onClick={() => setModalSegnalazioniSalette(null)}
+                className="w-8 h-8 rounded-full hover:bg-gray-100 flex items-center justify-center"
+              >
+
+                <X className="w-4 h-4 text-gray-400" />
+
+              </button>
+
+            </div>
+
+            {/* LISTA */}
+            {modalSegnalazioniSalette.lista.length === 0 ? (
+
+              <div className="text-center text-sm text-gray-400 py-8">
+
+                Nessuna segnalazione
+
+              </div>
+
+            ) : (
+
+              <div className="flex flex-col gap-3">
+
+                {modalSegnalazioniSalette.lista.map((v: any) => (
+
+                  <div
+                    key={v.id}
+                    className="bg-amber-50 border border-amber-100 rounded-2xl p-4 flex flex-col gap-3"
+                  >
+
+                    {/* SALETTA */}
+                    <div>
+
+                      <p className="font-semibold text-gray-900">
+
+                        {v.salette?.tipo || 'Saletta sconosciuta'}
+
+                      </p>
+
+                      <p className="text-xs text-gray-500 mt-0.5">
+
+                        {v.salette?.stazione || ''}
+
+                      </p>
+
+                    </div>
+
+                    {/* PROBLEMA */}
+                    <div className="flex items-center gap-2">
+
+                      <AlertTriangle className="w-4 h-4 text-amber-500 flex-shrink-0" />
+
+                      <span className="text-sm font-medium text-amber-800">
+
+                        {v.tipo_problema
+                          ?.replace(/_/g, ' ')
+                          ?.replace(/\b\w/g, (c: string) => c.toUpperCase())}
+
+                      </span>
+
+                    </div>
+
+                    {/* NOTE */}
+                    {v.nota && (
+
+                      <p className="text-xs text-gray-600 bg-white rounded-xl px-3 py-2 border border-amber-100">
+
+                        {v.nota}
+
+                      </p>
+                    )}
+
+                    {/* DATA */}
+                    <p className="text-xs text-gray-400">
+
+                      {new Date(v.created_at).toLocaleString('it-IT')}
+
+                    </p>
+
+                    {/* AZIONI */}
+                    <div className="flex gap-2">
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setModalSegnalazioniSalette(null);
+                          setShowSaletteManager(true);
+                        }}
+                        className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-blue-600 text-white text-sm font-medium hover:opacity-90"
+                      >
+
+                        <Pencil className="w-3.5 h-3.5" />
+
+                        Gestisci salette
+
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() =>
+                          gestisciSegnalazioneSaletta(v.id)
+                        }
+                        className="flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-emerald-600 text-white text-sm font-medium hover:opacity-90"
+                      >
+
+                        <Check className="w-3.5 h-3.5" />
+
+                        Gestita
+
+                      </button>
+
+                    </div>
+
+                  </div>
+                ))}
+
+              </div>
+            )}
+
+          </div>
+
+        </div>
+      )}
 
       {/* MODAL SEGNALAZIONI ATTIVITA */}
       {modalSegnalazioniAttivita && (
