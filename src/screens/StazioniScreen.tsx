@@ -1022,7 +1022,7 @@ export default function StazioniScreen({
 
                       </button>
 
-                      {/* VERIFICA ATTIVITÀ */}
+                      {/* VERIFICA ATTIVITA */}
                       <div className="px-4 pb-3 bg-white rounded-b-2xl border border-t-0 border-gray-200 -mt-2">
 
                         <AttivitaVerifica
