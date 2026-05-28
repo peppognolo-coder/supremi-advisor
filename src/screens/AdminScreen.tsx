@@ -159,6 +159,16 @@ export default function AdminScreen() {
   const [verificheStats, setVerificheStats] =
     useState<VerificheStats | null>(null);
 
+  interface VerificheAttivitaStats {
+    totaleConferme: number;
+    totaleProblemi: number;
+    attivitaNonVerificate: number;
+    breakdownProblemi: Record<string, number>;
+  }
+
+  const [verificheAttivitaStats, setVerificheAttivitaStats] =
+    useState<VerificheAttivitaStats | null>(null);
+
   // modal qualità aperto
   const [modalQualita, setModalQualita] =
     useState<ModalQualita | null>(null);
@@ -384,6 +394,59 @@ export default function AdminScreen() {
         saletteNonVerificate:
           Math.max(0, saletteNonVerificate),
         breakdownProblemi,
+      });
+    }
+
+    // =========================
+    // VERIFICHE ATTIVITÀ
+    // =========================
+
+    const { data: verificheAttivitaData } =
+      await supabase
+        .from('attivita_verifiche')
+        .select('is_correct, tipo_problema, attivita_id, created_at');
+
+    if (verificheAttivitaData) {
+
+      const ora = Date.now();
+      const trentaGiorni =
+        30 * 24 * 60 * 60 * 1000;
+
+      const attiviteVerificateRecente =
+        new Set(
+          verificheAttivitaData
+            .filter(
+              (v) =>
+                v.is_correct &&
+                ora - new Date(v.created_at).getTime() <
+                trentaGiorni
+            )
+            .map((v) => v.attivita_id)
+        );
+
+      const totaleAttive =
+        (attivitaData ?? []).filter(
+          (a) => a.is_active
+        ).length;
+
+      setVerificheAttivitaStats({
+        totaleConferme: verificheAttivitaData.filter(
+          (v) => v.is_correct
+        ).length,
+        totaleProblemi: verificheAttivitaData.filter(
+          (v) => !v.is_correct
+        ).length,
+        attivitaNonVerificate: Math.max(
+          0,
+          totaleAttive - attiviteVerificateRecente.size
+        ),
+        breakdownProblemi: verificheAttivitaData
+          .filter((v) => !v.is_correct && v.tipo_problema)
+          .reduce((acc: Record<string, number>, v) => {
+            acc[v.tipo_problema!] =
+              (acc[v.tipo_problema!] ?? 0) + 1;
+            return acc;
+          }, {}),
       });
     }
 
@@ -1662,6 +1725,170 @@ export default function AdminScreen() {
 
                 {Object.entries(
                   verificheStats.breakdownProblemi
+                )
+                  .sort(([, a], [, b]) => b - a)
+                  .map(([tipo, count]) => (
+
+                  <div
+                    key={tipo}
+                    className="flex items-center justify-between px-3 py-2 rounded-xl bg-gray-50 border border-gray-100"
+                  >
+
+                    <span className="text-sm text-gray-600">
+
+                      {tipo
+                        .replace(/_/g, ' ')
+                        .replace(/\b\w/g, (c) =>
+                          c.toUpperCase()
+                        )}
+
+                    </span>
+
+                    <span className="text-sm font-semibold text-gray-900">
+
+                      {count}
+
+                    </span>
+
+                  </div>
+                ))}
+
+              </div>
+            )}
+
+          </div>
+        )}
+
+        {/* ========================= */}
+        {/* VERIFICHE ATTIVITÀ        */}
+        {/* ========================= */}
+
+        {!loading && verificheAttivitaStats && (
+
+          <div className="bg-white rounded-2xl border border-gray-100 p-4 shadow-sm flex flex-col gap-4">
+
+            <div>
+
+              <h2 className="font-semibold text-gray-900">
+
+                Verifiche attività
+
+              </h2>
+
+              <p className="text-xs text-gray-400 mt-0.5">
+
+                Feedback della community sulle attività nelle stazioni
+
+              </p>
+
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+
+              <div className="rounded-2xl border border-emerald-100 bg-emerald-50 p-4 flex flex-col gap-3">
+
+                <div className="flex items-center justify-between">
+
+                  <CheckCircle className="w-5 h-5 text-emerald-500" />
+
+                  <span className="text-2xl font-bold text-emerald-700">
+
+                    {verificheAttivitaStats.totaleConferme}
+
+                  </span>
+
+                </div>
+
+                <p className="text-xs text-gray-500 uppercase tracking-wide">
+
+                  Conferme totali
+
+                </p>
+
+              </div>
+
+              <div className={`rounded-2xl border p-4 flex flex-col gap-3 ${
+                verificheAttivitaStats.totaleProblemi > 0
+                  ? 'border-amber-100 bg-amber-50'
+                  : 'border-gray-100 bg-gray-50'
+              }`}>
+
+                <div className="flex items-center justify-between">
+
+                  <AlertTriangle className={`w-5 h-5 ${
+                    verificheAttivitaStats.totaleProblemi > 0
+                      ? 'text-amber-500'
+                      : 'text-gray-400'
+                  }`} />
+
+                  <span className={`text-2xl font-bold ${
+                    verificheAttivitaStats.totaleProblemi > 0
+                      ? 'text-amber-700'
+                      : 'text-gray-500'
+                  }`}>
+
+                    {verificheAttivitaStats.totaleProblemi}
+
+                  </span>
+
+                </div>
+
+                <p className="text-xs text-gray-500 uppercase tracking-wide">
+
+                  Problemi segnalati
+
+                </p>
+
+              </div>
+
+              <div className={`rounded-2xl border p-4 flex flex-col gap-3 col-span-2 ${
+                verificheAttivitaStats.attivitaNonVerificate > 0
+                  ? 'border-amber-100 bg-amber-50'
+                  : 'border-emerald-100 bg-emerald-50'
+              }`}>
+
+                <div className="flex items-center justify-between">
+
+                  <AlertCircle className={`w-5 h-5 ${
+                    verificheAttivitaStats.attivitaNonVerificate > 0
+                      ? 'text-amber-500'
+                      : 'text-emerald-500'
+                  }`} />
+
+                  <span className={`text-2xl font-bold ${
+                    verificheAttivitaStats.attivitaNonVerificate > 0
+                      ? 'text-amber-700'
+                      : 'text-emerald-700'
+                  }`}>
+
+                    {verificheAttivitaStats.attivitaNonVerificate}
+
+                  </span>
+
+                </div>
+
+                <p className="text-xs text-gray-500 uppercase tracking-wide">
+
+                  Attività non verificate (30+ gg)
+
+                </p>
+
+              </div>
+
+            </div>
+
+            {Object.keys(verificheAttivitaStats.breakdownProblemi).length > 0 && (
+
+              <div className="flex flex-col gap-2">
+
+                <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide">
+
+                  Tipo problemi segnalati
+
+                </p>
+
+                {Object.entries(
+                  verificheAttivitaStats.breakdownProblemi
                 )
                   .sort(([, a], [, b]) => b - a)
                   .map(([tipo, count]) => (
