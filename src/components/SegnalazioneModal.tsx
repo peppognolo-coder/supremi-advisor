@@ -5,6 +5,8 @@ import {
   Info,
 } from 'lucide-react';
 
+import toast from 'react-hot-toast';
+
 import { supabase } from '../lib/supabase';
 
 interface Props {
@@ -33,13 +35,21 @@ export default function SegnalazioneModal({
 
     setLoading(true);
 
+    // =========================
+    // Inserisce in contributi
+    // così appare in pending admin
+    // =========================
+
     const { error } = await supabase
-      .from('saletta_segnalazioni')
+      .from('contributi')
       .insert({
-        saletta_id: salettaId,
-        tipo,
-        valore,
-        nota,
+        tipo: 'segnalazione_saletta',
+        dati: {
+          saletta_id: salettaId,
+          tipo,
+          valore: valore.trim() || null,
+          nota: nota.trim() || null,
+        },
         stato: 'pending',
       });
 
@@ -47,14 +57,14 @@ export default function SegnalazioneModal({
 
       console.error(error);
 
-      alert(
+      toast.error(
         'Errore invio segnalazione'
       );
 
     } else {
 
-      alert(
-        'Segnalazione inviata'
+      toast.success(
+        'Segnalazione inviata, grazie!'
       );
 
       onClose();
@@ -200,9 +210,7 @@ export default function SegnalazioneModal({
               type="text"
               value={valore}
               onChange={(e) =>
-                setValore(
-                  e.target.value
-                )
+                setValore(e.target.value)
               }
               placeholder="Inserisci informazione"
               className="border border-gray-200 rounded-2xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-trenord-green/30 focus:border-trenord-green"
@@ -223,9 +231,7 @@ export default function SegnalazioneModal({
           <textarea
             value={nota}
             onChange={(e) =>
-              setNota(
-                e.target.value
-              )
+              setNota(e.target.value)
             }
             placeholder="Informazioni opzionali"
             className="border border-gray-200 rounded-2xl px-4 py-3 text-sm min-h-[110px] resize-none focus:outline-none focus:ring-2 focus:ring-trenord-green/30 focus:border-trenord-green"
