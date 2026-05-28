@@ -24,6 +24,8 @@ import {
   RefreshCw,
 } from 'lucide-react';
 
+import AdminPinModal from './components/AdminPinModal';
+
 const ADMIN_PIN = '1105';
 
 const screenTitles: Record<Tab, string> = {
@@ -257,6 +259,9 @@ export default function App() {
   const [adminMode, setAdminMode] =
     useState(false);
 
+  const [showPinModal, setShowPinModal] =
+    useState<'login' | 'logout' | null>(null);
+
   useEffect(() => {
 
     const stored =
@@ -283,51 +288,52 @@ export default function App() {
 
     if (adminMode) {
 
-      const confirmLogout =
-        window.confirm(
-          'Disattivare modalità admin?'
+      setShowPinModal('logout');
+
+    } else {
+
+      setShowPinModal('login');
+    }
+  }
+
+  function handlePinConfirm(pin?: string) {
+
+    if (showPinModal === 'login') {
+
+      if (pin === ADMIN_PIN) {
+
+        localStorage.setItem(
+          'trenord_admin',
+          'true'
         );
 
-      if (confirmLogout) {
-
-        localStorage.removeItem(
-          'trenord_admin'
-        );
-
-        setAdminMode(false);
-
-        setActiveTab('salette');
+        setAdminMode(true);
 
         toast.success(
-          'Modalità admin disattivata'
+          'Modalità admin attivata'
         );
+
+      } else {
+
+        toast.error('PIN errato');
       }
 
-      return;
-    }
+    } else {
 
-    const pin =
-      window.prompt(
-        'Inserisci PIN admin'
+      localStorage.removeItem(
+        'trenord_admin'
       );
 
-    if (pin === ADMIN_PIN) {
+      setAdminMode(false);
 
-      localStorage.setItem(
-        'trenord_admin',
-        'true'
-      );
-
-      setAdminMode(true);
+      setActiveTab('salette');
 
       toast.success(
-        'Modalità admin attivata'
+        'Modalità admin disattivata'
       );
-
-    } else if (pin != null) {
-
-      toast.error('PIN errato');
     }
+
+    setShowPinModal(null);
   }
 
   return (
@@ -449,6 +455,16 @@ export default function App() {
         onChange={setActiveTab}
         adminMode={adminMode}
       />
+
+      {/* ADMIN PIN MODAL */}
+      {showPinModal && (
+
+        <AdminPinModal
+          mode={showPinModal}
+          onConfirm={handlePinConfirm}
+          onClose={() => setShowPinModal(null)}
+        />
+      )}
 
       {/* TOASTER */}
       <Toaster
