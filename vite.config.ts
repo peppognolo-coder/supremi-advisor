@@ -11,10 +11,7 @@ export default defineConfig({
 
       injectRegister: 'auto',
 
-      includeAssets: [
-        'favicon.svg',
-        'favicon.ico',
-      ],
+      includeAssets: ['favicon.svg'],
 
       manifest: {
         name: 'Supremi Advisor',
@@ -38,31 +35,19 @@ export default defineConfig({
 
         icons: [
           {
-            src: '/icons/web-app-manifest-192x192.png',
-
-            sizes: '192x192',
-
-            type: 'image/png',
-
-            purpose: 'any',
-          },
-
-          {
-            src: '/icons/web-app-manifest-512x512.png',
+            src: '/favicon.svg',
 
             sizes: '512x512',
 
-            type: 'image/png',
+            type: 'image/svg+xml',
 
-            purpose: 'any maskable',
+            purpose: 'any',
           },
         ],
       },
 
       workbox: {
-        globPatterns: [
-          '**/*.{js,css,html,svg,png,ico}',
-        ],
+        globPatterns: ['**/*.{js,css,html,svg}'],
 
         cleanupOutdatedCaches: true,
 
