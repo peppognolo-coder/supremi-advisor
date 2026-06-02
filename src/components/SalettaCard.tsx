@@ -3,7 +3,6 @@ import { useState } from 'react';
 import {
   ChevronDown,
   ChevronUp,
-  KeyRound,
   MapPin,
   Microwave,
   Coffee,
@@ -125,32 +124,6 @@ export default function SalettaCard({
                   </div>
 
                 </div>
-
-                {/* CODICE */}
-                {saletta.codice_accesso && (
-
-                  <div className="flex items-center gap-2 bg-gray-50 rounded-xl px-3 py-2">
-
-                    <KeyRound className="w-4 h-4 text-trenord-green flex-shrink-0" />
-
-                    <div className="flex flex-col">
-
-                      <span className="text-[11px] uppercase tracking-wide text-gray-400">
-
-                        Codice accesso
-
-                      </span>
-
-                      <span className="text-sm font-semibold text-gray-800">
-
-                        {saletta.codice_accesso}
-
-                      </span>
-
-                    </div>
-
-                  </div>
-                )}
 
                 {/* DOTAZIONI */}
                 <div className="grid grid-cols-2 gap-2">
