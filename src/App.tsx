@@ -82,7 +82,7 @@ export default function App() {
         document.head.appendChild(el);
         return el;
       })();
-    apple.href = '/icons/icon-192.png';
+   apple.href = '/apple-touch-icon.png';
 
     // THEME COLOR
     const themeColor =
@@ -98,21 +98,7 @@ export default function App() {
       })();
     themeColor.content = '#007A3D';
 
-    // MANIFEST
-    const manifest =
-      (document.querySelector(
-        "link[rel='manifest']"
-      ) as HTMLLinkElement) ||
-      (() => {
-        const el =
-          document.createElement('link');
-        el.rel = 'manifest';
-        document.head.appendChild(el);
-        return el;
-      })();
-    manifest.href = '/manifest.json';
-
-  }, []);
+     }, []);
 
   // =========================
   // GLOBAL REFRESH
