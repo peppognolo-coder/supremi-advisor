@@ -90,7 +90,11 @@ interface ModalQualita {
 // COMPONENTE
 // =========================
 
-export default function AdminScreen() {
+interface Props {
+  adminPin: string;
+}
+
+export default function AdminScreen({ adminPin }: Props) {
 
   const [loading, setLoading] =
     useState(true);
