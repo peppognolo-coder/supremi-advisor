@@ -815,9 +815,10 @@ export default function AdminScreen({ adminPin }: Props) {
 
         </button>
 
-        <AdminAttivitaScreen
-          initialEditId={editAttivitaId}
-        />
+       <AdminAttivitaScreen
+  adminPin={adminPin}
+  initialEditId={editAttivitaId}
+/>
 
       </div>
     );
