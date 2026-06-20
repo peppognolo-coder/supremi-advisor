@@ -1,14 +1,24 @@
 // =============================================================
 // adminApi.ts
-// Client frontend per la Netlify Function /.netlify/functions/admin-api
-//
-// NON usa supabase direttamente — tutte le operazioni admin
-// passano dal server con SUPABASE_SERVICE_ROLE_KEY.
+// Client frontend per /.netlify/functions/admin-api
+// NON usa supabase direttamente — tutto passa dal server
+// con SUPABASE_SERVICE_ROLE_KEY.
 // =============================================================
 
 // =============================================================
-// TIPI
+// TIPI CONDIVISI
 // =============================================================
+
+export interface AdminApiError {
+  code: string;
+  message: string;
+}
+
+export interface AdminApiResult<T = unknown> {
+  ok: boolean;
+  data?: T;
+  error?: AdminApiError;
+}
 
 export interface Saletta {
   id: string;
@@ -23,15 +33,39 @@ export interface Saletta {
   climatizzata: boolean;
 }
 
-export interface AdminApiError {
-  code: string;
-  message: string;
+export interface FasciaOraria {
+  giorni: string[];
+  apertura: string;
+  chiusura: string;
 }
 
-export interface AdminApiResult<T = unknown> {
-  ok: boolean;
-  data?: T;
-  error?: AdminApiError;
+export interface AttivitaRow {
+  id: string;
+  stazione_id: string;
+  nome: string;
+  categoria: string;
+  indirizzo: string | null;
+  ubicazione: string | null;
+  maps_query: string | null;
+  distanza_piedi: string | null;
+  convenzionato: boolean;
+  is_active: boolean;
+  deleted_at: string | null;
+  note: string | null;
+  fasce_orarie: FasciaOraria[] | null;
+}
+
+export interface StazioneRow {
+  id: string;
+  nome: string;
+}
+
+export interface Contributo {
+  id: string;
+  tipo: string;
+  dati: Record<string, unknown>;
+  stato: string;
+  created_at: string;
 }
 
 // =============================================================
@@ -55,17 +89,9 @@ async function call<T>(
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ action, adminPin, payload }),
     });
-
-    const json = await res.json() as AdminApiResult<T>;
-    return json;
-  } catch (e) {
-    return {
-      ok: false,
-      error: {
-        code: 'NETWORK_ERROR',
-        message: 'Errore di rete. Verifica la connessione.',
-      },
-    };
+    return await res.json() as AdminApiResult<T>;
+  } catch {
+    return { ok: false, error: { code: 'NETWORK_ERROR', message: 'Errore di rete. Verifica la connessione.' } };
   }
 }
 
@@ -73,12 +99,10 @@ async function call<T>(
 // SALETTE
 // =============================================================
 
-/** Legge tutte le salette ordinate per stazione. */
 export async function getSalette(adminPin: string): Promise<AdminApiResult<Saletta[]>> {
   return call<Saletta[]>('getSalette', adminPin);
 }
 
-/** Aggiunge una nuova saletta. */
 export async function addSaletta(
   adminPin: string,
   payload: { stazione: string; tipo?: string }
@@ -86,29 +110,88 @@ export async function addSaletta(
   return call<Saletta>('addSaletta', adminPin, payload);
 }
 
-/** Aggiorna una saletta esistente. */
 export async function updateSaletta(
   adminPin: string,
   payload: {
-    id: string;
-    stazione: string;
-    tipo: string;
-    codice_accesso: string | null;
-    ubicazione: string | null;
-    note: string | null;
-    microonde: boolean;
-    distributori: boolean;
-    acqua: boolean;
-    climatizzata: boolean;
+    id: string; stazione: string; tipo: string;
+    codice_accesso: string | null; ubicazione: string | null; note: string | null;
+    microonde: boolean; distributori: boolean; acqua: boolean; climatizzata: boolean;
   }
 ): Promise<AdminApiResult<Saletta>> {
   return call<Saletta>('updateSaletta', adminPin, payload as unknown as Record<string, unknown>);
 }
 
-/** Elimina una saletta per ID. */
 export async function deleteSaletta(
   adminPin: string,
   id: string
 ): Promise<AdminApiResult<{ deleted: string }>> {
   return call<{ deleted: string }>('deleteSaletta', adminPin, { id });
+}
+
+// =============================================================
+// ATTIVITA_STAZIONE
+// =============================================================
+
+export async function getAttivita(
+  adminPin: string
+): Promise<AdminApiResult<{ attivita: AttivitaRow[]; stazioni: StazioneRow[] }>> {
+  return call<{ attivita: AttivitaRow[]; stazioni: StazioneRow[] }>('getAttivita', adminPin);
+}
+
+export async function softDeleteAttivita(
+  adminPin: string,
+  id: string
+): Promise<AdminApiResult<AttivitaRow>> {
+  return call<AttivitaRow>('softDeleteAttivita', adminPin, { id });
+}
+
+export async function ripristinaAttivita(
+  adminPin: string,
+  id: string
+): Promise<AdminApiResult<AttivitaRow>> {
+  return call<AttivitaRow>('ripristinaAttivita', adminPin, { id });
+}
+
+export async function updateAttivita(
+  adminPin: string,
+  payload: {
+    id: string; nome: string; categoria: string;
+    indirizzo: string | null; ubicazione: string | null; maps_query: string | null;
+    distanza_piedi: string | null; convenzionato: boolean; note: string | null;
+    fasce_orarie: FasciaOraria[];
+  }
+): Promise<AdminApiResult<AttivitaRow>> {
+  return call<AttivitaRow>('updateAttivita', adminPin, payload as unknown as Record<string, unknown>);
+}
+
+// =============================================================
+// CONTRIBUTI
+// =============================================================
+
+export async function getContributi(
+  adminPin: string
+): Promise<AdminApiResult<{ contributi: Contributo[]; stazioni: StazioneRow[] }>> {
+  return call<{ contributi: Contributo[]; stazioni: StazioneRow[] }>('getContributi', adminPin);
+}
+
+export async function updateContributoDati(
+  adminPin: string,
+  id: string,
+  dati: Record<string, unknown>
+): Promise<AdminApiResult<Contributo>> {
+  return call<Contributo>('updateContributoDati', adminPin, { id, dati });
+}
+
+export async function approveContributo(
+  adminPin: string,
+  contributo: Contributo
+): Promise<AdminApiResult<Contributo>> {
+  return call<Contributo>('approveContributo', adminPin, { contributo: contributo as unknown as Record<string, unknown> });
+}
+
+export async function rejectContributo(
+  adminPin: string,
+  id: string
+): Promise<AdminApiResult<Contributo>> {
+  return call<Contributo>('rejectContributo', adminPin, { id });
 }
