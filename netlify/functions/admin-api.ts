@@ -348,14 +348,40 @@ export const handler: Handler = async (event: HandlerEvent) => {
       }
 
       // ------ STAZIONE ------
-      if (tipo === 'stazione') {
-        const { error } = await supabase.from('stazioni')
-          .insert({ nome: dati.nome, codice: dati.codice, regione: dati.regione, provincia: dati.provincia,
-                    maps_query: dati.maps_query, lat: dati.lat ?? null, lng: dati.lng ?? null,
-                    note: dati.note, indirizzo: dati.indirizzo ?? null, plus_code: dati.plus_code ?? null,
-                    attiva: true });
-        if (error) return dbErr(error.message);
-      }
+if (tipo === 'stazione') {
+
+  const lat =
+    dati.lat === '' ||
+    dati.lat === undefined ||
+    dati.lat === null
+      ? null
+      : Number(dati.lat);
+
+  const lng =
+    dati.lng === '' ||
+    dati.lng === undefined ||
+    dati.lng === null
+      ? null
+      : Number(dati.lng);
+
+  const { error } = await supabase
+    .from('stazioni')
+    .insert({
+      nome: dati.nome?.trim() || null,
+      codice: dati.codice?.trim() || null,
+      regione: dati.regione?.trim() || null,
+      provincia: dati.provincia?.trim() || null,
+      maps_query: dati.maps_query?.trim() || null,
+      lat,
+      lng,
+      note: dati.note?.trim() || null,
+      indirizzo: dati.indirizzo?.trim() || null,
+      plus_code: dati.plus_code?.trim() || null,
+      attiva: true,
+    });
+
+  if (error) return dbErr(error.message);
+}
 
       // Aggiorna stato contributo → approved
       const { data, error: statoError } = await supabase
