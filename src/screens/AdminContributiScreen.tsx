@@ -458,6 +458,212 @@ export default function AdminContributiScreen({ adminPin }: Props) {
               </>
             )}
 
+            {/* STAZIONE */}
+{editingContributo.tipo === 'stazione' && (
+  <div className="flex flex-col gap-4">
+
+    <div>
+      <label className="text-xs font-semibold text-gray-400 uppercase">
+        Nome stazione
+      </label>
+      <input
+        ref={firstInputRef}
+        value={editingContributo.dati?.nome || ''}
+        onChange={(e) =>
+          setEditingContributo({
+            ...editingContributo,
+            dati: {
+              ...editingContributo.dati,
+              nome: e.target.value,
+            },
+          })
+        }
+        className="mt-1 border border-gray-200 rounded-xl px-3 py-2 w-full"
+      />
+    </div>
+
+    <div>
+      <label className="text-xs font-semibold text-gray-400 uppercase">
+        Codice
+      </label>
+      <input
+        value={editingContributo.dati?.codice || ''}
+        onChange={(e) =>
+          setEditingContributo({
+            ...editingContributo,
+            dati: {
+              ...editingContributo.dati,
+              codice: e.target.value,
+            },
+          })
+        }
+        className="mt-1 border border-gray-200 rounded-xl px-3 py-2 w-full"
+      />
+    </div>
+
+    <div>
+      <label className="text-xs font-semibold text-gray-400 uppercase">
+        Regione
+      </label>
+      <input
+        value={editingContributo.dati?.regione || ''}
+        onChange={(e) =>
+          setEditingContributo({
+            ...editingContributo,
+            dati: {
+              ...editingContributo.dati,
+              regione: e.target.value,
+            },
+          })
+        }
+        className="mt-1 border border-gray-200 rounded-xl px-3 py-2 w-full"
+      />
+    </div>
+
+    <div>
+      <label className="text-xs font-semibold text-gray-400 uppercase">
+        Provincia
+      </label>
+      <input
+        value={editingContributo.dati?.provincia || ''}
+        onChange={(e) =>
+          setEditingContributo({
+            ...editingContributo,
+            dati: {
+              ...editingContributo.dati,
+              provincia: e.target.value,
+            },
+          })
+        }
+        className="mt-1 border border-gray-200 rounded-xl px-3 py-2 w-full"
+      />
+    </div>
+
+    <div>
+      <label className="text-xs font-semibold text-gray-400 uppercase">
+        Indirizzo
+      </label>
+      <input
+        value={editingContributo.dati?.indirizzo || ''}
+        onChange={(e) =>
+          setEditingContributo({
+            ...editingContributo,
+            dati: {
+              ...editingContributo.dati,
+              indirizzo: e.target.value,
+            },
+          })
+        }
+        className="mt-1 border border-gray-200 rounded-xl px-3 py-2 w-full"
+      />
+    </div>
+
+    <div>
+      <label className="text-xs font-semibold text-gray-400 uppercase">
+        Maps Query
+      </label>
+      <input
+        value={editingContributo.dati?.maps_query || ''}
+        onChange={(e) =>
+          setEditingContributo({
+            ...editingContributo,
+            dati: {
+              ...editingContributo.dati,
+              maps_query: e.target.value,
+            },
+          })
+        }
+        className="mt-1 border border-gray-200 rounded-xl px-3 py-2 w-full"
+      />
+    </div>
+
+    <div>
+      <label className="text-xs font-semibold text-gray-400 uppercase">
+        Plus Code
+      </label>
+      <input
+        value={editingContributo.dati?.plus_code || ''}
+        onChange={(e) =>
+          setEditingContributo({
+            ...editingContributo,
+            dati: {
+              ...editingContributo.dati,
+              plus_code: e.target.value,
+            },
+          })
+        }
+        className="mt-1 border border-gray-200 rounded-xl px-3 py-2 w-full"
+      />
+    </div>
+
+    <div className="grid grid-cols-2 gap-4">
+
+      <div>
+        <label className="text-xs font-semibold text-gray-400 uppercase">
+          Latitudine
+        </label>
+        <input
+          type="number"
+          step="any"
+          value={editingContributo.dati?.lat ?? ''}
+          onChange={(e) =>
+            setEditingContributo({
+              ...editingContributo,
+              dati: {
+                ...editingContributo.dati,
+                lat: e.target.value,
+              },
+            })
+          }
+          className="mt-1 border border-gray-200 rounded-xl px-3 py-2 w-full"
+        />
+      </div>
+
+      <div>
+        <label className="text-xs font-semibold text-gray-400 uppercase">
+          Longitudine
+        </label>
+        <input
+          type="number"
+          step="any"
+          value={editingContributo.dati?.lng ?? ''}
+          onChange={(e) =>
+            setEditingContributo({
+              ...editingContributo,
+              dati: {
+                ...editingContributo.dati,
+                lng: e.target.value,
+              },
+            })
+          }
+          className="mt-1 border border-gray-200 rounded-xl px-3 py-2 w-full"
+        />
+      </div>
+
+    </div>
+
+    <div>
+      <label className="text-xs font-semibold text-gray-400 uppercase">
+        Note
+      </label>
+      <textarea
+        value={editingContributo.dati?.note || ''}
+        onChange={(e) =>
+          setEditingContributo({
+            ...editingContributo,
+            dati: {
+              ...editingContributo.dati,
+              note: e.target.value,
+            },
+          })
+        }
+        className="mt-1 border border-gray-200 rounded-xl px-3 py-2 w-full min-h-[120px]"
+      />
+    </div>
+
+  </div>
+)}
+            
             <button onClick={saveContributoModificato}
               className="bg-blue-600 text-white rounded-xl py-3 font-medium hover:opacity-90">
               Salva modifiche
