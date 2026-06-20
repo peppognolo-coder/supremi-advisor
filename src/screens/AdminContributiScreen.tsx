@@ -17,821 +17,169 @@ import {
 
 import toast from 'react-hot-toast';
 
-import { supabase } from '../lib/supabase';
+import {
+  type Contributo,
+  type StazioneRow,
+  getContributi,
+  updateContributoDati,
+  approveContributo,
+  rejectContributo,
+} from '../lib/adminApi';
 
-interface Contributo {
+// =========================
+// PROPS
+// =========================
 
-  id: string;
-
-  tipo: string;
-
-  dati: any;
-
-  stato: string;
-
-  created_at: string;
+interface Props {
+  adminPin: string;
 }
 
-export default function AdminContributiScreen() {
+// =========================
+// COSTANTI
+// =========================
 
-  const [loading, setLoading] =
-    useState(true);
+const GIORNI_SETTIMANA = ['Lun', 'Mar', 'Mer', 'Gio', 'Ven', 'Sab', 'Dom'];
+const TIPI_SALETTA    = ['Equipaggi', 'Bagni', 'Cancelletto', 'Trenitalia', 'Sala Relax'];
+const STATI_SALETTA   = ['Aperta', 'Chiusa', 'Pulizie', 'Guasto'];
+const CATEGORIE       = ['Bar', 'Fast Food', 'Market', 'Ristorante', 'Farmacia', 'Tabacchi', 'Hotel', 'Altro'];
+const DISTANZE        = ['In stazione', 'Entro 2 minuti', 'Entro 5 minuti', 'Entro 10 minuti', 'Oltre 10 minuti'];
 
-  const [contributi, setContributi] =
-    useState<Contributo[]>([]);
+// =========================
+// HELPER renderValore
+// =========================
 
-  const [stazioni, setStazioni] =
-    useState<any[]>([]);
-
-  const [
-    editingContributo,
-    setEditingContributo,
-  ] = useState<any>(null);
-
-  const [processingId, setProcessingId] =
-    useState<string | null>(null);
-
-  const firstInputRef =
-    useRef<HTMLInputElement>(null);
-
-  const giorniSettimana = [
-    'Lun',
-    'Mar',
-    'Mer',
-    'Gio',
-    'Ven',
-    'Sab',
-    'Dom',
-  ];
-
-  const tipiSaletta = [
-    'Equipaggi',
-    'Bagni',
-    'Cancelletto',
-    'Trenitalia',
-    'Sala Relax',
-  ];
-
-  const statiSaletta = [
-    'Aperta',
-    'Chiusa',
-    'Pulizie',
-    'Guasto',
-  ];
-
-  // =========================
-  // NORMALIZE
-  // =========================
-
-  function normalizeGroupId(
-    text: string
-  ) {
-
-    return text
-      ?.toLowerCase()
-      ?.trim()
-      ?.replaceAll(' ', '_');
+function renderValore(key: string, value: unknown): string {
+  if (value === null || value === undefined) return '—';
+  if (typeof value === 'boolean') return value ? 'Sì' : 'No';
+  if (Array.isArray(value)) {
+    if (key === 'fasce_orarie') return `${value.length} fasce`;
+    return value.join(', ');
   }
+  if (typeof value === 'object') return JSON.stringify(value);
+  return String(value);
+}
+
+// =========================
+// COMPONENTE
+// =========================
+
+export default function AdminContributiScreen({ adminPin }: Props) {
+
+  const [loading, setLoading]           = useState(true);
+  const [contributi, setContributi]     = useState<Contributo[]>([]);
+  const [stazioni, setStazioni]         = useState<StazioneRow[]>([]);
+  const [editingContributo, setEditingContributo] = useState<any>(null);
+  const [processingId, setProcessingId] = useState<string | null>(null);
+  const firstInputRef = useRef<HTMLInputElement>(null);
 
   // =========================
   // LOAD
   // =========================
 
   async function load() {
-
     setLoading(true);
-
-    const { data, error } =
-      await supabase
-        .from('contributi')
-        .select('*')
-        .order('created_at', {
-          ascending: false,
-        });
-
-    if (!error) {
-
-      setContributi(
-        data ?? []
-      );
+    const res = await getContributi(adminPin);
+    if (!res.ok) {
+      toast.error(res.error?.message ?? 'Errore caricamento');
+      setLoading(false);
+      return;
     }
-
-    const {
-      data: stazioniData,
-    } = await supabase
-      .from('stazioni')
-      .select('id,nome');
-
-    setStazioni(
-      stazioniData || []
-    );
-
+    setContributi(res.data?.contributi ?? []);
+    setStazioni(res.data?.stazioni ?? []);
     setLoading(false);
   }
 
-  useEffect(() => {
-
-    load();
-
-  }, []);
+  useEffect(() => { load(); }, []);
 
   // =========================
-  // ESC PER CHIUDERE MODAL
+  // HELPER FASCE (modal)
   // =========================
 
-  useEffect(() => {
-
-    function handleKeyDown(
-      e: KeyboardEvent
-    ) {
-
-      if (
-        e.key === 'Escape' &&
-        editingContributo
-      ) {
-
-        setEditingContributo(null);
-      }
-    }
-
-    window.addEventListener(
-      'keydown',
-      handleKeyDown
-    );
-
-    return () =>
-      window.removeEventListener(
-        'keydown',
-        handleKeyDown
-      );
-
-  }, [editingContributo]);
-
-  // =========================
-  // AUTOFOCUS PRIMO INPUT
-  // =========================
-
-  useEffect(() => {
-
-    if (editingContributo) {
-
-      setTimeout(() => {
-        firstInputRef.current?.focus();
-      }, 50);
-    }
-
-  }, [editingContributo]);
-
-  // =========================
-  // FASCE ORARIE
-  // =========================
-
-  function updateFasciaAdmin(
-    fasciaIndex: number,
-    field: string,
-    value: any
-  ) {
-
-    const nuoveFasce = [
-      ...(editingContributo
-        ?.dati
-        ?.fasce_orarie || [])
-    ];
-
-    nuoveFasce[fasciaIndex] = {
-
-      ...nuoveFasce[fasciaIndex],
-
-      [field]: value,
-    };
-
-    setEditingContributo({
-
-      ...editingContributo,
-
-      dati: {
-
-        ...editingContributo.dati,
-
-        fasce_orarie: nuoveFasce,
-      },
-    });
+  function updateFasciaAdmin(fasciaIndex: number, field: string, value: unknown) {
+    const nuoveFasce = [...(editingContributo?.dati?.fasce_orarie || [])];
+    nuoveFasce[fasciaIndex] = { ...nuoveFasce[fasciaIndex], [field]: value };
+    setEditingContributo({ ...editingContributo, dati: { ...editingContributo.dati, fasce_orarie: nuoveFasce } });
   }
 
-  function toggleGiornoAdmin(
-    fasciaIndex: number,
-    giorno: string
-  ) {
-
-    const fascia =
-      editingContributo
-        ?.dati
-        ?.fasce_orarie?.[fasciaIndex];
-
+  function toggleGiornoAdmin(fasciaIndex: number, giorno: string) {
+    const fascia = editingContributo?.dati?.fasce_orarie?.[fasciaIndex];
     if (!fascia) return;
-
-    const giorniAttuali =
-      Array.isArray(fascia.giorni)
-        ? fascia.giorni
-        : [];
-
-    const giorni =
-      giorniAttuali.includes(giorno)
-        ? giorniAttuali.filter(
-            (g: string) => g !== giorno
-          )
-        : [...giorniAttuali, giorno];
-
-    updateFasciaAdmin(
-      fasciaIndex,
-      'giorni',
-      giorni
-    );
+    const giorniAttuali = Array.isArray(fascia.giorni) ? fascia.giorni : [];
+    const giorni = giorniAttuali.includes(giorno)
+      ? giorniAttuali.filter((g: string) => g !== giorno)
+      : [...giorniAttuali, giorno];
+    updateFasciaAdmin(fasciaIndex, 'giorni', giorni);
   }
 
   function addFasciaAdmin() {
-
-    const nuoveFasce = [
-
-      ...(editingContributo
-        ?.dati
-        ?.fasce_orarie || []),
-
-      {
-        giorni: [],
-        apertura: '',
-        chiusura: '',
-      },
-    ];
-
     setEditingContributo({
-
       ...editingContributo,
-
-      dati: {
-
-        ...editingContributo.dati,
-
-        fasce_orarie: nuoveFasce,
-      },
+      dati: { ...editingContributo.dati,
+        fasce_orarie: [...(editingContributo?.dati?.fasce_orarie || []), { giorni: [], apertura: '', chiusura: '' }] },
     });
   }
 
-  function removeFasciaAdmin(
-    fasciaIndex: number
-  ) {
-
-    const nuoveFasce =
-      (
-        editingContributo
-          ?.dati
-          ?.fasce_orarie || []
-      ).filter(
-        (
-          _: any,
-          index: number
-        ) => index !== fasciaIndex
-      );
-
+  function removeFasciaAdmin(fasciaIndex: number) {
     setEditingContributo({
-
       ...editingContributo,
-
-      dati: {
-
-        ...editingContributo.dati,
-
-        fasce_orarie: nuoveFasce,
-      },
+      dati: { ...editingContributo.dati,
+        fasce_orarie: (editingContributo?.dati?.fasce_orarie || []).filter((_: unknown, i: number) => i !== fasciaIndex) },
     });
   }
 
-  // =========================
-  // ORDINAMENTO FASCE
-  // =========================
-
-  function ordinaFasce(
-    fasce: any[]
-  ) {
-
-    return [...fasce].sort(
-      (a, b) => {
-
-        const aAp = a.apertura || '';
-        const bAp = b.apertura || '';
-
-        return aAp.localeCompare(bAp);
-      }
-    );
+  function ordinaFasce(fasce: any[]) {
+    return [...fasce].sort((a, b) => (a.apertura || '').localeCompare(b.apertura || ''));
   }
 
   // =========================
-  // VALIDAZIONE ATTIVITA
+  // VALIDAZIONE
   // =========================
 
-  function validaAttivita(
-    dati: any
-  ): boolean {
-
-    if (!dati.nome?.trim()) {
-
-      toast.error('Inserisci il nome attività');
-
-      return false;
-    }
-
-    if (!dati.categoria?.trim()) {
-
-      toast.error('Inserisci la categoria');
-
-      return false;
-    }
-
-    if (!dati.stazione_id) {
-
-      toast.error('Seleziona la stazione');
-
-      return false;
-    }
-
+  function validaAttivita(dati: any): boolean {
+    if (!dati.nome?.trim())       { toast.error('Inserisci il nome attività'); return false; }
+    if (!dati.categoria?.trim())  { toast.error('Inserisci la categoria'); return false; }
+    if (!dati.stazione_id)        { toast.error('Seleziona la stazione'); return false; }
     return true;
   }
 
   // =========================
-  // SALVA CONTRIBUTO
+  // SALVA MODIFICA CONTRIBUTO
   // =========================
 
   async function saveContributoModificato() {
-
     if (!editingContributo) return;
 
-    const dati = {
-      ...editingContributo.dati,
-    };
+    const dati = { ...editingContributo.dati };
+    if (editingContributo.tipo === 'attivita' && !validaAttivita(dati)) return;
+    if (Array.isArray(dati.fasce_orarie)) dati.fasce_orarie = ordinaFasce(dati.fasce_orarie);
 
-    if (
-      editingContributo.tipo ===
-      'attivita'
-    ) {
-
-      if (!validaAttivita(dati)) return;
-    }
-
-    if (
-      Array.isArray(dati.fasce_orarie)
-    ) {
-
-      dati.fasce_orarie =
-        ordinaFasce(dati.fasce_orarie);
-    }
-
-    const { error } =
-      await supabase
-        .from('contributi')
-        .update({ dati })
-        .eq(
-          'id',
-          editingContributo.id
-        );
-
-    if (error) {
-
-      console.error(error);
-
-      toast.error('Errore durante il salvataggio');
-
-      return;
-    }
+    const res = await updateContributoDati(adminPin, editingContributo.id, dati);
+    if (!res.ok) { toast.error(res.error?.message ?? 'Errore salvataggio'); return; }
 
     await load();
-
     setEditingContributo(null);
-
     toast.success('Modifiche salvate');
   }
 
   // =========================
-  // RENDER VALORE
+  // APPROVA / RIFIUTA
   // =========================
 
-  function renderValore(
-    key: string,
-    value: any
-  ): string {
-
-    if (
-      value === null ||
-      value === undefined
-    ) {
-      return '—';
-    }
-
-    if (typeof value === 'boolean') {
-      return value ? 'Sì' : 'No';
-    }
-
-    if (
-      key === 'fasce_orarie' &&
-      Array.isArray(value)
-    ) {
-
-      if (value.length === 0) {
-        return 'Nessuna fascia';
-      }
-
-      return value
-        .map((f: any) => {
-
-          const giorni =
-            Array.isArray(f.giorni) &&
-            f.giorni.length > 0
-              ? f.giorni.join(', ')
-              : '—';
-
-          const orari =
-            f.apertura && f.chiusura
-              ? `${f.apertura}–${f.chiusura}`
-              : '—';
-
-          return `${giorni} ${orari}`;
-        })
-        .join(' | ');
-    }
-
-    if (typeof value === 'object') {
-      return JSON.stringify(value);
-    }
-
-    return String(value);
+  async function handleApprove(c: Contributo) {
+    setProcessingId(c.id);
+    const res = await approveContributo(adminPin, c);
+    setProcessingId(null);
+    if (!res.ok) { toast.error(res.error?.message ?? 'Errore approvazione'); return; }
+    toast.success('Contributo approvato');
+    await load();
   }
 
-  // =========================
-  // UPDATE STATUS
-  // =========================
-
-  async function updateStatus(
-    contributo: Contributo,
-    stato: string
-  ) {
-
-
-
-    setProcessingId(contributo.id);
-
-    if (stato === 'approved') {
-
-      // =========================
-      // SEGNALAZIONE SALETTA
-      // =========================
-
-      if (
-        contributo.tipo === 'segnalazione_saletta'
-      ) {
-
-        const dati = contributo.dati;
-
-        // Aggiorna la saletta con il campo segnalato
-        const updatePayload: any = {};
-
-        if (dati.tipo === 'codice_accesso' && dati.valore) {
-          updatePayload.codice_accesso = dati.valore;
-        } else if (dati.tipo === 'ubicazione' && dati.valore) {
-          updatePayload.ubicazione = dati.valore;
-        } else if (dati.tipo === 'note' && dati.valore) {
-          updatePayload.note = dati.valore;
-        } else if (dati.tipo === 'climatizzata') {
-          updatePayload.climatizzata = true;
-        } else if (dati.tipo === 'remove_climatizzata') {
-          updatePayload.climatizzata = false;
-        } else if (dati.tipo === 'microonde') {
-          updatePayload.microonde = true;
-        } else if (dati.tipo === 'remove_microonde') {
-          updatePayload.microonde = false;
-        } else if (dati.tipo === 'fontana_acqua') {
-          updatePayload.acqua = true;
-        } else if (dati.tipo === 'remove_fontana_acqua') {
-          updatePayload.acqua = false;
-        } else if (dati.tipo === 'distributori') {
-          updatePayload.distributori = true;
-        } else if (dati.tipo === 'remove_distributori') {
-          updatePayload.distributori = false;
-        }
-
-        if (
-          Object.keys(updatePayload).length > 0 &&
-          dati.saletta_id
-        ) {
-
-          const { error } =
-            await supabase
-              .from('salette')
-              .update(updatePayload)
-              .eq('id', dati.saletta_id);
-
-          if (error) {
-
-            console.error(error);
-
-            toast.error('Errore aggiornamento saletta');
-
-            setProcessingId(null);
-
-            return;
-          }
-        }
-      }
-
-      // =========================
-      // SALETTA
-      // =========================
-
-      if (
-        contributo.tipo === 'saletta'
-      ) {
-
-        const dati = contributo.dati;
-
-        const groupId =
-          normalizeGroupId(
-            dati.stazione
-          );
-
-        const {
-          data: existing,
-        } = await supabase
-          .from('salette')
-          .select('*')
-          .eq(
-            'saletta_group_id',
-            groupId
-          )
-          .eq('tipo', dati.tipo)
-          .maybeSingle();
-
-        if (existing) {
-
-          const { error } =
-            await supabase
-              .from('salette')
-              .update({
-
-                codice_accesso:
-                  dati.codice_accesso,
-
-                ubicazione:
-                  dati.ubicazione,
-
-                stato:
-                  dati.stato,
-
-                note:
-                  dati.note,
-
-                microonde:
-                  dati.microonde,
-
-                distributori:
-                  dati.distributori,
-
-                acqua:
-                  dati.acqua,
-
-                climatizzata:
-                  dati.climatizzata,
-              })
-              .eq('id', existing.id);
-
-          if (error) {
-
-            console.error(error);
-
-            toast.error('Errore durante il salvataggio');
-
-            setProcessingId(null);
-
-            return;
-          }
-
-        } else {
-
-          const { error } =
-            await supabase
-              .from('salette')
-              .insert({
-
-                saletta_group_id:
-                  groupId,
-
-                stazione:
-                  dati.stazione,
-
-                nome:
-                  dati.stazione,
-
-                tipo:
-                  dati.tipo,
-
-                codice_accesso:
-                  dati.codice_accesso,
-
-                ubicazione:
-                  dati.ubicazione,
-
-                stato:
-                  dati.stato,
-
-                note:
-                  dati.note,
-
-                microonde:
-                  dati.microonde,
-
-                distributori:
-                  dati.distributori,
-
-                acqua:
-                  dati.acqua,
-
-                climatizzata:
-                  dati.climatizzata,
-              });
-
-          if (error) {
-
-            console.error(error);
-
-            toast.error('Errore durante il salvataggio');
-
-            setProcessingId(null);
-
-            return;
-          }
-        }
-      }
-
-      // =========================
-      // ATTIVITA
-      // =========================
-
-      if (
-        contributo.tipo === 'attivita'
-      ) {
-
-        const dati = contributo.dati;
-
-        const fasceSalvate =
-          Array.isArray(dati.fasce_orarie)
-            ? ordinaFasce(
-                dati.fasce_orarie
-              )
-            : [];
-
-        const {
-          data: existing,
-        } = await supabase
-          .from('attivita_stazione')
-          .select('id')
-          .eq(
-            'stazione_id',
-            dati.stazione_id
-          )
-          .eq('nome', dati.nome)
-          .maybeSingle();
-
-        if (existing) {
-
-          const { error } =
-            await supabase
-              .from('attivita_stazione')
-              .update({
-
-                categoria:
-                  dati.categoria,
-
-                indirizzo:
-                  dati.indirizzo,
-
-                maps_query:
-                  dati.maps_query,
-
-                distanza_piedi:
-                  dati.distanza_piedi,
-
-                ubicazione:
-                  dati.ubicazione,
-
-                note:
-                  dati.note,
-
-                convenzionato:
-                  dati.convenzionato,
-
-                fasce_orarie:
-                  fasceSalvate,
-              })
-              .eq('id', existing.id);
-
-          if (error) {
-
-            console.error(error);
-
-            toast.error('Errore durante il salvataggio');
-
-            setProcessingId(null);
-
-            return;
-          }
-
-        } else {
-
-          const { error } =
-            await supabase
-              .from('attivita_stazione')
-              .insert({
-
-                stazione_id:
-                  dati.stazione_id,
-
-                nome:
-                  dati.nome,
-
-                categoria:
-                  dati.categoria,
-
-                indirizzo:
-                  dati.indirizzo,
-
-                maps_query:
-                  dati.maps_query,
-
-                distanza_piedi:
-                  dati.distanza_piedi,
-
-                ubicazione:
-                  dati.ubicazione,
-
-                note:
-                  dati.note,
-
-                convenzionato:
-                  dati.convenzionato,
-
-                fasce_orarie:
-                  fasceSalvate,
-
-                is_active:
-                  true,
-
-                deleted_at:
-                  null,
-              });
-
-          if (error) {
-
-            console.error(error);
-
-            toast.error('Errore durante il salvataggio');
-
-            setProcessingId(null);
-
-            return;
-          }
-        }
-      }
-    }
-
-    // =========================
-    // AGGIORNA STATO CONTRIBUTO
-    // =========================
-
-    const { error: statoError } =
-      await supabase
-        .from('contributi')
-        .update({ stato })
-        .eq('id', contributo.id);
-
-    if (statoError) {
-
-      console.error(statoError);
-
-      toast.error('Errore durante il salvataggio');
-
-      setProcessingId(null);
-
-      return;
-    }
-
+  async function handleReject(c: Contributo) {
+    setProcessingId(c.id);
+    const res = await rejectContributo(adminPin, c.id);
     setProcessingId(null);
-
-    if (stato === 'approved') {
-
-      toast.success('Contributo approvato');
-
-    } else {
-
-      toast.error('Contributo rifiutato');
-    }
-
+    if (!res.ok) { toast.error(res.error?.message ?? 'Errore rifiuto'); return; }
+    toast.error('Contributo rifiutato');
     await load();
   }
 
@@ -840,1328 +188,284 @@ export default function AdminContributiScreen() {
   // =========================
 
   return (
-
     <>
-
       <div className="flex flex-col gap-4">
 
-        {/* TITLE */}
         <div>
-
-          <h1 className="text-2xl font-bold text-gray-900">
-
-            Moderazione Contributi
-
-          </h1>
-
-          <p className="text-sm text-gray-500 mt-1">
-
-            Gestisci contributi inviati dagli utenti
-
-          </p>
-
+          <h1 className="text-2xl font-bold text-gray-900">Moderazione Contributi</h1>
+          <p className="text-sm text-gray-500 mt-1">Gestisci contributi inviati dagli utenti</p>
         </div>
 
-        {/* LOADING */}
-        {loading && (
+        {loading && <div className="text-sm text-gray-500">Caricamento...</div>}
 
-          <div className="text-sm text-gray-500">
-
-            Caricamento...
-
-          </div>
-        )}
-
-        {/* EMPTY */}
-        {!loading &&
-          contributi.length === 0 && (
-
+        {!loading && contributi.length === 0 && (
           <div className="bg-white rounded-2xl border border-gray-100 p-6 text-sm text-gray-500 text-center">
-
             Nessun contributo presente
-
           </div>
         )}
 
-        {/* LIST */}
         <div className="flex flex-col gap-4">
+          {contributi.map((c) => (
+            <div key={c.id} className="bg-white rounded-2xl border border-gray-100 p-4 shadow-sm flex flex-col gap-4">
 
-          {contributi.map(
-            (c) => (
-
-              <div
-                key={c.id}
-                className="bg-white rounded-2xl border border-gray-100 p-4 shadow-sm flex flex-col gap-4"
-              >
-
-                {/* TOP */}
-                <div className="flex items-start justify-between gap-3">
-
-                  <div>
-
-                    <div className="flex items-center gap-2">
-
-                      <FileJson className="w-5 h-5 text-trenord-green" />
-
-                      <h2 className="font-bold text-gray-900 capitalize">
-
-                        {c.tipo}
-
-                      </h2>
-
-                    </div>
-
-                    <p className="text-xs text-gray-400 mt-1">
-
-                      ID:
-                      {' '}
-                      {c.id}
-
-                    </p>
-
+              {/* TOP */}
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <div className="flex items-center gap-2">
+                    <FileJson className="w-5 h-5 text-trenord-green" />
+                    <h2 className="font-bold text-gray-900 capitalize">{c.tipo}</h2>
                   </div>
-
-                  {/* STATUS */}
-                  <div
-                    className={`px-3 py-1 rounded-full text-xs font-semibold ${
-                      c.stato === 'approved'
-                        ? 'bg-emerald-100 text-emerald-700'
-                        : c.stato === 'rejected'
-                        ? 'bg-red-100 text-red-700'
-                        : 'bg-amber-100 text-amber-700'
-                    }`}
-                  >
-
-                    {c.stato}
-
-                  </div>
-
+                  <p className="text-xs text-gray-400 mt-1">ID: {c.id}</p>
                 </div>
-
-                {/* DATI CONTRIBUTO */}
-                <div
-                  className="
-                    bg-gray-50
-                    rounded-xl
-                    border
-                    border-gray-100
-                    p-4
-                    flex
-                    flex-col
-                    gap-3
-                  "
-                >
-
-                  {Object.entries(
-                    c.dati || {}
-                  ).map(
-                    ([key, value]) => (
-
-                      <div
-                        key={key}
-                        className="
-                          flex
-                          justify-between
-                          gap-4
-                          text-sm
-                        "
-                      >
-
-                        <span
-                          className="
-                            font-medium
-                            text-gray-500
-                          "
-                        >
-                          {key}
-                        </span>
-
-                        <span
-                          className="
-                            text-gray-900
-                            text-right
-                            break-all
-                          "
-                        >
-                          {renderValore(
-                            key,
-                            value
-                          )}
-                        </span>
-
-                      </div>
-
-                    )
-                  )}
-
+                <div className={`px-3 py-1 rounded-full text-xs font-semibold ${
+                  c.stato === 'approved' ? 'bg-emerald-100 text-emerald-700'
+                  : c.stato === 'rejected' ? 'bg-red-100 text-red-700'
+                  : 'bg-amber-100 text-amber-700'}`}>
+                  {c.stato}
                 </div>
-
-                {/* DATE */}
-                <div className="flex items-center gap-2 text-xs text-gray-400">
-
-                  <Clock3 className="w-4 h-4" />
-
-                  {new Date(
-                    c.created_at
-                  ).toLocaleString(
-                    'it-IT'
-                  )}
-
-                </div>
-
-                {/* ACTIONS */}
-                {c.stato === 'pending' && (
-
-                  <div className="flex gap-2">
-
-                    <button
-                      onClick={() =>
-                        setEditingContributo(c)
-                      }
-                      disabled={
-                        processingId === c.id
-                      }
-                      className="
-                        flex
-                        items-center
-                        gap-2
-                        px-4
-                        py-2
-                        rounded-xl
-                        bg-blue-600
-                        text-white
-                        text-sm
-                        font-medium
-                        disabled:opacity-50
-                      "
-                    >
-
-                      Modifica
-
-                    </button>
-
-                    {/* APPROVE */}
-                    <button
-                      onClick={() =>
-                        updateStatus(
-                          c,
-                          'approved'
-                        )
-                      }
-                      disabled={
-                        processingId === c.id
-                      }
-                      className="flex items-center gap-2 px-4 py-2 rounded-xl bg-emerald-600 text-white text-sm font-medium hover:opacity-90 disabled:opacity-50"
-                    >
-
-                      <Check className="w-4 h-4" />
-
-                      {processingId === c.id
-                        ? '...'
-                        : 'Approva'}
-
-                    </button>
-
-                    {/* REJECT */}
-                    <button
-                      onClick={() =>
-                        updateStatus(
-                          c,
-                          'rejected'
-                        )
-                      }
-                      disabled={
-                        processingId === c.id
-                      }
-                      className="flex items-center gap-2 px-4 py-2 rounded-xl bg-red-600 text-white text-sm font-medium hover:opacity-90 disabled:opacity-50"
-                    >
-
-                      <X className="w-4 h-4" />
-
-                      {processingId === c.id
-                        ? '...'
-                        : 'Rifiuta'}
-
-                    </button>
-
-                  </div>
-                )}
-
               </div>
-            )
-          )}
 
+              {/* DATI */}
+              <div className="bg-gray-50 rounded-xl border border-gray-100 p-4 flex flex-col gap-3">
+                {Object.entries(c.dati || {}).map(([key, value]) => (
+                  <div key={key} className="flex justify-between gap-4 text-sm">
+                    <span className="font-medium text-gray-500">{key}</span>
+                    <span className="text-gray-900 text-right break-all">{renderValore(key, value)}</span>
+                  </div>
+                ))}
+              </div>
+
+              {/* DATA */}
+              <div className="flex items-center gap-2 text-xs text-gray-400">
+                <Clock3 className="w-4 h-4" />
+                {new Date(c.created_at).toLocaleString('it-IT')}
+              </div>
+
+              {/* ACTIONS */}
+              {c.stato === 'pending' && (
+                <div className="flex gap-2">
+                  <button onClick={() => setEditingContributo(c)} disabled={processingId === c.id}
+                    className="flex items-center gap-2 px-4 py-2 rounded-xl bg-blue-600 text-white text-sm font-medium disabled:opacity-50">
+                    Modifica
+                  </button>
+                  <button onClick={() => handleApprove(c)} disabled={processingId === c.id}
+                    className="flex items-center gap-2 px-4 py-2 rounded-xl bg-emerald-600 text-white text-sm font-medium hover:opacity-90 disabled:opacity-50">
+                    <Check className="w-4 h-4" />
+                    {processingId === c.id ? '...' : 'Approva'}
+                  </button>
+                  <button onClick={() => handleReject(c)} disabled={processingId === c.id}
+                    className="flex items-center gap-2 px-4 py-2 rounded-xl bg-red-600 text-white text-sm font-medium hover:opacity-90 disabled:opacity-50">
+                    <X className="w-4 h-4" />
+                    {processingId === c.id ? '...' : 'Rifiuta'}
+                  </button>
+                </div>
+              )}
+
+            </div>
+          ))}
         </div>
-
       </div>
 
       {/* MODAL MODIFICA */}
       {editingContributo && (
-
-        <div
-          className="
-            fixed
-            inset-0
-            bg-black/40
-            z-50
-            flex
-            items-center
-            justify-center
-            p-4
-          "
-          onClick={(e) => {
-            if (
-              e.target === e.currentTarget
-            ) {
-              setEditingContributo(null);
-            }
-          }}
-        >
-
-          <div
-            className="
-              bg-white
-              rounded-3xl
-              w-full
-              max-w-2xl
-              p-6
-              pb-24
-              flex
-              flex-col
-              gap-4
-              max-h-[90vh]
-              overflow-y-auto
-            "
-          >
+        <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4"
+          onClick={(e) => { if (e.target === e.currentTarget) setEditingContributo(null); }}>
+          <div className="bg-white rounded-3xl w-full max-w-2xl p-6 pb-24 flex flex-col gap-4 max-h-[90vh] overflow-y-auto">
 
             <div className="flex items-center justify-between">
-
-              <h2 className="text-xl font-bold">
-
-                Modifica contributo
-
-              </h2>
-
-              <button
-                onClick={() =>
-                  setEditingContributo(
-                    null
-                  )
-                }
-              >
-
-                <X className="w-5 h-5" />
-
-              </button>
-
+              <h2 className="text-xl font-bold">Modifica contributo</h2>
+              <button onClick={() => setEditingContributo(null)}><X className="w-5 h-5" /></button>
             </div>
 
-            {/* ========================= */}
-            {/* MODAL SEGNALAZIONE SALETTA*/}
-            {/* ========================= */}
-
+            {/* SEGNALAZIONE SALETTA */}
             {editingContributo.tipo === 'segnalazione_saletta' && (
-
               <div className="flex flex-col gap-4">
-
                 <div className="bg-amber-50 border border-amber-200 rounded-xl p-3">
-
-                  <p className="text-xs font-semibold text-amber-700 uppercase tracking-wide mb-2">
-
-                    Segnalazione saletta
-
-                  </p>
-
+                  <p className="text-xs font-semibold text-amber-700 uppercase tracking-wide mb-2">Segnalazione saletta</p>
                   <div className="flex flex-col gap-2 text-sm">
-
                     <div className="flex justify-between">
                       <span className="text-gray-500">Tipo</span>
-                      <span className="font-medium text-gray-900">
-                        {editingContributo.dati?.tipo?.replace(/_/g, ' ')}
-                      </span>
+                      <span className="font-medium text-gray-900">{editingContributo.dati?.tipo?.replace(/_/g, ' ')}</span>
                     </div>
-
                     {editingContributo.dati?.valore && (
                       <div className="flex justify-between">
                         <span className="text-gray-500">Valore</span>
-                        <span className="font-medium text-gray-900">
-                          {editingContributo.dati.valore}
-                        </span>
+                        <span className="font-medium text-gray-900">{editingContributo.dati.valore}</span>
                       </div>
                     )}
-
                     {editingContributo.dati?.nota && (
                       <div className="flex flex-col gap-1">
                         <span className="text-gray-500">Note</span>
-                        <span className="text-gray-900 bg-white rounded-lg p-2 border border-amber-100">
-                          {editingContributo.dati.nota}
-                        </span>
+                        <span className="text-gray-900 bg-white rounded-lg p-2 border border-amber-100">{editingContributo.dati.nota}</span>
                       </div>
                     )}
-
                   </div>
-
                 </div>
-
-                <p className="text-xs text-gray-400 text-center">
-
-                  Approvando questa segnalazione il campo indicato verrà aggiornato automaticamente nella saletta.
-
-                </p>
-
+                <p className="text-xs text-gray-400 text-center">Approvando questa segnalazione il campo indicato verrà aggiornato automaticamente nella saletta.</p>
               </div>
             )}
 
-            {/* ========================= */}
-            {/* MODAL SALETTA             */}
-            {/* ========================= */}
-
+            {/* SALETTA */}
             {editingContributo.tipo === 'saletta' && (
-
               <div className="flex flex-col gap-4">
-
-                {/* STAZIONE sola lettura */}
                 <div>
-
-                  <label className="text-xs font-semibold text-gray-400 uppercase">
-
-                    Stazione
-
-                  </label>
-
-                  <input
-                    value={
-                      editingContributo.dati?.stazione || ''
-                    }
-                    disabled
-                    className="mt-1 border border-gray-200 rounded-xl px-3 py-2 w-full bg-gray-100 text-gray-500"
-                  />
-
+                  <label className="text-xs font-semibold text-gray-400 uppercase">Stazione</label>
+                  <input value={editingContributo.dati?.stazione || ''} disabled
+                    className="mt-1 border border-gray-200 rounded-xl px-3 py-2 w-full bg-gray-100 text-gray-500" />
                 </div>
-
-                {/* TIPO */}
                 <div>
-
-                  <label className="text-xs font-semibold text-gray-400 uppercase">
-
-                    Tipo
-
-                  </label>
-
-                  <select
-                    value={
-                      editingContributo.dati?.tipo || ''
-                    }
-                    onChange={(e) =>
-                      setEditingContributo({
-                        ...editingContributo,
-                        dati: {
-                          ...editingContributo.dati,
-                          tipo: e.target.value,
-                        },
-                      })
-                    }
-                    className="mt-1 border border-gray-200 rounded-xl px-3 py-2 w-full"
-                  >
-
-                    {tipiSaletta.map(
-                      (t) => (
-
-                        <option
-                          key={t}
-                          value={t}
-                        >
-
-                          {t}
-
-                        </option>
-                      )
-                    )}
-
+                  <label className="text-xs font-semibold text-gray-400 uppercase">Tipo</label>
+                  <select value={editingContributo.dati?.tipo || ''}
+                    onChange={(e) => setEditingContributo({ ...editingContributo, dati: { ...editingContributo.dati, tipo: e.target.value } })}
+                    className="mt-1 border border-gray-200 rounded-xl px-3 py-2 w-full">
+                    {TIPI_SALETTA.map((t) => <option key={t} value={t}>{t}</option>)}
                   </select>
-
                 </div>
-
-                {/* CODICE ACCESSO */}
                 <div>
-
-                  <label className="text-xs font-semibold text-gray-400 uppercase">
-
-                    Codice accesso
-
-                  </label>
-
-                  <input
-                    value={
-                      editingContributo.dati?.codice_accesso || ''
-                    }
-                    onChange={(e) =>
-                      setEditingContributo({
-                        ...editingContributo,
-                        dati: {
-                          ...editingContributo.dati,
-                          codice_accesso:
-                            e.target.value,
-                        },
-                      })
-                    }
-                    placeholder="Es. 14579B"
-                    className="mt-1 border border-gray-200 rounded-xl px-3 py-2 w-full"
-                  />
-
+                  <label className="text-xs font-semibold text-gray-400 uppercase">Codice accesso</label>
+                  <input value={editingContributo.dati?.codice_accesso || ''}
+                    onChange={(e) => setEditingContributo({ ...editingContributo, dati: { ...editingContributo.dati, codice_accesso: e.target.value } })}
+                    placeholder="Es. 14579B" className="mt-1 border border-gray-200 rounded-xl px-3 py-2 w-full" />
                 </div>
-
-                {/* UBICAZIONE */}
                 <div>
-
-                  <label className="text-xs font-semibold text-gray-400 uppercase">
-
-                    Ubicazione
-
-                  </label>
-
-                  <input
-                    value={
-                      editingContributo.dati?.ubicazione || ''
-                    }
-                    onChange={(e) =>
-                      setEditingContributo({
-                        ...editingContributo,
-                        dati: {
-                          ...editingContributo.dati,
-                          ubicazione:
-                            e.target.value,
-                        },
-                      })
-                    }
-                    placeholder="Es. Binario 1 lato Milano"
-                    className="mt-1 border border-gray-200 rounded-xl px-3 py-2 w-full"
-                  />
-
+                  <label className="text-xs font-semibold text-gray-400 uppercase">Ubicazione</label>
+                  <input value={editingContributo.dati?.ubicazione || ''}
+                    onChange={(e) => setEditingContributo({ ...editingContributo, dati: { ...editingContributo.dati, ubicazione: e.target.value } })}
+                    placeholder="Es. Binario 1 lato Milano" className="mt-1 border border-gray-200 rounded-xl px-3 py-2 w-full" />
                 </div>
-
-                {/* STATO */}
                 <div>
-
-                  <label className="text-xs font-semibold text-gray-400 uppercase">
-
-                    Stato
-
-                  </label>
-
-                  <select
-                    value={
-                      editingContributo.dati?.stato || ''
-                    }
-                    onChange={(e) =>
-                      setEditingContributo({
-                        ...editingContributo,
-                        dati: {
-                          ...editingContributo.dati,
-                          stato: e.target.value,
-                        },
-                      })
-                    }
-                    className="mt-1 border border-gray-200 rounded-xl px-3 py-2 w-full"
-                  >
-
-                    {statiSaletta.map(
-                      (s) => (
-
-                        <option
-                          key={s}
-                          value={s}
-                        >
-
-                          {s}
-
-                        </option>
-                      )
-                    )}
-
+                  <label className="text-xs font-semibold text-gray-400 uppercase">Stato</label>
+                  <select value={editingContributo.dati?.stato || ''}
+                    onChange={(e) => setEditingContributo({ ...editingContributo, dati: { ...editingContributo.dati, stato: e.target.value } })}
+                    className="mt-1 border border-gray-200 rounded-xl px-3 py-2 w-full">
+                    {STATI_SALETTA.map((s) => <option key={s} value={s}>{s}</option>)}
                   </select>
-
                 </div>
 
                 {/* DOTAZIONI */}
                 <div className="flex flex-col gap-3">
-
-                  <label className="text-xs font-semibold text-gray-400 uppercase">
-
-                    Servizi
-
-                  </label>
-
-                  {/* MICROONDE */}
-                  <button
-                    type="button"
-                    onClick={() =>
-                      setEditingContributo({
-                        ...editingContributo,
-                        dati: {
-                          ...editingContributo.dati,
-                          microonde: !(
-                            editingContributo.dati?.microonde ??
-                            editingContributo.dati?.servizi?.microonde ??
-                            false
-                          ),
-                        },
-                      })
-                    }
-                    className={`flex items-center justify-between rounded-xl border px-4 py-3 transition-colors ${
-                      (
-                        editingContributo.dati?.microonde ??
-                        editingContributo.dati?.servizi?.microonde ??
-                        false
-                      )
-                        ? 'bg-trenord-green text-white border-trenord-green'
-                        : 'bg-white border-gray-200 text-gray-700'
-                    }`}
-                  >
-
-                    <div className="flex items-center gap-3">
-
-                      <Microwave className="w-5 h-5" />
-
-                      Microonde
-
-                    </div>
-
-                    <span>
-
-                      {(
-                        editingContributo.dati?.microonde ??
-                        editingContributo.dati?.servizi?.microonde ??
-                        false
-                      )
-                        ? 'SI'
-                        : 'NO'}
-
-                    </span>
-
-                  </button>
-
-                  {/* DISTRIBUTORI */}
-                  <button
-                    type="button"
-                    onClick={() =>
-                      setEditingContributo({
-                        ...editingContributo,
-                        dati: {
-                          ...editingContributo.dati,
-                          distributori: !(
-                            editingContributo.dati?.distributori ??
-                            editingContributo.dati?.servizi?.distributori ??
-                            false
-                          ),
-                        },
-                      })
-                    }
-                    className={`flex items-center justify-between rounded-xl border px-4 py-3 transition-colors ${
-                      (
-                        editingContributo.dati?.distributori ??
-                        editingContributo.dati?.servizi?.distributori ??
-                        false
-                      )
-                        ? 'bg-trenord-green text-white border-trenord-green'
-                        : 'bg-white border-gray-200 text-gray-700'
-                    }`}
-                  >
-
-                    <div className="flex items-center gap-3">
-
-                      <Coffee className="w-5 h-5" />
-
-                      Distributori
-
-                    </div>
-
-                    <span>
-
-                      {(
-                        editingContributo.dati?.distributori ??
-                        editingContributo.dati?.servizi?.distributori ??
-                        false
-                      )
-                        ? 'SI'
-                        : 'NO'}
-
-                    </span>
-
-                  </button>
-
-                  {/* ACQUA */}
-                  <button
-                    type="button"
-                    onClick={() =>
-                      setEditingContributo({
-                        ...editingContributo,
-                        dati: {
-                          ...editingContributo.dati,
-                          acqua: !(
-                            editingContributo.dati?.acqua ??
-                            editingContributo.dati?.servizi?.acqua ??
-                            false
-                          ),
-                        },
-                      })
-                    }
-                    className={`flex items-center justify-between rounded-xl border px-4 py-3 transition-colors ${
-                      (
-                        editingContributo.dati?.acqua ??
-                        editingContributo.dati?.servizi?.acqua ??
-                        false
-                      )
-                        ? 'bg-trenord-green text-white border-trenord-green'
-                        : 'bg-white border-gray-200 text-gray-700'
-                    }`}
-                  >
-
-                    <div className="flex items-center gap-3">
-
-                      <Droplets className="w-5 h-5" />
-
-                      Acqua
-
-                    </div>
-
-                    <span>
-
-                      {(
-                        editingContributo.dati?.acqua ??
-                        editingContributo.dati?.servizi?.acqua ??
-                        false
-                      )
-                        ? 'SI'
-                        : 'NO'}
-
-                    </span>
-
-                  </button>
-
-                  {/* CLIMATIZZATA */}
-                  <button
-                    type="button"
-                    onClick={() =>
-                      setEditingContributo({
-                        ...editingContributo,
-                        dati: {
-                          ...editingContributo.dati,
-                          climatizzata: !(
-                            editingContributo.dati?.climatizzata ??
-                            editingContributo.dati?.servizi?.climatizzata ??
-                            false
-                          ),
-                        },
-                      })
-                    }
-                    className={`flex items-center justify-between rounded-xl border px-4 py-3 transition-colors ${
-                      (
-                        editingContributo.dati?.climatizzata ??
-                        editingContributo.dati?.servizi?.climatizzata ??
-                        false
-                      )
-                        ? 'bg-trenord-green text-white border-trenord-green'
-                        : 'bg-white border-gray-200 text-gray-700'
-                    }`}
-                  >
-
-                    <div className="flex items-center gap-3">
-
-                      <Snowflake className="w-5 h-5" />
-
-                      Climatizzata
-
-                    </div>
-
-                    <span>
-
-                      {(
-                        editingContributo.dati?.climatizzata ??
-                        editingContributo.dati?.servizi?.climatizzata ??
-                        false
-                      )
-                        ? 'SI'
-                        : 'NO'}
-
-                    </span>
-
-                  </button>
-
+                  <label className="text-xs font-semibold text-gray-400 uppercase">Servizi</label>
+                  {[
+                    { key: 'microonde',   label: 'Microonde',    icon: <Microwave className="w-5 h-5" /> },
+                    { key: 'distributori',label: 'Distributori', icon: <Coffee className="w-5 h-5" /> },
+                    { key: 'acqua',       label: 'Acqua',        icon: <Droplets className="w-5 h-5" /> },
+                    { key: 'climatizzata',label: 'Climatizzata', icon: <Snowflake className="w-5 h-5" /> },
+                  ].map(({ key, label, icon }) => {
+                    const val = editingContributo.dati?.[key] ?? editingContributo.dati?.servizi?.[key] ?? false;
+                    return (
+                      <button key={key} type="button"
+                        onClick={() => setEditingContributo({ ...editingContributo, dati: { ...editingContributo.dati, [key]: !val } })}
+                        className={`flex items-center justify-between rounded-xl border px-4 py-3 transition-colors ${val ? 'bg-trenord-green text-white border-trenord-green' : 'bg-white border-gray-200 text-gray-700'}`}>
+                        <div className="flex items-center gap-3">{icon}{label}</div>
+                        <span>{val ? 'SI' : 'NO'}</span>
+                      </button>
+                    );
+                  })}
                 </div>
 
-                {/* NOTE */}
                 <div>
-
-                  <label className="text-xs font-semibold text-gray-400 uppercase">
-
-                    Note
-
-                  </label>
-
-                  <textarea
-                    value={
-                      editingContributo.dati?.note || ''
-                    }
-                    onChange={(e) =>
-                      setEditingContributo({
-                        ...editingContributo,
-                        dati: {
-                          ...editingContributo.dati,
-                          note: e.target.value,
-                        },
-                      })
-                    }
+                  <label className="text-xs font-semibold text-gray-400 uppercase">Note</label>
+                  <textarea value={editingContributo.dati?.note || ''}
+                    onChange={(e) => setEditingContributo({ ...editingContributo, dati: { ...editingContributo.dati, note: e.target.value } })}
                     placeholder="Inserisci eventuali informazioni aggiuntive..."
-                    className="mt-1 border border-gray-200 rounded-xl px-3 py-2 w-full min-h-[120px]"
-                  />
-
+                    className="mt-1 border border-gray-200 rounded-xl px-3 py-2 w-full min-h-[120px]" />
                 </div>
-
               </div>
             )}
 
-            {/* ========================= */}
-            {/* MODAL ATTIVITA            */}
-            {/* ========================= */}
-
+            {/* ATTIVITA */}
             {editingContributo.tipo === 'attivita' && (
-
-              <div className="grid gap-3">
-
-                {/* STAZIONE (sola lettura) */}
-                <div className="flex flex-col gap-1">
-
-                  <label className="text-xs text-gray-500">
-
-                    Stazione
-
-                  </label>
-
-                  <input
-                    value={
-                      stazioni.find(
-                        (s) =>
-                          s.id ===
-                          editingContributo.dati?.stazione_id
-                      )?.nome || ''
-                    }
-                    disabled
-                    className="border rounded-xl px-3 py-2 bg-gray-100"
-                  />
-
-                </div>
-
-                {/* NOME */}
-                <div className="flex flex-col gap-1">
-
-                  <label className="text-xs text-gray-500">
-
-                    nome
-
-                  </label>
-
-                  <input
-                    value={
-                      editingContributo.dati?.nome || ''
-                    }
-                    onChange={(e) =>
-                      setEditingContributo({
-                        ...editingContributo,
-                        dati: {
-                          ...editingContributo.dati,
-                          nome: e.target.value,
-                        },
-                      })
-                    }
-                    className="border rounded-xl px-3 py-2"
-                  />
-
-                </div>
-
-                {/* INDIRIZZO */}
-                <div className="flex flex-col gap-1">
-
-                  <label className="text-xs text-gray-500">
-
-                    indirizzo
-
-                  </label>
-
-                  <input
-                    value={
-                      editingContributo.dati?.indirizzo || ''
-                    }
-                    onChange={(e) =>
-                      setEditingContributo({
-                        ...editingContributo,
-                        dati: {
-                          ...editingContributo.dati,
-                          indirizzo: e.target.value,
-                        },
-                      })
-                    }
-                    className="border rounded-xl px-3 py-2"
-                  />
-
-                </div>
-
-                {/* UBICAZIONE */}
-                <div className="flex flex-col gap-1">
-
-                  <label className="text-xs text-gray-500">
-
-                    ubicazione
-
-                  </label>
-
-                  <input
-                    value={
-                      editingContributo.dati?.ubicazione || ''
-                    }
-                    onChange={(e) =>
-                      setEditingContributo({
-                        ...editingContributo,
-                        dati: {
-                          ...editingContributo.dati,
-                          ubicazione: e.target.value,
-                        },
-                      })
-                    }
-                    className="border rounded-xl px-3 py-2"
-                  />
-
-                </div>
-
-                {/* NOTE */}
-                <div className="flex flex-col gap-1">
-
-                  <label className="text-xs text-gray-500">
-
-                    note
-
-                  </label>
-
-                  <input
-                    value={
-                      editingContributo.dati?.note || ''
-                    }
-                    onChange={(e) =>
-                      setEditingContributo({
-                        ...editingContributo,
-                        dati: {
-                          ...editingContributo.dati,
-                          note: e.target.value,
-                        },
-                      })
-                    }
-                    className="border rounded-xl px-3 py-2"
-                  />
-
-                </div>
-
-              </div>
-            )}
-
-            {editingContributo.tipo === 'attivita' && (
-
               <>
-
-            {/* FASCE ORARIE */}
-            <div className="flex flex-col gap-4">
-
-              <div className="flex items-center justify-between">
-
-                <h3 className="font-semibold">
-
-                  Fasce orarie
-
-                </h3>
-
-                <button
-                  type="button"
-                  onClick={addFasciaAdmin}
-                  className="
-                    text-sm
-                    text-trenord-green
-                  "
-                >
-
-                  + Aggiungi fascia
-
-                </button>
-
-              </div>
-
-              {(editingContributo
-                ?.dati
-                ?.fasce_orarie || []
-              ).map(
-                (
-                  fascia: any,
-                  index: number
-                ) => {
-
-                  const giorniAttuali =
-                    Array.isArray(
-                      fascia.giorni
-                    )
-                      ? fascia.giorni
-                      : [];
-
-                  return (
-
-                    <div
-                      key={index}
-                      className="
-                        border
-                        rounded-2xl
-                        p-4
-                        flex
-                        flex-col
-                        gap-4
-                      "
-                    >
-
-                      <div className="flex items-center justify-between">
-
-                        <div className="font-medium">
-
-                          Fascia {index + 1}
-
-                        </div>
-
-                        {(editingContributo
-                          ?.dati
-                          ?.fasce_orarie
-                          ?.length || 0) > 1 && (
-
-                          <button
-                            type="button"
-                            onClick={() =>
-                              removeFasciaAdmin(
-                                index
-                              )
-                            }
-                            className="
-                              text-red-600
-                              text-sm
-                            "
-                          >
-
-                            Elimina
-
-                          </button>
-
-                        )}
-
-                      </div>
-
-                      <div className="grid grid-cols-4 gap-2">
-
-                        {giorniSettimana.map(
-                          (giorno) => {
-
-                            const active =
-                              giorniAttuali?.includes(
-                                giorno
-                              ) || false;
-
-                            return (
-
-                              <button
-                                key={giorno}
-                                type="button"
-                                onClick={() =>
-                                  toggleGiornoAdmin(
-                                    index,
-                                    giorno
-                                  )
-                                }
-                                className={`rounded-xl border py-2 text-sm ${
-                                  active
-                                    ? 'bg-trenord-green text-white'
-                                    : 'bg-white'
-                                }`}
-                              >
-
-                                {giorno}
-
-                              </button>
-
-                            );
-                          }
-                        )}
-
-                      </div>
-
-                      <div className="grid grid-cols-2 gap-3">
-
-                        <input
-                          type="time"
-                          value={
-                            fascia.apertura || ''
-                          }
-                          onChange={(e) =>
-                            updateFasciaAdmin(
-                              index,
-                              'apertura',
-                              e.target.value
-                            )
-                          }
-                          className="
-                            border
-                            rounded-xl
-                            px-3
-                            py-2
-                          "
-                        />
-
-                        <input
-                          type="time"
-                          value={
-                            fascia.chiusura || ''
-                          }
-                          onChange={(e) =>
-                            updateFasciaAdmin(
-                              index,
-                              'chiusura',
-                              e.target.value
-                            )
-                          }
-                          className="
-                            border
-                            rounded-xl
-                            px-3
-                            py-2
-                          "
-                        />
-
-                      </div>
-
+                <div className="grid gap-3">
+                  <div className="flex flex-col gap-1">
+                    <label className="text-xs text-gray-500">Stazione</label>
+                    <input value={stazioni.find((s) => s.id === editingContributo.dati?.stazione_id)?.nome || ''} disabled
+                      className="border rounded-xl px-3 py-2 bg-gray-100" />
+                  </div>
+                  {[
+                    { key: 'nome',      label: 'Nome' },
+                    { key: 'indirizzo', label: 'Indirizzo' },
+                    { key: 'ubicazione',label: 'Ubicazione' },
+                    { key: 'note',      label: 'Note' },
+                    { key: 'maps_query',label: 'Maps Query' },
+                  ].map(({ key, label }) => (
+                    <div key={key} className="flex flex-col gap-1">
+                      <label className="text-xs text-gray-500">{label}</label>
+                      <input value={editingContributo.dati?.[key] || ''}
+                        onChange={(e) => setEditingContributo({ ...editingContributo, dati: { ...editingContributo.dati, [key]: e.target.value } })}
+                        className="border rounded-xl px-3 py-2" />
                     </div>
+                  ))}
+                  <div className="flex flex-col gap-1">
+                    <label className="text-xs text-gray-500">Categoria</label>
+                    <select value={editingContributo?.dati?.categoria || ''}
+                      onChange={(e) => setEditingContributo({ ...editingContributo, dati: { ...editingContributo.dati, categoria: e.target.value } })}
+                      className="border rounded-xl px-3 py-2">
+                      {CATEGORIE.map((c) => <option key={c} value={c}>{c}</option>)}
+                    </select>
+                  </div>
+                  <div className="flex flex-col gap-1">
+                    <label className="text-xs text-gray-500">Distanza a piedi</label>
+                    <select value={editingContributo?.dati?.distanza_piedi || ''}
+                      onChange={(e) => setEditingContributo({ ...editingContributo, dati: { ...editingContributo.dati, distanza_piedi: e.target.value } })}
+                      className="border rounded-xl px-3 py-2">
+                      {DISTANZE.map((d) => <option key={d} value={d}>{d}</option>)}
+                    </select>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <input type="checkbox" checked={Boolean(editingContributo?.dati?.convenzionato)}
+                      onChange={(e) => setEditingContributo({ ...editingContributo, dati: { ...editingContributo.dati, convenzionato: e.target.checked } })} />
+                    <span className="font-medium">Convenzionato Trenord</span>
+                  </div>
+                </div>
 
-                  );
-                }
-              )}
-
-            </div>
-
-            {/* CONVENZIONATO */}
-            <div className="flex items-center gap-3">
-
-              <input
-                type="checkbox"
-                checked={
-                  Boolean(
-                    editingContributo
-                      ?.dati
-                      ?.convenzionato
-                  )
-                }
-                onChange={(e) =>
-                  setEditingContributo({
-
-                    ...editingContributo,
-
-                    dati: {
-
-                      ...editingContributo.dati,
-
-                      convenzionato:
-                        e.target.checked,
-                    },
-                  })
-                }
-              />
-
-              <span className="font-medium">
-
-                Convenzionato Trenord
-
-              </span>
-
-            </div>
-
-            {/* CATEGORIA */}
-            <div className="flex flex-col gap-1">
-
-              <label className="text-xs text-gray-500">
-
-                Categoria
-
-              </label>
-
-              <select
-                value={
-                  editingContributo?.dati?.categoria || ''
-                }
-                onChange={(e) =>
-                  setEditingContributo({
-                    ...editingContributo,
-                    dati: {
-                      ...editingContributo.dati,
-                      categoria: e.target.value,
-                    },
-                  })
-                }
-                className="
-                  border
-                  rounded-xl
-                  px-3
-                  py-2
-                "
-              >
-
-                <option value="Bar">
-                  Bar
-                </option>
-
-                <option value="Fast Food">
-                  Fast Food
-                </option>
-
-                <option value="Market">
-                  Market
-                </option>
-
-                <option value="Ristorante">
-                  Ristorante
-                </option>
-
-                <option value="Farmacia">
-                  Farmacia
-                </option>
-
-                <option value="Tabacchi">
-                  Tabacchi
-                </option>
-
-                <option value="Hotel">
-                  Hotel
-                </option>
-
-                <option value="Altro">
-                  Altro
-                </option>
-
-              </select>
-
-            </div>
-
-            {/* DISTANZA A PIEDI */}
-            <div className="flex flex-col gap-1">
-
-              <label className="text-xs text-gray-500">
-
-                Distanza a piedi
-
-              </label>
-
-              <select
-                value={
-                  editingContributo?.dati?.distanza_piedi || ''
-                }
-                onChange={(e) =>
-                  setEditingContributo({
-                    ...editingContributo,
-                    dati: {
-                      ...editingContributo.dati,
-                      distanza_piedi:
-                        e.target.value,
-                    },
-                  })
-                }
-                className="
-                  border
-                  rounded-xl
-                  px-3
-                  py-2
-                "
-              >
-
-                <option value="In stazione">
-                  In stazione
-                </option>
-
-                <option value="Entro 2 minuti">
-                  Entro 2 minuti
-                </option>
-
-                <option value="Entro 5 minuti">
-                  Entro 5 minuti
-                </option>
-
-                <option value="Entro 10 minuti">
-                  Entro 10 minuti
-                </option>
-
-                <option value="Oltre 10 minuti">
-                  Oltre 10 minuti
-                </option>
-
-              </select>
-
-            </div>
-
-            {/* MAPS QUERY */}
-            <div className="flex flex-col gap-1">
-
-              <label className="text-xs text-gray-500">
-
-                Maps Query
-
-              </label>
-
-              <input
-                value={
-                  editingContributo.dati?.maps_query || ''
-                }
-                onChange={(e) =>
-                  setEditingContributo({
-                    ...editingContributo,
-                    dati: {
-                      ...editingContributo.dati,
-                      maps_query: e.target.value,
-                    },
-                  })
-                }
-                className="
-                  border
-                  rounded-xl
-                  px-3
-                  py-2
-                "
-              />
-
-            </div>
-
+                {/* FASCE ORARIE */}
+                <div className="flex flex-col gap-4">
+                  <div className="flex items-center justify-between">
+                    <h3 className="font-semibold">Fasce orarie</h3>
+                    <button type="button" onClick={addFasciaAdmin} className="text-sm text-trenord-green">+ Aggiungi fascia</button>
+                  </div>
+                  {(editingContributo?.dati?.fasce_orarie || []).map((fascia: any, index: number) => {
+                    const giorniAttuali = Array.isArray(fascia.giorni) ? fascia.giorni : [];
+                    return (
+                      <div key={index} className="border rounded-2xl p-4 flex flex-col gap-4">
+                        <div className="flex items-center justify-between">
+                          <div className="font-medium">Fascia {index + 1}</div>
+                          {(editingContributo?.dati?.fasce_orarie?.length || 0) > 1 && (
+                            <button type="button" onClick={() => removeFasciaAdmin(index)} className="text-red-600 text-sm">Elimina</button>
+                          )}
+                        </div>
+                        <div className="grid grid-cols-4 gap-2">
+                          {GIORNI_SETTIMANA.map((giorno) => (
+                            <button key={giorno} type="button" onClick={() => toggleGiornoAdmin(index, giorno)}
+                              className={`rounded-xl border py-2 text-sm ${giorniAttuali.includes(giorno) ? 'bg-trenord-green text-white' : 'bg-white'}`}>
+                              {giorno}
+                            </button>
+                          ))}
+                        </div>
+                        <div className="grid grid-cols-2 gap-3">
+                          <input type="time" value={fascia.apertura || ''}
+                            onChange={(e) => updateFasciaAdmin(index, 'apertura', e.target.value)}
+                            className="border rounded-xl px-3 py-2" />
+                          <input type="time" value={fascia.chiusura || ''}
+                            onChange={(e) => updateFasciaAdmin(index, 'chiusura', e.target.value)}
+                            className="border rounded-xl px-3 py-2" />
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
               </>
             )}
 
-            <button
-              onClick={
-                saveContributoModificato
-              }
-              className="
-                bg-blue-600
-                text-white
-                rounded-xl
-                py-3
-                font-medium
-              "
-            >
-
+            <button onClick={saveContributoModificato}
+              className="bg-blue-600 text-white rounded-xl py-3 font-medium hover:opacity-90">
               Salva modifiche
-
             </button>
 
           </div>
-
         </div>
-
       )}
-
     </>
   );
 }
