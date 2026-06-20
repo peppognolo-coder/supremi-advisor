@@ -428,7 +428,7 @@ export default function App() {
           )}
 
           {activeTab === 'admin' && adminMode && (
-            <AdminScreen refreshKey={refreshKey} />
+            <AdminScreen refreshKey={refreshKey} adminPin={ADMIN_PIN} />
           )}
 
         </div>
