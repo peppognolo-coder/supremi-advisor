@@ -26,9 +26,6 @@ export default function ContributoStazioneForm({
   const [nome, setNome] =
     useState('');
 
-  const [codice, setCodice] =
-    useState('');
-
   const [regione, setRegione] =
     useState('');
 
@@ -87,9 +84,6 @@ export default function ContributoStazioneForm({
 
         nome:
           nome.trim(),
-
-        codice:
-          codice.trim(),
 
         regione:
           regione.trim(),
@@ -245,28 +239,6 @@ export default function ContributoStazioneForm({
             />
 
           </div>
-
-        </div>
-
-        {/* CODICE */}
-        <div>
-
-          <label className="text-xs font-semibold text-gray-400 uppercase">
-
-            Codice
-
-          </label>
-
-          <input
-            value={codice}
-            onChange={(e) =>
-              setCodice(
-                e.target.value
-              )
-            }
-            placeholder="Es. MILC"
-            className="mt-1 border border-gray-200 rounded-xl px-3 py-2 w-full"
-          />
 
         </div>
 
