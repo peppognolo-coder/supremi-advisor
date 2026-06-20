@@ -347,7 +347,7 @@ export const handler: Handler = async (event: HandlerEvent) => {
         }
       }
 
-      // ------ STAZIONE ------
+     // ------ STAZIONE ------
 if (tipo === 'stazione') {
 
   const lat =
@@ -363,6 +363,14 @@ if (tipo === 'stazione') {
     dati.lng === null
       ? null
       : Number(dati.lng);
+
+  // BLOCCO OBBLIGATORIO CODICE
+  if (!dati.codice?.trim()) {
+    return err({
+      code: 'MISSING_STATION_CODE',
+      message: 'Inserire il codice stazione prima dell’approvazione.',
+    });
+  }
 
   const { error } = await supabase
     .from('stazioni')
