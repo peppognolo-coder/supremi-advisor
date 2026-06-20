@@ -33,6 +33,8 @@ import AdminContributiScreen from './AdminContributiScreen';
 
 import AdminAttivitaScreen from './AdminAttivitaScreen';
 
+import AdminStazioniScreen from './AdminStazioniScreen';
+
 // =========================
 // TIPI
 // =========================
@@ -878,6 +880,30 @@ export default function AdminScreen({ adminPin }: Props) {
     );
   }
 
+  if (showStazioniManager) {
+
+  return (
+
+    <div className="flex flex-col gap-4">
+
+      <button
+        onClick={() =>
+          setShowStazioniManager(false)
+        }
+        className="self-start flex items-center gap-2 px-3 py-2 rounded-xl bg-white border border-gray-200 text-sm text-gray-700 hover:bg-gray-50"
+      >
+        <ArrowLeft className="w-4 h-4" />
+        Torna dashboard
+      </button>
+
+      <AdminStazioniScreen
+        adminPin={adminPin}
+      />
+
+    </div>
+  );
+}
+  
   // =========================
   // UI
   // =========================
@@ -1080,6 +1106,20 @@ export default function AdminScreen({ adminPin }: Props) {
 
           </button>
 
+          {/* STAZIONI */}
+<button
+  onClick={() =>
+    setShowStazioniManager(true)
+  }
+  className="flex items-center gap-3 p-3 rounded-xl bg-indigo-600 text-white hover:opacity-90 transition-opacity"
+>
+  <MapPin className="w-5 h-5" />
+
+  <span className="font-medium">
+    Gestione stazioni
+  </span>
+</button>
+          
           {/* CONTRIBUTI */}
           <button
             onClick={() =>
