@@ -845,7 +845,7 @@ export default function AdminScreen({ adminPin }: Props) {
 
         </button>
 
-        <AdminContributiScreen />
+        <AdminContributiScreen adminPin={adminPin} />
 
       </div>
     );
