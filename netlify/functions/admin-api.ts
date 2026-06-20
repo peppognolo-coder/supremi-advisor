@@ -16,6 +16,11 @@ type Action =
   | 'softDeleteAttivita'
   | 'ripristinaAttivita'
   | 'updateAttivita'
+  // STAZIONI
+| 'getStazioni'
+| 'updateStazione'
+| 'softDeleteStazione'
+| 'ripristinaStazione'
   // CONTRIBUTI
   | 'getContributi'
   | 'updateContributoDati'
@@ -240,6 +245,126 @@ export const handler: Handler = async (event: HandlerEvent) => {
       return ok(data);
     }
 
+    // ============================================================
+// STAZIONI
+// ============================================================
+
+if (action === 'getStazioni') {
+  const { data, error } = await supabase
+    .from('stazioni')
+    .select('*')
+    .order('nome', { ascending: true });
+
+  if (error) return dbErr(error.message);
+
+  return ok(data ?? []);
+}
+
+if (action === 'updateStazione') {
+  const {
+    id,
+    nome,
+    codice,
+    regione,
+    provincia,
+    indirizzo,
+    maps_query,
+    plus_code,
+    lat,
+    lng,
+    note,
+    attiva,
+  } = (payload ?? {}) as any;
+
+  if (!id) {
+    return err({
+      ...ERRORS.MISSING_PAYLOAD,
+      message: 'Campo obbligatorio: id',
+    });
+  }
+
+  const { data, error } = await supabase
+    .from('stazioni')
+    .update({
+      nome: nome?.trim() || null,
+      codice: codice?.trim() || null,
+      regione: regione?.trim() || null,
+      provincia: provincia?.trim() || null,
+      indirizzo: indirizzo?.trim() || null,
+      maps_query: maps_query?.trim() || null,
+      plus_code: plus_code?.trim() || null,
+      lat:
+        lat === '' ||
+        lat === undefined ||
+        lat === null
+          ? null
+          : Number(lat),
+      lng:
+        lng === '' ||
+        lng === undefined ||
+        lng === null
+          ? null
+          : Number(lng),
+      note: note?.trim() || null,
+      attiva: Boolean(attiva),
+    })
+    .eq('id', id)
+    .select()
+    .single();
+
+  if (error) return dbErr(error.message);
+
+  return ok(data);
+}
+
+if (action === 'softDeleteStazione') {
+  const { id } = (payload ?? {}) as any;
+
+  if (!id) {
+    return err({
+      ...ERRORS.MISSING_PAYLOAD,
+      message: 'Campo obbligatorio: id',
+    });
+  }
+
+  const { data, error } = await supabase
+    .from('stazioni')
+    .update({
+      attiva: false,
+    })
+    .eq('id', id)
+    .select()
+    .single();
+
+  if (error) return dbErr(error.message);
+
+  return ok(data);
+}
+
+if (action === 'ripristinaStazione') {
+  const { id } = (payload ?? {}) as any;
+
+  if (!id) {
+    return err({
+      ...ERRORS.MISSING_PAYLOAD,
+      message: 'Campo obbligatorio: id',
+    });
+  }
+
+  const { data, error } = await supabase
+    .from('stazioni')
+    .update({
+      attiva: true,
+    })
+    .eq('id', id)
+    .select()
+    .single();
+
+  if (error) return dbErr(error.message);
+
+  return ok(data);
+}
+    
     // ============================================================
     // CONTRIBUTI
     // ============================================================
