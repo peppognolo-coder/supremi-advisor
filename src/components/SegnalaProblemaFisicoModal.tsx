@@ -161,7 +161,7 @@ export default function SegnalaProblemaFisicoModal({
               onChange={(e) => setNote(e.target.value)}
               rows={3}
               placeholder="Descrivi il problema in modo più dettagliato..."
-              className="border border-gray-200 rounded-xl px-3 py-2 text-sm resize-none"
+              className="border border-gray-200 rounded-xl px-3 py-2 text-base resize-none"
             />
           </div>
 
