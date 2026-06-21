@@ -1065,7 +1065,7 @@ export default function StazioniScreen({
             onChange={(e) =>
               setSearch(e.target.value)
             }
-            className="w-full bg-white border border-gray-200 rounded-2xl pl-10 pr-9 py-3 text-sm"
+            className="w-full bg-white border border-gray-200 rounded-2xl pl-10 pr-9 py-3 text-base"
           />
 
           {search.length > 0 && (
