@@ -30,6 +30,7 @@ import {
 
 interface Props {
   adminPin: string;
+  initialFiltroQualita?: string;
 }
 
 // =========================
@@ -212,13 +213,17 @@ function ConfirmModal({
 // SCHERMATA PRINCIPALE
 // =========================
 
-export default function AdminSaletteScreen({ adminPin }: Props) {
+export default function AdminSaletteScreen({
+  adminPin,
+  initialFiltroQualita = '',
+}: Props) {
 
   const [loading, setLoading]   = useState(true);
   const [salette, setSalette]   = useState<Saletta[]>([]);
   const [search, setSearch]     = useState('');
   const [showAdd, setShowAdd]   = useState(false);
   const [savingId, setSavingId] = useState<string | null>(null);
+  const [filtroQualita, setFiltroQualita] = useState<string>(initialFiltroQualita);
   const [confirmDelete, setConfirmDelete] = useState<{
     id: string;
     nome: string;
@@ -250,6 +255,11 @@ export default function AdminSaletteScreen({ adminPin }: Props) {
   // =========================
 
   const filtered = salette.filter((s) => {
+    // Filtro qualità (proveniente dalla dashboard)
+    if (filtroQualita === '__no_ubicazione__' && s.ubicazione?.trim()) return false;
+    if (filtroQualita === '__no_codice__' && s.codice_accesso?.trim())  return false;
+
+    // Ricerca testuale
     const q = search.trim().toLowerCase();
     return (
       !q ||
@@ -370,6 +380,25 @@ export default function AdminSaletteScreen({ adminPin }: Props) {
             </button>
           )}
         </div>
+
+        {/* BANNER FILTRO QUALITA */}
+        {filtroQualita !== '' && (
+          <div className="flex items-center justify-between bg-blue-50 border border-blue-200 rounded-xl px-4 py-2.5">
+            <span className="text-sm text-blue-700 font-medium">
+              Filtro dashboard: {
+                filtroQualita === '__no_ubicazione__' ? 'Salette senza ubicazione' :
+                filtroQualita === '__no_codice__' ? 'Salette senza codice' :
+                filtroQualita
+              }
+            </span>
+            <button
+              onClick={() => setFiltroQualita('')}
+              className="text-blue-500 hover:text-blue-700 text-xs underline"
+            >
+              Rimuovi filtro
+            </button>
+          </div>
+        )}
 
         {/* LOADING */}
         {loading && (
