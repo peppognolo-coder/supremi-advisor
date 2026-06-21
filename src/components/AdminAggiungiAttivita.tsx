@@ -173,7 +173,7 @@ export default function AdminAggiungiAttivita() {
               e.target.value
             )
           }
-          className="border border-gray-200 rounded-2xl px-4 py-3 text-sm"
+          className="border border-gray-200 rounded-2xl px-4 py-3 text-base"
         >
 
           <option value="">
@@ -216,7 +216,7 @@ export default function AdminAggiungiAttivita() {
             )
           }
           placeholder="McDonald's"
-          className="border border-gray-200 rounded-2xl px-4 py-3 text-sm"
+          className="border border-gray-200 rounded-2xl px-4 py-3 text-base"
         />
 
       </div>
@@ -237,7 +237,7 @@ export default function AdminAggiungiAttivita() {
               e.target.value
             )
           }
-          className="border border-gray-200 rounded-2xl px-4 py-3 text-sm"
+          className="border border-gray-200 rounded-2xl px-4 py-3 text-base"
         >
 
           {categorie.map(
@@ -276,7 +276,7 @@ export default function AdminAggiungiAttivita() {
             )
           }
           placeholder="Piazzale esterno lato binario 1"
-          className="border border-gray-200 rounded-2xl px-4 py-3 text-sm"
+          className="border border-gray-200 rounded-2xl px-4 py-3 text-base"
         />
 
       </div>
@@ -299,7 +299,7 @@ export default function AdminAggiungiAttivita() {
             )
           }
           placeholder="McDonald's Milano Centrale"
-          className="border border-gray-200 rounded-2xl px-4 py-3 text-sm"
+          className="border border-gray-200 rounded-2xl px-4 py-3 text-base"
         />
 
       </div>
@@ -321,7 +321,7 @@ export default function AdminAggiungiAttivita() {
             )
           }
           placeholder="Info aggiuntive"
-          className="border border-gray-200 rounded-2xl px-4 py-3 text-sm min-h-[100px]"
+          className="border border-gray-200 rounded-2xl px-4 py-3 text-base min-h-[100px]"
         />
 
       </div>
