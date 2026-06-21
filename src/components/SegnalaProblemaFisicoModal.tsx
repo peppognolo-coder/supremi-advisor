@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useScrollLock } from '../lib/useScrollLock';
 
 import { X, AlertTriangle } from 'lucide-react';
 
@@ -27,6 +28,8 @@ export default function SegnalaProblemaFisicoModal({
   salettaNome,
   onClose,
 }: Props) {
+  useScrollLock();
+
 
   const [tipoSelezionato, setTipoSelezionato] = useState('');
   const [note, setNote]     = useState('');
