@@ -252,6 +252,10 @@ export default function SalettaCard({
                 )}
 
                 {/* BUTTONS */}
+                <div className="flex flex-col gap-2">
+                  <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide">
+                    Aggiorna questa saletta
+                  </p>
                 <div className="flex gap-2 flex-wrap">
 
                   <button
@@ -262,7 +266,7 @@ export default function SalettaCard({
                     className="flex items-center gap-2 px-3 py-2 rounded-xl bg-trenord-green text-white text-xs font-medium hover:opacity-90 transition-opacity"
                   >
                     <MessageSquarePlus className="w-4 h-4" />
-                    Segnala modifica
+                    Modifica informazioni
                   </button>
 
                   <button
@@ -276,9 +280,10 @@ export default function SalettaCard({
                     className="flex items-center gap-2 px-3 py-2 rounded-xl bg-red-600 text-white text-xs font-medium hover:opacity-90 transition-opacity"
                   >
                     <AlertTriangle className="w-4 h-4" />
-                    Segnala problema
+                    Segnala guasto
                   </button>
 
+                </div>
                 </div>
 
                 {/* VERIFICA RAPIDA */}
