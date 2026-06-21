@@ -133,72 +133,81 @@ export default function App() {
   // PULL TO REFRESH
   // =========================
 
-  const touchStartY =
-    useRef(0);
+  const touchStartY   = useRef(0);
+  const touchStartX   = useRef(0);
+  const touchEndY     = useRef(0);
+  const pulling       = useRef(false);
+  const directionLocked = useRef(false); // true = gesto confermato verticale
 
-  const touchEndY =
-    useRef(0);
-
-  const pulling =
-    useRef(false);
+  // Soglia minima px verso il basso per attivare il refresh
+  const PULL_THRESHOLD = 100;
+  // Quanti px percorrere prima di decidere se il gesto è verticale o orizzontale
+  const DIRECTION_LOCK_PX = 10;
 
   useEffect(() => {
 
-    function handleTouchStart(
-      e: TouchEvent
-    ) {
+    function handleTouchStart(e: TouchEvent) {
+      // Attiva solo se siamo esattamente in cima alla pagina
+      if (window.scrollY > 0) return;
 
-      if (
-        window.scrollY <= 0
-      ) {
-
-        touchStartY.current =
-          e.touches[0].clientY;
-
-        pulling.current =
-          true;
-      }
+      touchStartY.current   = e.touches[0].clientY;
+      touchStartX.current   = e.touches[0].clientX;
+      touchEndY.current     = e.touches[0].clientY;
+      pulling.current       = true;
+      directionLocked.current = false;
     }
 
-    function handleTouchMove(
-      e: TouchEvent
-    ) {
+    function handleTouchMove(e: TouchEvent) {
+      if (!pulling.current) return;
 
-      if (
-        !pulling.current
-      )
-        return;
+      const currentY = e.touches[0].clientY;
+      const currentX = e.touches[0].clientX;
+      const deltaY   = currentY - touchStartY.current;
+      const deltaX   = currentX - touchStartX.current;
 
-      touchEndY.current =
-        e.touches[0].clientY;
+      // Se la direzione non è ancora bloccata, decidila
+      if (!directionLocked.current) {
+        const movedEnough = Math.abs(deltaY) > DIRECTION_LOCK_PX || Math.abs(deltaX) > DIRECTION_LOCK_PX;
+        if (!movedEnough) return;
+
+        // Se il gesto è più orizzontale che verticale, annulla il pull
+        if (Math.abs(deltaX) > Math.abs(deltaY)) {
+          pulling.current = false;
+          return;
+        }
+
+        // Se il gesto è verso l'alto, non è un pull-to-refresh
+        if (deltaY < 0) {
+          pulling.current = false;
+          return;
+        }
+
+        directionLocked.current = true;
+      }
+
+      touchEndY.current = currentY;
     }
 
     function handleTouchEnd() {
+      if (!pulling.current) return;
 
+      const distance = touchEndY.current - touchStartY.current;
+
+      // Refresh solo se: abbastanza distanza, ancora in cima, direzione confermata
       if (
-        !pulling.current
-      )
-        return;
-
-      const distance =
-        touchEndY.current -
-        touchStartY.current;
-
-      if (
-        distance > 120 &&
-        window.scrollY <= 10 &&
+        distance > PULL_THRESHOLD &&
+        directionLocked.current &&
+        window.scrollY <= 0 &&
         !refreshing
       ) {
-
         refreshApp();
       }
 
-      pulling.current =
-        false;
-
-      touchStartY.current = 0;
-
-      touchEndY.current = 0;
+      pulling.current         = false;
+      directionLocked.current = false;
+      touchStartY.current     = 0;
+      touchStartX.current     = 0;
+      touchEndY.current       = 0;
     }
 
     window.addEventListener(
