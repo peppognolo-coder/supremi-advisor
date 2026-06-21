@@ -340,7 +340,7 @@ export default function ContributoAttivitaForm({
           disabled={
             !!stazionePredefinitaId
           }
-          className="border border-gray-200 rounded-xl px-3 py-2"
+          className="border border-gray-200 rounded-xl px-3 py-2 text-base"
         >
 
           <option value="">
@@ -372,7 +372,7 @@ export default function ContributoAttivitaForm({
             setNome(e.target.value)
           }
           placeholder="Nome attività"
-          className="border border-gray-200 rounded-xl px-3 py-2"
+          className="border border-gray-200 rounded-xl px-3 py-2 text-base"
         />
 
         {/* CATEGORIA */}
@@ -381,7 +381,7 @@ export default function ContributoAttivitaForm({
           onChange={(e) =>
             setCategoria(e.target.value)
           }
-          className="border border-gray-200 rounded-xl px-3 py-2"
+          className="border border-gray-200 rounded-xl px-3 py-2 text-base"
         >
 
           {categorie.map(
@@ -404,7 +404,7 @@ export default function ContributoAttivitaForm({
             setIndirizzo(e.target.value)
           }
           placeholder="Indirizzo"
-          className="border border-gray-200 rounded-xl px-3 py-2"
+          className="border border-gray-200 rounded-xl px-3 py-2 text-base"
         />
 
         {/* DISTANZA DALLA STAZIONE */}
@@ -415,7 +415,7 @@ export default function ContributoAttivitaForm({
               e.target.value
             )
           }
-          className="border border-gray-200 rounded-xl px-3 py-2"
+          className="border border-gray-200 rounded-xl px-3 py-2 text-base"
         >
 
           <option value="">
@@ -463,7 +463,7 @@ export default function ContributoAttivitaForm({
             setUbicazione(e.target.value)
           }
           placeholder="Ubicazione"
-          className="border border-gray-200 rounded-xl px-3 py-2"
+          className="border border-gray-200 rounded-xl px-3 py-2 text-base"
         />
 
         {/* CONVENZIONATO */}
@@ -593,7 +593,7 @@ export default function ContributoAttivitaForm({
                         e.target.value
                       )
                     }
-                    className="border border-gray-200 rounded-xl px-3 py-2"
+                    className="border border-gray-200 rounded-xl px-3 py-2 text-base"
                   />
 
                   <input
@@ -606,7 +606,7 @@ export default function ContributoAttivitaForm({
                         e.target.value
                       )
                     }
-                    className="border border-gray-200 rounded-xl px-3 py-2"
+                    className="border border-gray-200 rounded-xl px-3 py-2 text-base"
                   />
 
                 </div>
@@ -624,7 +624,7 @@ export default function ContributoAttivitaForm({
             setNote(e.target.value)
           }
           placeholder="Note"
-          className="border border-gray-200 rounded-xl px-3 py-2 min-h-[120px]"
+          className="border border-gray-200 rounded-xl px-3 py-2 min-h-[120px] text-base"
         />
 
         {/* SUBMIT */}
