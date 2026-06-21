@@ -89,7 +89,7 @@ export default function SegnalaProblemaFisicoModal({
 
   return (
     <div
-      className="fixed inset-0 bg-black/40 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4"
+      className="fixed inset-0 bg-black/40 z-[9999] flex items-end sm:items-center justify-center p-0 sm:p-4"
       onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
     >
       <div className="bg-white rounded-t-3xl sm:rounded-3xl w-full sm:max-w-md flex flex-col gap-0 max-h-[90vh] overflow-y-auto">
