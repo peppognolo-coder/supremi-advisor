@@ -26,6 +26,8 @@ import {
 
 import AdminPinModal from './components/AdminPinModal';
 
+import { modalOpenCount } from './lib/useScrollLock';
+
 const ADMIN_PIN = '1105';
 
 const screenTitles: Record<Tab, string> = {
@@ -147,8 +149,9 @@ export default function App() {
   useEffect(() => {
 
     function handleTouchStart(e: TouchEvent) {
-      // Attiva solo se siamo esattamente in cima alla pagina
+      // Attiva solo se siamo in cima e nessun modal è aperto
       if (window.scrollY > 0) return;
+      if (modalOpenCount.current > 0) return;
 
       touchStartY.current   = e.touches[0].clientY;
       touchStartX.current   = e.touches[0].clientX;
@@ -198,7 +201,8 @@ export default function App() {
         distance > PULL_THRESHOLD &&
         directionLocked.current &&
         window.scrollY <= 0 &&
-        !refreshing
+        !refreshing &&
+        modalOpenCount.current === 0
       ) {
         refreshApp();
       }
