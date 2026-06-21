@@ -340,7 +340,7 @@ export default function AdminStazioniScreen({
             placeholder="Cerca per nome, codice, regione, provincia..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full bg-white border border-gray-200 rounded-xl pl-9 pr-9 py-2.5 text-sm"
+            className="w-full bg-white border border-gray-200 rounded-xl pl-9 pr-9 py-2.5 text-base"
           />
           {search.length > 0 && (
             <button
@@ -581,7 +581,7 @@ export default function AdminStazioniScreen({
                 value={editing.nome ?? ''}
                 onChange={(e) => setField('nome', e.target.value)}
                 placeholder="es. Milano Centrale"
-                className="border border-gray-200 rounded-xl px-3 py-2 text-sm"
+                className="border border-gray-200 rounded-xl px-3 py-2 text-base"
               />
             </div>
 
@@ -592,7 +592,7 @@ export default function AdminStazioniScreen({
                 value={editing.codice ?? ''}
                 onChange={(e) => setField('codice', e.target.value || null)}
                 placeholder="es. MCTL"
-                className="border border-gray-200 rounded-xl px-3 py-2 text-sm font-mono"
+                className="border border-gray-200 rounded-xl px-3 py-2 text-base font-mono"
               />
             </div>
 
@@ -604,7 +604,7 @@ export default function AdminStazioniScreen({
                   value={editing.regione ?? ''}
                   onChange={(e) => setField('regione', e.target.value || null)}
                   placeholder="es. Lombardia"
-                  className="border border-gray-200 rounded-xl px-3 py-2 text-sm"
+                  className="border border-gray-200 rounded-xl px-3 py-2 text-base"
                 />
               </div>
               <div className="flex flex-col gap-1">
@@ -613,7 +613,7 @@ export default function AdminStazioniScreen({
                   value={editing.provincia ?? ''}
                   onChange={(e) => setField('provincia', e.target.value || null)}
                   placeholder="es. Milano"
-                  className="border border-gray-200 rounded-xl px-3 py-2 text-sm"
+                  className="border border-gray-200 rounded-xl px-3 py-2 text-base"
                 />
               </div>
             </div>
@@ -625,7 +625,7 @@ export default function AdminStazioniScreen({
                 value={editing.indirizzo ?? ''}
                 onChange={(e) => setField('indirizzo', e.target.value || null)}
                 placeholder="es. Piazza Duca d'Aosta 1, Milano"
-                className="border border-gray-200 rounded-xl px-3 py-2 text-sm"
+                className="border border-gray-200 rounded-xl px-3 py-2 text-base"
               />
             </div>
 
@@ -636,7 +636,7 @@ export default function AdminStazioniScreen({
                 value={editing.maps_query ?? ''}
                 onChange={(e) => setField('maps_query', e.target.value || null)}
                 placeholder="es. Milano Centrale stazione ferroviaria"
-                className="border border-gray-200 rounded-xl px-3 py-2 text-sm"
+                className="border border-gray-200 rounded-xl px-3 py-2 text-base"
               />
             </div>
 
@@ -647,7 +647,7 @@ export default function AdminStazioniScreen({
                 value={editing.plus_code ?? ''}
                 onChange={(e) => setField('plus_code', e.target.value || null)}
                 placeholder="es. 8FQ9+WF"
-                className="border border-gray-200 rounded-xl px-3 py-2 text-sm font-mono"
+                className="border border-gray-200 rounded-xl px-3 py-2 text-base font-mono"
               />
             </div>
 
@@ -661,7 +661,7 @@ export default function AdminStazioniScreen({
                   value={editing.lat ?? ''}
                   onChange={(e) => setField('lat', e.target.value === '' ? null : Number(e.target.value))}
                   placeholder="es. 45.4858"
-                  className="border border-gray-200 rounded-xl px-3 py-2 text-sm font-mono"
+                  className="border border-gray-200 rounded-xl px-3 py-2 text-base font-mono"
                 />
               </div>
               <div className="flex flex-col gap-1">
@@ -672,7 +672,7 @@ export default function AdminStazioniScreen({
                   value={editing.lng ?? ''}
                   onChange={(e) => setField('lng', e.target.value === '' ? null : Number(e.target.value))}
                   placeholder="es. 9.2042"
-                  className="border border-gray-200 rounded-xl px-3 py-2 text-sm font-mono"
+                  className="border border-gray-200 rounded-xl px-3 py-2 text-base font-mono"
                 />
               </div>
             </div>
@@ -685,7 +685,7 @@ export default function AdminStazioniScreen({
                 onChange={(e) => setField('note', e.target.value || null)}
                 rows={3}
                 placeholder="Note aggiuntive sulla stazione..."
-                className="border border-gray-200 rounded-xl px-3 py-2 text-sm resize-none"
+                className="border border-gray-200 rounded-xl px-3 py-2 text-base resize-none"
               />
             </div>
 
