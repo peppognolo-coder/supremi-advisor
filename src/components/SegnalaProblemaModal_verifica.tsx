@@ -12,6 +12,8 @@ import { supabase } from '../lib/supabase';
 
 import { getDeviceId } from '../lib/device';
 
+import { useSwipeDown } from '../lib/useSwipeDown';
+
 // =========================
 // TIPI PROBLEMA
 // =========================
@@ -57,6 +59,7 @@ export default function SegnalaProblemaModal({
   onClose,
   onSuccess,
 }: Props) {
+  const { panelRef, dragStyle, handleDragStart } = useSwipeDown({ onClose: onClose });
   useScrollLock();
 
 
@@ -134,7 +137,11 @@ export default function SegnalaProblemaModal({
 
     <div className="fixed inset-0 z-[9999] bg-black/40 flex items-end justify-center p-4">
 
-      <div className="bg-white rounded-3xl w-full max-w-md flex flex-col gap-4 p-5 shadow-2xl animate-in slide-in-from-bottom duration-200">
+      <div ref={panelRef} style={dragStyle} onTouchStart={handleDragStart} className="bg-white rounded-3xl w-full max-w-md flex flex-col gap-4 p-5 shadow-2xl animate-in slide-in-from-bottom duration-200">
+          {/* DRAG INDICATOR */}
+          <div className="flex justify-center pt-3 pb-1 cursor-grab active:cursor-grabbing flex-shrink-0">
+            <div className="w-10 h-1 rounded-full bg-gray-200" />
+          </div>
 
         {/* HEADER */}
         <div className="flex items-center justify-between">
