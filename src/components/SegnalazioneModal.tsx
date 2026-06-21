@@ -10,6 +10,8 @@ import toast from 'react-hot-toast';
 
 import { supabase } from '../lib/supabase';
 
+import { useSwipeDown } from '../lib/useSwipeDown';
+
 interface Props {
   salettaId: string;
   onClose: () => void;
@@ -19,6 +21,7 @@ export default function SegnalazioneModal({
   salettaId,
   onClose,
 }: Props) {
+  const { panelRef, dragStyle, handleDragStart } = useSwipeDown({ onClose: onClose });
   useScrollLock();
 
 
@@ -91,7 +94,11 @@ export default function SegnalazioneModal({
 
     <div className="fixed inset-0 z-[9999] bg-black/40 flex items-center justify-center p-4 overflow-y-auto">
 
-      <div className="bg-white rounded-3xl p-5 w-full max-w-md flex flex-col gap-4 shadow-2xl animate-in fade-in zoom-in-95 duration-200 my-auto">
+      <div ref={panelRef} style={dragStyle} onTouchStart={handleDragStart} className="bg-white rounded-3xl p-5 w-full max-w-md flex flex-col gap-4 shadow-2xl animate-in fade-in zoom-in-95 duration-200 my-auto">
+          {/* DRAG INDICATOR */}
+          <div className="flex justify-center pt-3 pb-1 cursor-grab active:cursor-grabbing flex-shrink-0">
+            <div className="w-10 h-1 rounded-full bg-gray-200" />
+          </div>
 
         {/* HEADER */}
         <div className="flex items-center justify-between">
