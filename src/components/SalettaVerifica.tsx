@@ -378,10 +378,11 @@ export default function SalettaVerifica({
         {renderStatoBadge()}
 
         {/* TITOLO */}
-        <p className="text-sm font-medium text-gray-700">
-
-          Le informazioni sono corrette?
-
+        <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide">
+          Verifica delle informazioni
+        </p>
+        <p className="text-sm text-gray-600">
+          Hai utilizzato questa saletta recentemente?
         </p>
 
         {/* AZIONI */}
@@ -406,7 +407,7 @@ export default function SalettaVerifica({
               {submitting
                 ? 'Invio...'
                 : giaPuoVerificare
-                ? 'Informazioni corrette'
+                ? 'Dati corretti'
                 : `Verificato il ${miaDataVerifica}`}
 
             </span>
@@ -425,7 +426,7 @@ export default function SalettaVerifica({
 
             <span className="whitespace-nowrap">
 
-              Segnala problema
+              Dati non corretti
 
             </span>
 
