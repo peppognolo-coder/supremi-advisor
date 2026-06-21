@@ -39,6 +39,7 @@ type FiltroQualita =
   | '__no_indirizzo__'
   | '__no_codice__'
   | '__disattivate__'
+  | '__no_pluscode__'
   | '';
 
 interface Props {
@@ -186,6 +187,7 @@ export default function AdminStazioniScreen({
         if (filtroQualita === '__no_maps__'      && s.maps_query?.trim())      return false;
         if (filtroQualita === '__no_indirizzo__' && s.indirizzo?.trim())       return false;
         if (filtroQualita === '__no_codice__'    && s.codice?.trim())          return false;
+        if (filtroQualita === '__no_pluscode__'  && (s as any).plus_code?.trim()) return false;
         if (filtroQualita === '__disattivate__'  && s.attiva)                  return false;
         // Integrità — questi richiedono dati esterni: passati via ID set nelle props
         if (filtroQualita === '__no_attivita__'  && stazioniConAttivita?.has(s.id))  return false;
@@ -400,6 +402,7 @@ export default function AdminStazioniScreen({
                 '__disattivate__': 'Disattivate',
                 '__no_attivita__': 'Senza attività',
                 '__no_salette__': 'Senza salette',
+                '__no_pluscode__': 'Senza Plus Code',
               }[filtroQualita] ?? filtroQualita}
             </span>
             <button
