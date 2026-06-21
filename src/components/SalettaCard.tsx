@@ -9,7 +9,7 @@ import {
   Droplets,
   Snowflake,
   MessageSquarePlus,
-  TriangleAlert,
+  AlertTriangle,
 } from 'lucide-react';
 
 import type {
@@ -275,7 +275,7 @@ export default function SalettaCard({
                     }}
                     className="flex items-center gap-2 px-3 py-2 rounded-xl bg-red-600 text-white text-xs font-medium hover:opacity-90 transition-opacity"
                   >
-                    <TriangleAlert className="w-4 h-4" />
+                    <AlertTriangle className="w-4 h-4" />
                     Segnala problema
                   </button>
 
