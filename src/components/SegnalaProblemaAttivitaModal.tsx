@@ -209,7 +209,7 @@ export default function SegnalaProblemaAttivitaModal({
                 onChange={() =>
                   setTipoProblema(tipo.value)
                 }
-                className="accent-amber-500"
+                className="accent-amber-500 text-base"
               />
 
               <span className="text-sm font-medium">
@@ -238,7 +238,7 @@ export default function SegnalaProblemaAttivitaModal({
               setNota(e.target.value)
             }
             placeholder="Descrivi il problema con più dettagli..."
-            className="mt-1 w-full border border-gray-200 rounded-xl px-3 py-2 text-sm min-h-[80px] resize-none focus:outline-none focus:ring-2 focus:ring-amber-300 focus:border-amber-300"
+            className="mt-1 w-full border border-gray-200 rounded-xl px-3 py-2 text-base min-h-[80px] resize-none focus:outline-none focus:ring-2 focus:ring-amber-300 focus:border-amber-300"
           />
 
         </div>
