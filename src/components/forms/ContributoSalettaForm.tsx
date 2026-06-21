@@ -243,7 +243,7 @@ export default function ContributoSalettaForm({
               )
             }
             placeholder="Es. Milano Centrale"
-            className="mt-1 border border-gray-200 rounded-xl px-3 py-2 w-full"
+            className="mt-1 border border-gray-200 rounded-xl px-3 py-2 w-full text-base"
           />
 
         </div>
@@ -264,7 +264,7 @@ export default function ContributoSalettaForm({
                 e.target.value
               )
             }
-            className="mt-1 border border-gray-200 rounded-xl px-3 py-2 w-full"
+            className="mt-1 border border-gray-200 rounded-xl px-3 py-2 w-full text-base"
           >
 
             {tipi.map((tipo) => (
@@ -299,7 +299,7 @@ export default function ContributoSalettaForm({
               )
             }
             placeholder="Es. 14579B"
-            className="mt-1 border border-gray-200 rounded-xl px-3 py-2 w-full"
+            className="mt-1 border border-gray-200 rounded-xl px-3 py-2 w-full text-base"
           />
 
         </div>
@@ -321,7 +321,7 @@ export default function ContributoSalettaForm({
               )
             }
             placeholder="Es. Binario 1 lato Milano"
-            className="mt-1 border border-gray-200 rounded-xl px-3 py-2 w-full"
+            className="mt-1 border border-gray-200 rounded-xl px-3 py-2 w-full text-base"
           />
 
         </div>
@@ -342,7 +342,7 @@ export default function ContributoSalettaForm({
                 e.target.value
               )
             }
-            className="mt-1 border border-gray-200 rounded-xl px-3 py-2 w-full"
+            className="mt-1 border border-gray-200 rounded-xl px-3 py-2 w-full text-base"
           >
 
             {stati.map((stato) => (
@@ -444,7 +444,7 @@ export default function ContributoSalettaForm({
               )
             }
             placeholder="Inserisci eventuali informazioni aggiuntive..."
-            className="mt-1 border border-gray-200 rounded-xl px-3 py-2 w-full min-h-[120px]"
+            className="mt-1 border border-gray-200 rounded-xl px-3 py-2 w-full min-h-[120px] text-base"
           />
 
         </div>
