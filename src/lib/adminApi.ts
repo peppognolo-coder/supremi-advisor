@@ -195,3 +195,50 @@ export async function rejectContributo(
 ): Promise<AdminApiResult<Contributo>> {
   return call<Contributo>('rejectContributo', adminPin, { id });
 }
+
+// =============================================================
+// STAZIONI
+// =============================================================
+
+export interface StazioneCompleta {
+  id: string;
+  nome: string;
+  codice: string | null;
+  regione: string | null;
+  provincia: string | null;
+  indirizzo: string | null;
+  maps_query: string | null;
+  plus_code: string | null;
+  lat: number | null;
+  lng: number | null;
+  note: string | null;
+  attiva: boolean;
+  created_at: string;
+}
+
+export async function getStazioni(
+  adminPin: string
+): Promise<AdminApiResult<StazioneCompleta[]>> {
+  return call<StazioneCompleta[]>('getStazioni', adminPin);
+}
+
+export async function updateStazione(
+  adminPin: string,
+  payload: {
+    id: string; nome: string; codice: string | null;
+    regione: string | null; provincia: string | null;
+    indirizzo: string | null; maps_query: string | null;
+    plus_code: string | null; lat: number | null; lng: number | null;
+    note: string | null; attiva: boolean;
+  }
+): Promise<AdminApiResult<StazioneCompleta>> {
+  return call<StazioneCompleta>('updateStazione', adminPin, payload as unknown as Record<string, unknown>);
+}
+
+export async function toggleAttivaStazione(
+  adminPin: string,
+  id: string,
+  attiva: boolean
+): Promise<AdminApiResult<StazioneCompleta>> {
+  return call<StazioneCompleta>('toggleAttivaStazione', adminPin, { id, attiva });
+}
