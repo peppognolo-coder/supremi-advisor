@@ -45,6 +45,8 @@ interface Props {
   adminPin: string;
   initialFiltro?: 'tutte' | 'attive' | 'disattivate';
   initialSearchQualita?: string;
+  stazioniConAttivita?: Set<string>;
+  stazioniConSalette?: Set<string>;
 }
 
 // =========================
@@ -110,6 +112,8 @@ export default function AdminStazioniScreen({
   adminPin,
   initialFiltro = 'tutte',
   initialSearchQualita = '',
+  stazioniConAttivita,
+  stazioniConSalette,
 }: Props) {
   console.log('ADMIN PIN', adminPin);
 
@@ -174,15 +178,18 @@ export default function AdminStazioniScreen({
 
       // Filtro qualità (proveniente dalla dashboard)
       if (filtroQualita) {
-        if (filtroQualita === '__coord__'       && !(s.lat && s.lng))          return false;
-        if (filtroQualita === '__maps__'        && !s.maps_query?.trim())      return false;
-        if (filtroQualita === '__indirizzo__'   && !s.indirizzo?.trim())       return false;
-        if (filtroQualita === '__pluscode__'    && !s.plus_code?.trim())       return false;
-        if (filtroQualita === '__no_coord__'    && (s.lat && s.lng))           return false;
-        if (filtroQualita === '__no_maps__'     && s.maps_query?.trim())       return false;
-        if (filtroQualita === '__no_indirizzo__'&& s.indirizzo?.trim())        return false;
-        if (filtroQualita === '__no_codice__'   && s.codice?.trim())           return false;
-        if (filtroQualita === '__disattivate__' && s.attiva)                   return false;
+        if (filtroQualita === '__coord__'        && !(s.lat && s.lng))         return false;
+        if (filtroQualita === '__maps__'         && !s.maps_query?.trim())     return false;
+        if (filtroQualita === '__indirizzo__'    && !s.indirizzo?.trim())      return false;
+        if (filtroQualita === '__pluscode__'     && !s.plus_code?.trim())      return false;
+        if (filtroQualita === '__no_coord__'     && (s.lat && s.lng))          return false;
+        if (filtroQualita === '__no_maps__'      && s.maps_query?.trim())      return false;
+        if (filtroQualita === '__no_indirizzo__' && s.indirizzo?.trim())       return false;
+        if (filtroQualita === '__no_codice__'    && s.codice?.trim())          return false;
+        if (filtroQualita === '__disattivate__'  && s.attiva)                  return false;
+        // Integrità — questi richiedono dati esterni: passati via ID set nelle props
+        if (filtroQualita === '__no_attivita__'  && stazioniConAttivita?.has(s.id))  return false;
+        if (filtroQualita === '__no_salette__'   && stazioniConSalette?.has(s.nome?.toLowerCase().trim())) return false;
       }
 
       // Ricerca testuale
@@ -391,6 +398,8 @@ export default function AdminStazioniScreen({
                 '__no_indirizzo__': 'Senza indirizzo',
                 '__no_codice__': 'Senza codice RFI',
                 '__disattivate__': 'Disattivate',
+                '__no_attivita__': 'Senza attività',
+                '__no_salette__': 'Senza salette',
               }[filtroQualita] ?? filtroQualita}
             </span>
             <button
