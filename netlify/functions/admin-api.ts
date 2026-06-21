@@ -16,16 +16,15 @@ type Action =
   | 'softDeleteAttivita'
   | 'ripristinaAttivita'
   | 'updateAttivita'
-  // STAZIONI
-| 'getStazioni'
-| 'updateStazione'
-| 'softDeleteStazione'
-| 'ripristinaStazione'
   // CONTRIBUTI
   | 'getContributi'
   | 'updateContributoDati'
   | 'approveContributo'
-  | 'rejectContributo';
+  | 'rejectContributo'
+  // STAZIONI
+  | 'getStazioni'
+  | 'updateStazione'
+  | 'toggleAttivaStazione';
 
 interface RequestBody {
   action: Action;
@@ -246,126 +245,6 @@ export const handler: Handler = async (event: HandlerEvent) => {
     }
 
     // ============================================================
-// STAZIONI
-// ============================================================
-
-if (action === 'getStazioni') {
-  const { data, error } = await supabase
-    .from('stazioni')
-    .select('*')
-    .order('nome', { ascending: true });
-
-  if (error) return dbErr(error.message);
-
-  return ok(data ?? []);
-}
-
-if (action === 'updateStazione') {
-  const {
-    id,
-    nome,
-    codice,
-    regione,
-    provincia,
-    indirizzo,
-    maps_query,
-    plus_code,
-    lat,
-    lng,
-    note,
-    attiva,
-  } = (payload ?? {}) as any;
-
-  if (!id) {
-    return err({
-      ...ERRORS.MISSING_PAYLOAD,
-      message: 'Campo obbligatorio: id',
-    });
-  }
-
-  const { data, error } = await supabase
-    .from('stazioni')
-    .update({
-      nome: nome?.trim() || null,
-      codice: codice?.trim() || null,
-      regione: regione?.trim() || null,
-      provincia: provincia?.trim() || null,
-      indirizzo: indirizzo?.trim() || null,
-      maps_query: maps_query?.trim() || null,
-      plus_code: plus_code?.trim() || null,
-      lat:
-        lat === '' ||
-        lat === undefined ||
-        lat === null
-          ? null
-          : Number(lat),
-      lng:
-        lng === '' ||
-        lng === undefined ||
-        lng === null
-          ? null
-          : Number(lng),
-      note: note?.trim() || null,
-      attiva: Boolean(attiva),
-    })
-    .eq('id', id)
-    .select()
-    .single();
-
-  if (error) return dbErr(error.message);
-
-  return ok(data);
-}
-
-if (action === 'softDeleteStazione') {
-  const { id } = (payload ?? {}) as any;
-
-  if (!id) {
-    return err({
-      ...ERRORS.MISSING_PAYLOAD,
-      message: 'Campo obbligatorio: id',
-    });
-  }
-
-  const { data, error } = await supabase
-    .from('stazioni')
-    .update({
-      attiva: false,
-    })
-    .eq('id', id)
-    .select()
-    .single();
-
-  if (error) return dbErr(error.message);
-
-  return ok(data);
-}
-
-if (action === 'ripristinaStazione') {
-  const { id } = (payload ?? {}) as any;
-
-  if (!id) {
-    return err({
-      ...ERRORS.MISSING_PAYLOAD,
-      message: 'Campo obbligatorio: id',
-    });
-  }
-
-  const { data, error } = await supabase
-    .from('stazioni')
-    .update({
-      attiva: true,
-    })
-    .eq('id', id)
-    .select()
-    .single();
-
-  if (error) return dbErr(error.message);
-
-  return ok(data);
-}
-    
-    // ============================================================
     // CONTRIBUTI
     // ============================================================
 
@@ -472,49 +351,15 @@ if (action === 'ripristinaStazione') {
         }
       }
 
-     // ------ STAZIONE ------
-if (tipo === 'stazione') {
-
-  const lat =
-    dati.lat === '' ||
-    dati.lat === undefined ||
-    dati.lat === null
-      ? null
-      : Number(dati.lat);
-
-  const lng =
-    dati.lng === '' ||
-    dati.lng === undefined ||
-    dati.lng === null
-      ? null
-      : Number(dati.lng);
-
-  // BLOCCO OBBLIGATORIO CODICE
-  if (!dati.codice?.trim()) {
-    return err({
-      code: 'MISSING_STATION_CODE',
-      message: 'Inserire il codice stazione prima dell’approvazione.',
-    });
-  }
-
-  const { error } = await supabase
-    .from('stazioni')
-    .insert({
-      nome: dati.nome?.trim() || null,
-      codice: dati.codice?.trim() || null,
-      regione: dati.regione?.trim() || null,
-      provincia: dati.provincia?.trim() || null,
-      maps_query: dati.maps_query?.trim() || null,
-      lat,
-      lng,
-      note: dati.note?.trim() || null,
-      indirizzo: dati.indirizzo?.trim() || null,
-      plus_code: dati.plus_code?.trim() || null,
-      attiva: true,
-    });
-
-  if (error) return dbErr(error.message);
-}
+      // ------ STAZIONE ------
+      if (tipo === 'stazione') {
+        const { error } = await supabase.from('stazioni')
+          .insert({ nome: dati.nome, codice: dati.codice, regione: dati.regione, provincia: dati.provincia,
+                    maps_query: dati.maps_query, lat: dati.lat ?? null, lng: dati.lng ?? null,
+                    note: dati.note, indirizzo: dati.indirizzo ?? null, plus_code: dati.plus_code ?? null,
+                    attiva: true });
+        if (error) return dbErr(error.message);
+      }
 
       // Aggiorna stato contributo → approved
       const { data, error: statoError } = await supabase
@@ -528,6 +373,62 @@ if (tipo === 'stazione') {
       if (!id) return err({ ...ERRORS.MISSING_PAYLOAD, message: 'Campo obbligatorio: id' });
       const { data, error } = await supabase
         .from('contributi').update({ stato: 'rejected' }).eq('id', id).select().single();
+      if (error) return dbErr(error.message);
+      return ok(data);
+    }
+
+
+    // ============================================================
+    // STAZIONI
+    // ============================================================
+
+    if (action === 'getStazioni') {
+      const { data, error } = await supabase
+        .from('stazioni')
+        .select('*')
+        .order('nome', { ascending: true });
+      if (error) return dbErr(error.message);
+      return ok(data ?? []);
+    }
+
+    if (action === 'updateStazione') {
+      const {
+        id, nome, codice, regione, provincia,
+        indirizzo, maps_query, plus_code, lat, lng, note, attiva,
+      } = (payload ?? {}) as any;
+      if (!id) return err({ ...ERRORS.MISSING_PAYLOAD, message: 'Campo obbligatorio: id' });
+      if (!nome?.trim()) return err({ ...ERRORS.MISSING_PAYLOAD, message: 'Campo obbligatorio: nome' });
+      const { data, error } = await supabase
+        .from('stazioni')
+        .update({
+          nome:       nome.trim(),
+          codice:     codice?.trim() || null,
+          regione:    regione?.trim() || null,
+          provincia:  provincia?.trim() || null,
+          indirizzo:  indirizzo?.trim() || null,
+          maps_query: maps_query?.trim() || null,
+          plus_code:  plus_code?.trim() || null,
+          lat:        lat !== undefined && lat !== '' ? Number(lat) : null,
+          lng:        lng !== undefined && lng !== '' ? Number(lng) : null,
+          note:       note?.trim() || null,
+          attiva:     attiva ?? true,
+        })
+        .eq('id', id)
+        .select()
+        .single();
+      if (error) return dbErr(error.message);
+      return ok(data);
+    }
+
+    if (action === 'toggleAttivaStazione') {
+      const { id, attiva } = (payload ?? {}) as { id?: string; attiva?: boolean };
+      if (!id) return err({ ...ERRORS.MISSING_PAYLOAD, message: 'Campo obbligatorio: id' });
+      const { data, error } = await supabase
+        .from('stazioni')
+        .update({ attiva: attiva ?? true })
+        .eq('id', id)
+        .select()
+        .single();
       if (error) return dbErr(error.message);
       return ok(data);
     }
