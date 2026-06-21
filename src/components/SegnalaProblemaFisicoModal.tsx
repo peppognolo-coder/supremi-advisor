@@ -126,6 +126,10 @@ export default function SegnalaProblemaFisicoModal({
         </div>
 
         {/* BODY */}
+        </div>{/* fine drag-handle area */}
+
+        {/* BODY SCROLLABILE — indipendente dal drag */}
+        <div className="overflow-y-auto flex-1">
         <div className="p-5 flex flex-col gap-4">
 
           {/* TIPO PROBLEMA */}
@@ -183,6 +187,7 @@ export default function SegnalaProblemaFisicoModal({
           </p>
 
         </div>
+        </div>{/* fine body scrollabile */}
 
       </div>
     </div>
