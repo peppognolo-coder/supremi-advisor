@@ -16,6 +16,7 @@ import {
   Store,
   AlertCircle,
   AlertTriangle,
+  AlertTriangle,
   Clock,
   CheckCircle,
   FileText,
@@ -32,6 +33,8 @@ import AdminSaletteScreen from './AdminSaletteScreen';
 import AdminContributiScreen from './AdminContributiScreen';
 
 import AdminAttivitaScreen from './AdminAttivitaScreen';
+
+import AdminProblemiSaletteScreen from './AdminProblemiSaletteScreen';
 
 import AdminStazioniScreen from './AdminStazioniScreen';
 
@@ -124,6 +127,11 @@ export default function AdminScreen({ adminPin }: Props) {
   showStazioniManager,
   setShowStazioniManager,
 ] = useState(false);
+
+  const [
+    showProblemiManager,
+    setShowProblemiManager,
+  ] = useState(false);
 
   const [stazioniInitialFiltro, setStazioniInitialFiltro] =
     useState<'tutte' | 'attive' | 'disattivate'>('tutte');
@@ -1152,6 +1160,21 @@ export default function AdminScreen({ adminPin }: Props) {
     );
   }
 
+  if (showProblemiManager) {
+    return (
+      <div className="flex flex-col gap-4">
+        <button
+          onClick={() => setShowProblemiManager(false)}
+          className="self-start flex items-center gap-2 px-3 py-2 rounded-xl bg-white border border-gray-200 text-sm text-gray-700 hover:bg-gray-50"
+        >
+          <ArrowLeft className="w-4 h-4" />
+          Torna dashboard
+        </button>
+        <AdminProblemiSaletteScreen adminPin={adminPin} />
+      </div>
+    );
+  }
+
   if (showStazioniManager) {
 
   return (
@@ -1539,6 +1562,15 @@ export default function AdminScreen({ adminPin }: Props) {
 
             </span>
 
+          </button>
+
+          {/* PROBLEMI SALETTE */}
+          <button
+            onClick={() => setShowProblemiManager(true)}
+            className="flex items-center gap-3 p-3 rounded-xl bg-red-600 text-white hover:opacity-90 transition-opacity"
+          >
+            <AlertTriangle className="w-5 h-5" />
+            <span className="font-medium">Problemi salette</span>
           </button>
 
         </div>
