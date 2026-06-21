@@ -93,6 +93,7 @@ function ConfirmModal({
 // =========================
 
 export default function AdminStazioniScreen({ adminPin }: Props) {
+  console.log('ADMIN PIN', adminPin);
 
   const [loading, setLoading]   = useState(true);
   const [stazioni, setStazioni] = useState<StazioneCompleta[]>([]);
