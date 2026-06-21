@@ -242,3 +242,67 @@ export async function toggleAttivaStazione(
 ): Promise<AdminApiResult<StazioneCompleta>> {
   return call<StazioneCompleta>('toggleAttivaStazione', adminPin, { id, attiva });
 }
+
+// =============================================================
+// SALETTA_PROBLEMI
+// =============================================================
+
+export interface SalettaProblema {
+  id: string;
+  saletta_id: string;
+  tipo_problema: string;
+  note: string | null;
+  stato: 'aperta' | 'in_carico' | 'risolta' | 'archiviata';
+  segnalazioni_count: number;
+  created_at: string;
+  updated_at: string;
+  salette?: {
+    id: string;
+    stazione: string;
+    tipo: string;
+    ubicazione: string | null;
+  };
+}
+
+export const TIPI_PROBLEMA_SALETTA = [
+  'Climatizzazione guasta',
+  'Microonde guasto',
+  'Distributori non funzionanti',
+  'Fontana acqua guasta',
+  'Bagni guasti',
+  'Porta danneggiata',
+  'Finestra danneggiata',
+  'Sedie o tavoli rotti',
+  'Saletta sporca',
+  'Presenza insetti o animali',
+  'Illuminazione guasta',
+  'Altro',
+] as const;
+
+export async function getProblemiSalette(
+  adminPin: string
+): Promise<AdminApiResult<SalettaProblema[]>> {
+  return call<SalettaProblema[]>('getProblemiSalette', adminPin);
+}
+
+export async function segnalaProblema(
+  adminPin: string,
+  saletta_id: string,
+  tipo_problema: string,
+  note?: string
+): Promise<AdminApiResult<SalettaProblema & { _action: 'created' | 'incremented' }>> {
+  // Usa la Function per la logica upsert server-side (incrementa se già esiste)
+  return call<SalettaProblema & { _action: 'created' | 'incremented' }>(
+    'segnalaProblema',
+    adminPin,
+    { saletta_id, tipo_problema, note }
+  );
+}
+
+export async function aggiornaStatoProblema(
+  adminPin: string,
+  id: string,
+  stato: SalettaProblema['stato']
+): Promise<AdminApiResult<SalettaProblema>> {
+  return call<SalettaProblema>('aggiornaStatoProblema', adminPin, { id, stato });
+}
