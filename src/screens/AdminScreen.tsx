@@ -902,14 +902,33 @@ export default function AdminScreen({ adminPin }: Props) {
   // =========================
 
   const statoSistema = useMemo(() => {
-    const voci: { label: string; valore: number }[] = [
-      { label: 'Contributi in attesa',      valore: stats.pending },
-      { label: 'Problemi segnalati salette', valore: verificheStats?.totaleProblemi ?? 0 },
-      { label: 'Problemi segnalati attività',valore: verificheAttivitaStats?.totaleProblemi ?? 0 },
-      { label: 'Stazioni senza attività',    valore: integrita.stazioniSenzaAttivita.length },
-      { label: 'Stazioni senza salette',     valore: integrita.stazioniSenzaSalette.length },
-      { label: 'Salette senza codice',       valore: integrita.saletteSenzaCodice.length },
-      { label: 'Salette senza ubicazione',   valore: integrita.saletteSenzaUbicazione.length },
+    // Solo problemi reali che richiedono intervento
+    type VoceStato = {
+      label: string;
+      valore: number;
+      onClick?: () => void;
+    };
+    const voci: VoceStato[] = [
+      {
+        label: 'Salette senza ubicazione',
+        valore: integrita.saletteSenzaUbicazione.length,
+        onClick: () => apriSaletteConFiltro('__no_ubicazione__'),
+      },
+      {
+        label: 'Stazioni senza coordinate',
+        valore: copertura.senzaCoord.length,
+        onClick: () => apriStazioniConFiltro('tutte', '__no_coord__'),
+      },
+      {
+        label: 'Stazioni senza Maps Query',
+        valore: copertura.senzaMaps.length,
+        onClick: () => apriStazioniConFiltro('tutte', '__no_maps__'),
+      },
+      {
+        label: 'Stazioni senza indirizzo',
+        valore: copertura.senzaIndirizzo.length,
+        onClick: () => apriStazioniConFiltro('tutte', '__no_indirizzo__'),
+      },
     ];
 
     const totaleCriticita = voci.reduce((sum, v) => sum + v.valore, 0);
@@ -920,8 +939,44 @@ export default function AdminScreen({ adminPin }: Props) {
       totaleCriticita <= 10 ? 'attenzione' :
       'critico';
 
-    return { totaleCriticita, voci: vociFiltrate, livello };
-  }, [stats.pending, verificheStats, verificheAttivitaStats, integrita]);
+    // Opportunità di crescita (separate dalle criticità reali)
+    type VoceOpportunita = {
+      label: string;
+      valore: number;
+      onClick?: () => void;
+    };
+    const opportunita: VoceOpportunita[] = [
+      {
+        label: 'Stazioni senza attività',
+        valore: integrita.stazioniSenzaAttivita.length,
+        onClick: () => apriStazioniConFiltro('tutte', '__no_attivita__'),
+      },
+      {
+        label: 'Stazioni senza salette',
+        valore: integrita.stazioniSenzaSalette.length,
+        onClick: () => apriStazioniConFiltro('tutte', '__no_salette__'),
+      },
+      {
+        label: 'Salette senza codice',
+        valore: integrita.saletteSenzaCodice.length,
+        onClick: () => apriSaletteConFiltro('__no_codice__'),
+      },
+      {
+        label: 'Attività senza note',
+        valore: qualita.senzaNote.length,
+        onClick: () => { apriModificaDaQualita && setShowAttivitaManager(true); },
+      },
+      {
+        label: 'Stazioni senza Plus Code',
+        valore: stazioniAll.filter((s: any) => !s.plus_code?.trim()).length,
+        onClick: () => apriStazioniConFiltro('tutte', '__no_pluscode__'),
+      },
+    ];
+
+    const totaleOpportunita = opportunita.reduce((sum, v) => sum + v.valore, 0);
+
+    return { totaleCriticita, voci: vociFiltrate, livello, opportunita, totaleOpportunita };
+  }, [integrita, copertura, qualita, stazioniAll, stats.pending, verificheStats, verificheAttivitaStats]);
 
   // =========================
   // COMMUNITY & CRESCITA (memo)
@@ -1209,14 +1264,23 @@ export default function AdminScreen({ adminPin }: Props) {
               )}
             </div>
 
-            {/* RIEPILOGO CRITICITÀ */}
+            {/* RIEPILOGO CRITICITÀ — righe cliccabili */}
             {statoSistema.voci.length > 0 && (
               <div className="flex flex-col gap-1.5">
                 {statoSistema.voci.map((v) => (
-                  <div key={v.label} className="flex items-center justify-between text-sm">
-                    <span className={`${
+                  <button
+                    key={v.label}
+                    type="button"
+                    onClick={v.onClick}
+                    className={`flex items-center justify-between text-sm w-full px-3 py-2 rounded-xl transition-colors ${
+                      statoSistema.livello === 'attenzione'
+                        ? 'hover:bg-amber-100'
+                        : 'hover:bg-red-100'
+                    }`}
+                  >
+                    <span className={
                       statoSistema.livello === 'attenzione' ? 'text-amber-700' : 'text-red-700'
-                    }`}>
+                    }>
                       {v.label}
                     </span>
                     <span className={`font-bold tabular-nums ${
@@ -1224,7 +1288,7 @@ export default function AdminScreen({ adminPin }: Props) {
                     }`}>
                       {v.valore}
                     </span>
-                  </div>
+                  </button>
                 ))}
               </div>
             )}
@@ -1233,6 +1297,54 @@ export default function AdminScreen({ adminPin }: Props) {
               <p className="text-sm text-emerald-700">
                 Nessuna criticità rilevata. Tutti i dati sono completi e aggiornati.
               </p>
+            )}
+
+          </div>
+        )}
+
+        {/* OPPORTUNITÀ DI CRESCITA */}
+        {!loading && (
+          <div className="bg-white rounded-2xl border border-emerald-100 p-4 shadow-sm flex flex-col gap-3">
+
+            {/* HEADER */}
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <span className="text-xl">🌱</span>
+                <span className="font-bold text-base text-emerald-800">
+                  Opportunità di crescita
+                </span>
+              </div>
+              {statoSistema.totaleOpportunita > 0 && (
+                <span className="text-sm font-bold px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-800">
+                  {statoSistema.totaleOpportunita} voci
+                </span>
+              )}
+            </div>
+
+            {statoSistema.totaleOpportunita === 0 ? (
+              <p className="text-sm text-emerald-700">
+                Ottimo! Nessuna opportunità di crescita rilevata.
+              </p>
+            ) : (
+              <div className="flex flex-col gap-1.5">
+                {statoSistema.opportunita.map((v) => (
+                  <button
+                    key={v.label}
+                    type="button"
+                    onClick={v.onClick}
+                    className={`flex items-center justify-between text-sm w-full px-3 py-2 rounded-xl transition-colors hover:bg-emerald-50 ${
+                      v.valore === 0 ? 'opacity-40' : ''
+                    }`}
+                  >
+                    <span className="text-gray-600">{v.label}</span>
+                    <span className={`font-bold tabular-nums ${
+                      v.valore === 0 ? 'text-gray-400' : 'text-emerald-700'
+                    }`}>
+                      {v.valore}
+                    </span>
+                  </button>
+                ))}
+              </div>
             )}
 
           </div>
