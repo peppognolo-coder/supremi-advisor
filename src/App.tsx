@@ -142,9 +142,9 @@ export default function App() {
   const directionLocked = useRef(false); // true = gesto confermato verticale
 
   // Soglia minima px verso il basso per attivare il refresh
-  const PULL_THRESHOLD = 100;
+  const PULL_THRESHOLD = 180; // px — soglia alta per evitare refresh accidentali
   // Quanti px percorrere prima di decidere se il gesto è verticale o orizzontale
-  const DIRECTION_LOCK_PX = 10;
+  const DIRECTION_LOCK_PX = 20; // px prima di decidere la direzione del gesto
 
   useEffect(() => {
 
@@ -186,6 +186,13 @@ export default function App() {
         }
 
         directionLocked.current = true;
+      }
+
+      // Annulla se durante il gesto la pagina ha scrollato (momentum scroll / bounce)
+      if (window.scrollY > 5) {
+        pulling.current         = false;
+        directionLocked.current = false;
+        return;
       }
 
       touchEndY.current = currentY;
