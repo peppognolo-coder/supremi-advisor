@@ -24,7 +24,11 @@ type Action =
   // STAZIONI
   | 'getStazioni'
   | 'updateStazione'
-  | 'toggleAttivaStazione';
+  | 'toggleAttivaStazione'
+  // SALETTA_PROBLEMI
+  | 'getProblemiSalette'
+  | 'segnalaProblema'
+  | 'aggiornaStatoProblema';
 
 interface RequestBody {
   action: Action;
@@ -426,6 +430,86 @@ export const handler: Handler = async (event: HandlerEvent) => {
       const { data, error } = await supabase
         .from('stazioni')
         .update({ attiva: attiva ?? true })
+        .eq('id', id)
+        .select()
+        .single();
+      if (error) return dbErr(error.message);
+      return ok(data);
+    }
+
+
+    // ============================================================
+    // SALETTA_PROBLEMI
+    // ============================================================
+
+    if (action === 'getProblemiSalette') {
+      // Carica tutti i problemi con join salette per avere stazione e tipo
+      const { data, error } = await supabase
+        .from('saletta_problemi')
+        .select('*, salette(id, stazione, tipo, ubicazione)')
+        .order('updated_at', { ascending: false });
+      if (error) return dbErr(error.message);
+      return ok(data ?? []);
+    }
+
+    if (action === 'segnalaProblema') {
+      // Upsert: se esiste già un problema aperto della stessa saletta e tipo,
+      // incrementa segnalazioni_count e aggiorna updated_at
+      const { saletta_id, tipo_problema, note } =
+        (payload ?? {}) as { saletta_id?: string; tipo_problema?: string; note?: string };
+
+      if (!saletta_id)    return err({ ...ERRORS.MISSING_PAYLOAD, message: 'Campo obbligatorio: saletta_id' });
+      if (!tipo_problema) return err({ ...ERRORS.MISSING_PAYLOAD, message: 'Campo obbligatorio: tipo_problema' });
+
+      // Cerca problema aperto esistente
+      const { data: existing } = await supabase
+        .from('saletta_problemi')
+        .select('id, segnalazioni_count')
+        .eq('saletta_id', saletta_id)
+        .eq('tipo_problema', tipo_problema)
+        .eq('stato', 'aperta')
+        .maybeSingle();
+
+      if (existing) {
+        // Incrementa contatore
+        const { data, error } = await supabase
+          .from('saletta_problemi')
+          .update({
+            segnalazioni_count: existing.segnalazioni_count + 1,
+            note: note ?? existing.note ?? null,
+          })
+          .eq('id', existing.id)
+          .select()
+          .single();
+        if (error) return dbErr(error.message);
+        return ok({ ...data, _action: 'incremented' });
+      } else {
+        // Crea nuovo problema
+        const { data, error } = await supabase
+          .from('saletta_problemi')
+          .insert({ saletta_id, tipo_problema, note: note ?? null, stato: 'aperta', segnalazioni_count: 1 })
+          .select()
+          .single();
+        if (error) return dbErr(error.message);
+        return ok({ ...data, _action: 'created' });
+      }
+    }
+
+    if (action === 'aggiornaStatoProblema') {
+      const { id, stato } =
+        (payload ?? {}) as { id?: string; stato?: string };
+
+      if (!id)    return err({ ...ERRORS.MISSING_PAYLOAD, message: 'Campo obbligatorio: id' });
+      if (!stato) return err({ ...ERRORS.MISSING_PAYLOAD, message: 'Campo obbligatorio: stato' });
+
+      const validStati = ['aperta', 'in_carico', 'risolta', 'archiviata'];
+      if (!validStati.includes(stato)) {
+        return err({ ...ERRORS.MISSING_PAYLOAD, message: `Stato non valido: ${stato}` });
+      }
+
+      const { data, error } = await supabase
+        .from('saletta_problemi')
+        .update({ stato })
         .eq('id', id)
         .select()
         .single();
