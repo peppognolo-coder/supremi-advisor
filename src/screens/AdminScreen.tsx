@@ -879,6 +879,32 @@ export default function AdminScreen({ adminPin }: Props) {
   }, [stazioniAll, attivitaAll, saletteAll]);
 
   // =========================
+  // STATO SISTEMA (memo)
+  // =========================
+
+  const statoSistema = useMemo(() => {
+    const voci: { label: string; valore: number }[] = [
+      { label: 'Contributi in attesa',      valore: stats.pending },
+      { label: 'Problemi segnalati salette', valore: verificheStats?.totaleProblemi ?? 0 },
+      { label: 'Problemi segnalati attività',valore: verificheAttivitaStats?.totaleProblemi ?? 0 },
+      { label: 'Stazioni senza attività',    valore: integrita.stazioniSenzaAttivita.length },
+      { label: 'Stazioni senza salette',     valore: integrita.stazioniSenzaSalette.length },
+      { label: 'Salette senza codice',       valore: integrita.saletteSenzaCodice.length },
+      { label: 'Salette senza ubicazione',   valore: integrita.saletteSenzaUbicazione.length },
+    ];
+
+    const totaleCriticita = voci.reduce((sum, v) => sum + v.valore, 0);
+    const vociFiltrate = voci.filter((v) => v.valore > 0);
+
+    const livello: 'ok' | 'attenzione' | 'critico' =
+      totaleCriticita === 0 ? 'ok' :
+      totaleCriticita <= 10 ? 'attenzione' :
+      'critico';
+
+    return { totaleCriticita, voci: vociFiltrate, livello };
+  }, [stats.pending, verificheStats, verificheAttivitaStats, integrita]);
+
+  // =========================
   // HELPERS QUALITÀ
   // =========================
 
@@ -1076,6 +1102,76 @@ export default function AdminScreen({ adminPin }: Props) {
           <div className="text-sm text-gray-500">
 
             Caricamento...
+
+          </div>
+        )}
+
+        {/* STATO SISTEMA */}
+        {!loading && (
+          <div className={`rounded-2xl border p-4 shadow-sm flex flex-col gap-3 ${
+            statoSistema.livello === 'ok'
+              ? 'bg-emerald-50 border-emerald-200'
+              : statoSistema.livello === 'attenzione'
+              ? 'bg-amber-50 border-amber-200'
+              : 'bg-red-50 border-red-200'
+          }`}>
+
+            {/* HEADER */}
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <span className="text-xl">
+                  {statoSistema.livello === 'ok' ? '🟢' : statoSistema.livello === 'attenzione' ? '🟠' : '🔴'}
+                </span>
+                <span className={`font-bold text-base ${
+                  statoSistema.livello === 'ok'
+                    ? 'text-emerald-800'
+                    : statoSistema.livello === 'attenzione'
+                    ? 'text-amber-800'
+                    : 'text-red-800'
+                }`}>
+                  {statoSistema.livello === 'ok'
+                    ? 'Sistema in salute'
+                    : statoSistema.livello === 'attenzione'
+                    ? 'Attenzione richiesta'
+                    : 'Intervento necessario'}
+                </span>
+              </div>
+              {statoSistema.totaleCriticita > 0 && (
+                <span className={`text-sm font-bold px-2.5 py-1 rounded-full ${
+                  statoSistema.livello === 'attenzione'
+                    ? 'bg-amber-200 text-amber-800'
+                    : 'bg-red-200 text-red-800'
+                }`}>
+                  {statoSistema.totaleCriticita} criticità
+                </span>
+              )}
+            </div>
+
+            {/* RIEPILOGO CRITICITÀ */}
+            {statoSistema.voci.length > 0 && (
+              <div className="flex flex-col gap-1.5">
+                {statoSistema.voci.map((v) => (
+                  <div key={v.label} className="flex items-center justify-between text-sm">
+                    <span className={`${
+                      statoSistema.livello === 'attenzione' ? 'text-amber-700' : 'text-red-700'
+                    }`}>
+                      {v.label}
+                    </span>
+                    <span className={`font-bold tabular-nums ${
+                      statoSistema.livello === 'attenzione' ? 'text-amber-800' : 'text-red-800'
+                    }`}>
+                      {v.valore}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {statoSistema.livello === 'ok' && (
+              <p className="text-sm text-emerald-700">
+                Nessuna criticità rilevata. Tutti i dati sono completi e aggiornati.
+              </p>
+            )}
 
           </div>
         )}
