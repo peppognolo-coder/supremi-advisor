@@ -155,7 +155,7 @@ export default function SegnalazioneModal({
             onChange={(e) =>
               setTipo(e.target.value)
             }
-            className="border border-gray-200 rounded-2xl px-4 py-3 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-trenord-green/30 focus:border-trenord-green"
+            className="border border-gray-200 rounded-2xl px-4 py-3 text-base bg-white focus:outline-none focus:ring-2 focus:ring-trenord-green/30 focus:border-trenord-green"
           >
 
             <option value="climatizzata">
@@ -224,7 +224,7 @@ export default function SegnalazioneModal({
                 setValore(e.target.value)
               }
               placeholder="Inserisci informazione"
-              className="border border-gray-200 rounded-2xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-trenord-green/30 focus:border-trenord-green"
+              className="border border-gray-200 rounded-2xl px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-trenord-green/30 focus:border-trenord-green"
             />
 
           </div>
@@ -245,7 +245,7 @@ export default function SegnalazioneModal({
               setNota(e.target.value)
             }
             placeholder="Informazioni opzionali"
-            className="border border-gray-200 rounded-2xl px-4 py-3 text-sm min-h-[110px] resize-none focus:outline-none focus:ring-2 focus:ring-trenord-green/30 focus:border-trenord-green"
+            className="border border-gray-200 rounded-2xl px-4 py-3 text-base min-h-[110px] resize-none focus:outline-none focus:ring-2 focus:ring-trenord-green/30 focus:border-trenord-green"
           />
 
         </div>
