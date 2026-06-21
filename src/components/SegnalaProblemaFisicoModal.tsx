@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { useScrollLock } from '../lib/useScrollLock';
 
 import { X, AlertTriangle } from 'lucide-react';
 
@@ -10,6 +9,8 @@ import { supabase } from '../lib/supabase';
 import { TIPI_PROBLEMA_SALETTA } from '../lib/adminApi';
 
 import { useSwipeDown } from '../lib/useSwipeDown';
+
+import { useScrollLock } from '../lib/useScrollLock';
 
 // =========================
 // PROPS
@@ -30,12 +31,14 @@ export default function SegnalaProblemaFisicoModal({
   salettaNome,
   onClose,
 }: Props) {
-  const { panelRef, dragStyle, handleDragStart } = useSwipeDown({ onClose: onClose });
+
   useScrollLock();
 
+  // Swipe-down applicato SOLO all'handle, non al body scrollabile
+  const { panelRef, dragStyle, handleDragStart } = useSwipeDown({ onClose });
 
   const [tipoSelezionato, setTipoSelezionato] = useState('');
-  const [note, setNote]     = useState('');
+  const [note, setNote]       = useState('');
   const [loading, setLoading] = useState(false);
 
   async function submit() {
@@ -47,7 +50,6 @@ export default function SegnalaProblemaFisicoModal({
     setLoading(true);
 
     try {
-      // Cerca problema aperto della stessa saletta e tipo
       const { data: existing } = await supabase
         .from('saletta_problemi')
         .select('id, segnalazioni_count')
@@ -57,7 +59,6 @@ export default function SegnalaProblemaFisicoModal({
         .maybeSingle();
 
       if (existing) {
-        // Incrementa segnalazioni_count
         const { error } = await supabase
           .from('saletta_problemi')
           .update({
@@ -69,14 +70,13 @@ export default function SegnalaProblemaFisicoModal({
         if (error) throw error;
         toast.success('Grazie! La tua segnalazione si aggiunge alle precedenti.');
       } else {
-        // Crea nuovo problema
         const { error } = await supabase
           .from('saletta_problemi')
           .insert({
-            saletta_id:      salettaId,
-            tipo_problema:   tipoSelezionato,
-            note:            note.trim() || null,
-            stato:           'aperta',
+            saletta_id:         salettaId,
+            tipo_problema:      tipoSelezionato,
+            note:               note.trim() || null,
+            stato:              'aperta',
             segnalazioni_count: 1,
           });
 
@@ -98,96 +98,111 @@ export default function SegnalaProblemaFisicoModal({
       className="fixed inset-0 bg-black/40 z-[9999] flex items-end sm:items-center justify-center p-0 sm:p-4"
       onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
     >
-      <div ref={panelRef} style={dragStyle} onTouchStart={handleDragStart} className="bg-white rounded-t-3xl sm:rounded-3xl w-full sm:max-w-md flex flex-col gap-0 max-h-[90vh] overflow-y-auto">
-          {/* DRAG INDICATOR */}
-          <div className="flex justify-center pt-3 pb-1 cursor-grab active:cursor-grabbing flex-shrink-0">
+      {/*
+        PANNELLO: overflow-hidden + flex-col
+        Il drag-handle in cima attiva lo swipe-down.
+        Il body sotto scorre liberamente con overflow-y-auto.
+      */}
+      <div
+        ref={panelRef}
+        style={dragStyle}
+        className="bg-white rounded-t-3xl sm:rounded-3xl w-full sm:max-w-md flex flex-col max-h-[90vh] overflow-hidden"
+      >
+
+        {/* ── DRAG HANDLE (attiva swipe-down) ── */}
+        <div
+          onTouchStart={handleDragStart}
+          className="flex-shrink-0 cursor-grab active:cursor-grabbing"
+        >
+          {/* Pill indicatore */}
+          <div className="flex justify-center pt-3 pb-1">
             <div className="w-10 h-1 rounded-full bg-gray-200" />
           </div>
 
-        {/* HEADER */}
-        <div className="flex items-center justify-between p-5 pb-4 border-b border-gray-100">
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-red-100 flex items-center justify-center">
-              <AlertTriangle className="w-5 h-5 text-red-600" />
+          {/* Header */}
+          <div className="flex items-center justify-between px-5 pb-4 pt-2 border-b border-gray-100">
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 rounded-xl bg-red-100 flex items-center justify-center">
+                <AlertTriangle className="w-5 h-5 text-red-600" />
+              </div>
+              <div>
+                <h2 className="font-bold text-gray-900">Segnala guasto</h2>
+                {salettaNome && (
+                  <p className="text-xs text-gray-500 mt-0.5">{salettaNome}</p>
+                )}
+              </div>
             </div>
-            <div>
-              <h2 className="font-bold text-gray-900">Segnala problema</h2>
-              {salettaNome && (
-                <p className="text-xs text-gray-500 mt-0.5">{salettaNome}</p>
-              )}
-            </div>
+            <button
+              onClick={onClose}
+              className="w-8 h-8 rounded-full hover:bg-gray-100 flex items-center justify-center"
+            >
+              <X className="w-4 h-4 text-gray-400" />
+            </button>
           </div>
-          <button
-            onClick={onClose}
-            className="w-8 h-8 rounded-full hover:bg-gray-100 flex items-center justify-center"
-          >
-            <X className="w-4 h-4 text-gray-400" />
-          </button>
         </div>
+        {/* ── FINE DRAG HANDLE ── */}
 
-        {/* BODY */}
-        </div>{/* fine drag-handle area */}
-
-        {/* BODY SCROLLABILE — indipendente dal drag */}
+        {/* ── BODY SCROLLABILE (indipendente dal drag) ── */}
         <div className="overflow-y-auto flex-1">
-        <div className="p-5 flex flex-col gap-4">
+          <div className="p-5 flex flex-col gap-4">
 
-          {/* TIPO PROBLEMA */}
-          <div className="flex flex-col gap-2">
-            <label className="text-xs font-semibold text-gray-400 uppercase tracking-wide">
-              Tipo di problema *
-            </label>
+            {/* TIPO PROBLEMA */}
             <div className="flex flex-col gap-2">
-              {TIPI_PROBLEMA_SALETTA.map((tipo) => (
-                <button
-                  key={tipo}
-                  type="button"
-                  onClick={() => setTipoSelezionato(tipo)}
-                  className={`text-left px-4 py-3 rounded-xl border text-sm font-medium transition-colors ${
-                    tipoSelezionato === tipo
-                      ? 'bg-red-600 text-white border-red-600'
-                      : 'bg-white text-gray-700 border-gray-200 hover:border-red-300 hover:bg-red-50'
-                  }`}
-                >
-                  {tipo}
-                </button>
-              ))}
+              <label className="text-xs font-semibold text-gray-400 uppercase tracking-wide">
+                Tipo di problema *
+              </label>
+              <div className="flex flex-col gap-2">
+                {TIPI_PROBLEMA_SALETTA.map((tipo) => (
+                  <button
+                    key={tipo}
+                    type="button"
+                    onClick={() => setTipoSelezionato(tipo)}
+                    className={`text-left px-4 py-3 rounded-xl border text-base font-medium transition-colors ${
+                      tipoSelezionato === tipo
+                        ? 'bg-red-600 text-white border-red-600'
+                        : 'bg-white text-gray-700 border-gray-200 hover:border-red-300 hover:bg-red-50'
+                    }`}
+                  >
+                    {tipo}
+                  </button>
+                ))}
+              </div>
             </div>
+
+            {/* NOTE */}
+            <div className="flex flex-col gap-2">
+              <label className="text-xs font-semibold text-gray-400 uppercase tracking-wide">
+                Note aggiuntive (opzionale)
+              </label>
+              <textarea
+                value={note}
+                onChange={(e) => setNote(e.target.value)}
+                rows={3}
+                placeholder="Descrivi il problema in modo più dettagliato..."
+                className="border border-gray-200 rounded-xl px-3 py-2 text-base resize-none"
+              />
+            </div>
+
+            {/* SUBMIT */}
+            <button
+              type="button"
+              onClick={submit}
+              disabled={loading || !tipoSelezionato}
+              className="flex items-center justify-center gap-2 w-full py-3 rounded-xl bg-red-600 text-white font-medium text-base hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed transition-opacity"
+            >
+              {loading && (
+                <span className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />
+              )}
+              {loading ? 'Invio...' : '🚨 Segnala guasto'}
+            </button>
+
+            <p className="text-xs text-gray-400 text-center">
+              La segnalazione viene inviata al team di manutenzione Trenord.
+            </p>
+
           </div>
-
-          {/* NOTE */}
-          <div className="flex flex-col gap-2">
-            <label className="text-xs font-semibold text-gray-400 uppercase tracking-wide">
-              Note aggiuntive (opzionale)
-            </label>
-            <textarea
-              value={note}
-              onChange={(e) => setNote(e.target.value)}
-              rows={3}
-              placeholder="Descrivi il problema in modo più dettagliato..."
-              className="border border-gray-200 rounded-xl px-3 py-2 text-base resize-none"
-            />
-          </div>
-
-          {/* SUBMIT */}
-          <button
-            type="button"
-            onClick={submit}
-            disabled={loading || !tipoSelezionato}
-            className="flex items-center justify-center gap-2 w-full py-3 rounded-xl bg-red-600 text-white font-medium text-sm hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed transition-opacity"
-          >
-            {loading && (
-              <span className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />
-            )}
-            {loading ? 'Invio...' : '🚨 Segnala problema'}
-          </button>
-
-          <p className="text-xs text-gray-400 text-center">
-            La segnalazione viene inviata al team di manutenzione Trenord.
-          </p>
-
         </div>
-        </div>{/* fine body scrollabile */}
+        {/* ── FINE BODY SCROLLABILE ── */}
 
       </div>
     </div>
