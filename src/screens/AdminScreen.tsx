@@ -140,6 +140,14 @@ export default function AdminScreen({ adminPin }: Props) {
     setShowStazioniManager(true);
   }
 
+  const [saletteInitialFiltro, setSaletteInitialFiltro] =
+    useState<string>('');
+
+  function apriSaletteConFiltro(filtroQualita: string = '') {
+    setSaletteInitialFiltro(filtroQualita);
+    setShowSaletteManager(true);
+  }
+
   // id da aprire direttamente nel modal modifica
   const [
     editAttivitaId,
@@ -190,6 +198,18 @@ export default function AdminScreen({ adminPin }: Props) {
 
   const [stazioniAll, setStazioniAll] =
     useState<StazioneQualita[]>([]);
+
+  interface SalettaQualita {
+    id: string;
+    stazione: string;
+    stazione_id?: string;
+    tipo: string;
+    codice_accesso: string | null;
+    ubicazione: string | null;
+  }
+
+  const [saletteAll, setSaletteAll] =
+    useState<SalettaQualita[]>([]);
 
   // =========================
   // VERIFICHE STATS
@@ -374,14 +394,14 @@ export default function AdminScreen({ adminPin }: Props) {
 
     setLoading(true);
 
-    // SALETTE
+    // SALETTE (count + dati completi per integrità)
     const {
       count: saletteCount,
+      data: saletteData,
     } = await supabase
       .from('salette')
-      .select('*', {
+      .select('id,stazione,tipo,codice_accesso,ubicazione', {
         count: 'exact',
-        head: true,
       });
 
     // STAZIONI (per nomi)
@@ -450,6 +470,7 @@ export default function AdminScreen({ adminPin }: Props) {
     }
 
     setStazioniAll(stazioniNomiData ?? []);
+    setSaletteAll(saletteData ?? []);
 
     setStats({
       salette: saletteCount ?? 0,
@@ -823,6 +844,41 @@ export default function AdminScreen({ adminPin }: Props) {
   }, [stazioniAll]);
 
   // =========================
+  // INTEGRITÀ DATABASE (memo)
+  // =========================
+
+  const integrita = useMemo(() => {
+    // Set di stazione_id con almeno un'attività attiva
+    const stazioniConAttivita = new Set(
+      attivitaAll.filter((a) => a.is_active).map((a) => a.stazione_id)
+    );
+    // Set di stazione con almeno una saletta (usa campo 'stazione' testo)
+    const stazioniConSalette = new Set(
+      saletteAll.map((s) => s.stazione?.toLowerCase().trim())
+    );
+
+    const stazioniSenzaAttivita = stazioniAll.filter(
+      (s) => s.attiva && !stazioniConAttivita.has(s.id)
+    );
+    const stazioniSenzaSalette = stazioniAll.filter(
+      (s) => s.attiva && !stazioniConSalette.has(s.nome?.toLowerCase().trim())
+    );
+    const saletteSenzaUbicazione = saletteAll.filter(
+      (s) => !s.ubicazione?.trim()
+    );
+    const saletteSenzaCodice = saletteAll.filter(
+      (s) => !s.codice_accesso?.trim()
+    );
+
+    return {
+      stazioniSenzaAttivita,
+      stazioniSenzaSalette,
+      saletteSenzaUbicazione,
+      saletteSenzaCodice,
+    };
+  }, [stazioniAll, attivitaAll, saletteAll]);
+
+  // =========================
   // HELPERS QUALITÀ
   // =========================
 
@@ -944,7 +1000,10 @@ export default function AdminScreen({ adminPin }: Props) {
 
         </button>
 
-        <AdminSaletteScreen adminPin={adminPin} />
+        <AdminSaletteScreen
+          adminPin={adminPin}
+          initialFiltroQualita={saletteInitialFiltro}
+        />
 
       </div>
     );
@@ -970,6 +1029,8 @@ export default function AdminScreen({ adminPin }: Props) {
         adminPin={adminPin}
         initialFiltro={stazioniInitialFiltro}
         initialSearchQualita={stazioniInitialSearchQualita}
+        stazioniConAttivita={new Set(attivitaAll.filter((a) => a.is_active).map((a) => a.stazione_id))}
+        stazioniConSalette={new Set(saletteAll.map((s) => s.stazione?.toLowerCase().trim()))}
       />
 
     </div>
@@ -1350,6 +1411,103 @@ export default function AdminScreen({ adminPin }: Props) {
                   </span>
                 </button>
               ))}
+            </div>
+
+          </div>
+        )}
+
+        {/* ========================= */}
+        {/* INTEGRITÀ DATABASE        */}
+        {/* ========================= */}
+
+        {!loading && (
+          <div className="bg-white rounded-2xl border border-gray-100 p-4 shadow-sm flex flex-col gap-4">
+
+            <div>
+              <h2 className="font-semibold text-gray-900">🔍 Integrità database</h2>
+              <p className="text-xs text-gray-400 mt-0.5">
+                Relazioni mancanti tra stazioni, salette e attività
+              </p>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+
+              {/* STAZIONI SENZA ATTIVITÀ */}
+              <button
+                type="button"
+                onClick={() => apriStazioniConFiltro('tutte', '__no_attivita__')}
+                className={`rounded-2xl border p-4 text-left shadow-sm transition-colors ${
+                  integrita.stazioniSenzaAttivita.length === 0
+                    ? 'border-emerald-100 bg-emerald-50 hover:border-emerald-300'
+                    : 'border-red-100 bg-white hover:border-red-300'
+                }`}
+              >
+                <div className="flex items-center justify-between">
+                  <Store className={`w-5 h-5 ${integrita.stazioniSenzaAttivita.length === 0 ? 'text-emerald-500' : 'text-red-500'}`} />
+                  <span className={`text-2xl font-bold ${integrita.stazioniSenzaAttivita.length === 0 ? 'text-emerald-700' : 'text-red-600'}`}>
+                    {integrita.stazioniSenzaAttivita.length}
+                  </span>
+                </div>
+                <p className="text-xs text-gray-500 mt-3 uppercase tracking-wide">Stazioni senza attività</p>
+              </button>
+
+              {/* STAZIONI SENZA SALETTE */}
+              <button
+                type="button"
+                onClick={() => apriStazioniConFiltro('tutte', '__no_salette__')}
+                className={`rounded-2xl border p-4 text-left shadow-sm transition-colors ${
+                  integrita.stazioniSenzaSalette.length === 0
+                    ? 'border-emerald-100 bg-emerald-50 hover:border-emerald-300'
+                    : 'border-amber-100 bg-white hover:border-amber-300'
+                }`}
+              >
+                <div className="flex items-center justify-between">
+                  <Building2 className={`w-5 h-5 ${integrita.stazioniSenzaSalette.length === 0 ? 'text-emerald-500' : 'text-amber-500'}`} />
+                  <span className={`text-2xl font-bold ${integrita.stazioniSenzaSalette.length === 0 ? 'text-emerald-700' : 'text-amber-600'}`}>
+                    {integrita.stazioniSenzaSalette.length}
+                  </span>
+                </div>
+                <p className="text-xs text-gray-500 mt-3 uppercase tracking-wide">Stazioni senza salette</p>
+              </button>
+
+              {/* SALETTE SENZA UBICAZIONE */}
+              <button
+                type="button"
+                onClick={() => apriSaletteConFiltro('__no_ubicazione__')}
+                className={`rounded-2xl border p-4 text-left shadow-sm transition-colors ${
+                  integrita.saletteSenzaUbicazione.length === 0
+                    ? 'border-emerald-100 bg-emerald-50 hover:border-emerald-300'
+                    : 'border-red-100 bg-white hover:border-red-300'
+                }`}
+              >
+                <div className="flex items-center justify-between">
+                  <MapPin className={`w-5 h-5 ${integrita.saletteSenzaUbicazione.length === 0 ? 'text-emerald-500' : 'text-red-500'}`} />
+                  <span className={`text-2xl font-bold ${integrita.saletteSenzaUbicazione.length === 0 ? 'text-emerald-700' : 'text-red-600'}`}>
+                    {integrita.saletteSenzaUbicazione.length}
+                  </span>
+                </div>
+                <p className="text-xs text-gray-500 mt-3 uppercase tracking-wide">Salette senza ubicazione</p>
+              </button>
+
+              {/* SALETTE SENZA CODICE */}
+              <button
+                type="button"
+                onClick={() => apriSaletteConFiltro('__no_codice__')}
+                className={`rounded-2xl border p-4 text-left shadow-sm transition-colors ${
+                  integrita.saletteSenzaCodice.length === 0
+                    ? 'border-emerald-100 bg-emerald-50 hover:border-emerald-300'
+                    : 'border-amber-100 bg-white hover:border-amber-300'
+                }`}
+              >
+                <div className="flex items-center justify-between">
+                  <ShieldCheck className={`w-5 h-5 ${integrita.saletteSenzaCodice.length === 0 ? 'text-emerald-500' : 'text-amber-500'}`} />
+                  <span className={`text-2xl font-bold ${integrita.saletteSenzaCodice.length === 0 ? 'text-emerald-700' : 'text-amber-600'}`}>
+                    {integrita.saletteSenzaCodice.length}
+                  </span>
+                </div>
+                <p className="text-xs text-gray-500 mt-3 uppercase tracking-wide">Salette senza codice</p>
+              </button>
+
             </div>
 
           </div>
