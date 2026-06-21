@@ -9,11 +9,15 @@ import {
   Plus,
   X,
   MessageSquarePlus,
+  X,
 } from 'lucide-react';
 
 import toast from 'react-hot-toast';
 
 import { supabase } from '../lib/supabase';
+
+import { useSwipeDown } from '../lib/useSwipeDown';
+import { useScrollLock } from '../lib/useScrollLock';
 
 import { getDeviceId } from '../lib/device';
 
@@ -1048,6 +1052,60 @@ export default function StazioniScreen({
     );
   }
 
+  // ─── Componente inner: sheet attività con scroll lock e swipe-down ───────
+  function AttivitaSheet({
+    onClose,
+    children,
+  }: {
+    onClose: () => void;
+    children: React.ReactNode;
+  }) {
+    useScrollLock();
+    const { panelRef, dragStyle, handleDragStart } = useSwipeDown({ onClose });
+
+    return (
+      <div
+        className="fixed inset-0 bg-black/40 z-[9999] flex items-end"
+        onClick={onClose}
+      >
+        <div
+          ref={panelRef}
+          style={dragStyle}
+          className="bg-white w-full rounded-t-3xl flex flex-col max-h-[85vh] overflow-hidden"
+          onClick={(e) => e.stopPropagation()}
+        >
+          {/* DRAG HANDLE */}
+          <div
+            onTouchStart={handleDragStart}
+            className="flex-shrink-0 cursor-grab active:cursor-grabbing"
+          >
+            <div className="flex justify-center pt-3 pb-0">
+              <div className="w-10 h-1 rounded-full bg-gray-200" />
+            </div>
+            {/* HEADER con X */}
+            <div className="flex items-center justify-between px-6 pt-4 pb-3 border-b border-gray-100">
+              <h2 className="text-lg font-bold text-gray-900 truncate pr-4">
+                {selectedAttivita?.nome}
+              </h2>
+              <button
+                type="button"
+                onClick={onClose}
+                className="flex-shrink-0 w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center hover:bg-gray-200"
+              >
+                <X className="w-4 h-4 text-gray-500" />
+              </button>
+            </div>
+          </div>
+          {/* BODY SCROLLABILE */}
+          <div className="overflow-y-auto flex-1 px-6 pb-8 pt-4">
+            {children}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+
   return (
 
     <>
@@ -1224,52 +1282,9 @@ export default function StazioniScreen({
 
       {/* DETTAGLIO ATTIVITA */}
       {selectedAttivita && (
-
-        <div
-          className="
-            fixed
-            inset-0
-            bg-black/40
-            z-50
-            flex
-            items-end
-          "
-          onClick={() =>
-            setSelectedAttivita(null)
-          }
+        <AttivitaSheet
+          onClose={() => setSelectedAttivita(null)}
         >
-
-          <div
-            className="
-              bg-white
-              w-full
-              rounded-t-3xl
-              p-6
-              pb-32
-              max-h-[80vh]
-              overflow-y-auto
-            "
-            onClick={(e) =>
-              e.stopPropagation()
-            }
-          >
-
-            <div
-              className="
-                w-12
-                h-1.5
-                bg-gray-300
-                rounded-full
-                mx-auto
-                mb-5
-              "
-            />
-
-            <h2 className="text-xl font-bold">
-
-              {selectedAttivita.nome}
-
-            </h2>
 
             <p className="text-gray-500 mb-3">
 
@@ -1555,28 +1570,7 @@ export default function StazioniScreen({
               </div>
             )}
 
-            <button
-              onClick={() =>
-                setSelectedAttivita(null)
-              }
-              className="
-                mt-4
-                w-full
-                h-11
-                rounded-xl
-                bg-trenord-green
-                text-white
-                font-medium
-              "
-            >
-
-              Chiudi
-
-            </button>
-
-          </div>
-
-        </div>
+        </AttivitaSheet>
       )}
 
     </>
