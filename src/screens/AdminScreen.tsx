@@ -120,6 +120,11 @@ export default function AdminScreen({ adminPin }: Props) {
     setShowAttivitaManager,
   ] = useState(false);
 
+  const [
+  showStazioniManager,
+  setShowStazioniManager,
+] = useState(false);
+
   // id da aprire direttamente nel modal modifica
   const [
     editAttivitaId,
