@@ -129,7 +129,7 @@ export default function SegnalaProblemaModal({
 
   return (
 
-    <div className="fixed inset-0 z-[999] bg-black/40 flex items-end justify-center p-4">
+    <div className="fixed inset-0 z-[9999] bg-black/40 flex items-end justify-center p-4">
 
       <div className="bg-white rounded-3xl w-full max-w-md flex flex-col gap-4 p-5 shadow-2xl animate-in slide-in-from-bottom duration-200">
 
