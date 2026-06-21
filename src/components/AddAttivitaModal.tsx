@@ -277,7 +277,7 @@ export default function AddAttivitaModal({
           onChange={(e) =>
             setNome(e.target.value)
           }
-          className="border rounded-2xl px-3 py-3 text-sm"
+          className="border rounded-2xl px-3 py-3 text-base"
           placeholder="Nome attività"
         />
 
@@ -287,7 +287,7 @@ export default function AddAttivitaModal({
           onChange={(e) =>
             setCategoria(e.target.value)
           }
-          className="border rounded-2xl px-3 py-3 text-sm"
+          className="border rounded-2xl px-3 py-3 text-base"
         >
 
           <option>Bar</option>
@@ -306,7 +306,7 @@ export default function AddAttivitaModal({
           onChange={(e) =>
             setIndirizzo(e.target.value)
           }
-          className="border rounded-2xl px-3 py-3 text-sm"
+          className="border rounded-2xl px-3 py-3 text-base"
           placeholder="Indirizzo"
         />
 
@@ -316,7 +316,7 @@ export default function AddAttivitaModal({
           onChange={(e) =>
             setDistanzaPiedi(e.target.value)
           }
-          className="border rounded-2xl px-3 py-3 text-sm"
+          className="border rounded-2xl px-3 py-3 text-base"
         >
 
           <option value="">
@@ -364,7 +364,7 @@ export default function AddAttivitaModal({
           onChange={(e) =>
             setUbicazione(e.target.value)
           }
-          className="border rounded-2xl px-3 py-3 text-sm"
+          className="border rounded-2xl px-3 py-3 text-base"
           placeholder="Ubicazione"
         />
 
@@ -504,7 +504,7 @@ export default function AddAttivitaModal({
                           e.target.value
                         )
                       }
-                      className="border rounded-2xl px-3 py-3 text-sm w-full"
+                      className="border rounded-2xl px-3 py-3 text-base w-full"
                     />
 
                   </div>
@@ -527,7 +527,7 @@ export default function AddAttivitaModal({
                           e.target.value
                         )
                       }
-                      className="border rounded-2xl px-3 py-3 text-sm w-full"
+                      className="border rounded-2xl px-3 py-3 text-base w-full"
                     />
 
                   </div>
@@ -546,7 +546,7 @@ export default function AddAttivitaModal({
           onChange={(e) =>
             setNote(e.target.value)
           }
-          className="border rounded-2xl px-3 py-3 text-sm min-h-[100px]"
+          className="border rounded-2xl px-3 py-3 text-base min-h-[100px]"
           placeholder="Note"
         />
 
