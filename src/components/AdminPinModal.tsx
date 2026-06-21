@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useScrollLock } from '../lib/useScrollLock';
 
 import {
   Shield,
@@ -47,6 +48,8 @@ export default function AdminPinModal({
   onConfirm,
   onClose,
 }: Props) {
+  useScrollLock();
+
 
   const [pin, setPin] = useState('');
   const MAX_LEN = 4;
