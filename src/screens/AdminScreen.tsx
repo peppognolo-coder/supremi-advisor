@@ -211,6 +211,14 @@ export default function AdminScreen({ adminPin }: Props) {
   const [saletteAll, setSaletteAll] =
     useState<SalettaQualita[]>([]);
 
+  // Dati raw per Community & Crescita
+  interface ContributoSlim { stato: string; created_at: string; }
+  interface VerificaSlim   { is_correct: boolean; created_at: string; }
+
+  const [contributiAll, setContributiAll]         = useState<ContributoSlim[]>([]);
+  const [verificheRaw, setVerificheRaw]           = useState<VerificaSlim[]>([]);
+  const [verificheAttivitaRaw, setVerificheAttivitaRaw] = useState<VerificaSlim[]>([]);
+
   // =========================
   // VERIFICHE STATS
   // =========================
@@ -400,7 +408,7 @@ export default function AdminScreen({ adminPin }: Props) {
       data: saletteData,
     } = await supabase
       .from('salette')
-      .select('id,stazione,tipo,codice_accesso,ubicazione', {
+      .select('id,stazione,tipo,codice_accesso,ubicazione,created_at', {
         count: 'exact',
       });
 
@@ -446,7 +454,7 @@ export default function AdminScreen({ adminPin }: Props) {
     } = await supabase
       .from('attivita_stazione')
       .select(
-        'id,stazione_id,nome,categoria,convenzionato,is_active,maps_query,indirizzo,fasce_orarie,note,distanza_piedi'
+        'id,stazione_id,nome,categoria,convenzionato,is_active,maps_query,indirizzo,fasce_orarie,note,distanza_piedi,created_at'
       )
       .order('nome', {
         ascending: true,
@@ -457,7 +465,7 @@ export default function AdminScreen({ adminPin }: Props) {
       data: stazioniNomiData,
     } = await supabase
       .from('stazioni')
-      .select('id,nome,codice,regione,provincia,indirizzo,maps_query,plus_code,lat,lng,attiva')
+      .select('id,nome,codice,regione,provincia,indirizzo,maps_query,plus_code,lat,lng,attiva,created_at')
       .order('nome', { ascending: true });
 
     // mappa id → nome stazione
@@ -471,6 +479,13 @@ export default function AdminScreen({ adminPin }: Props) {
 
     setStazioniAll(stazioniNomiData ?? []);
     setSaletteAll(saletteData ?? []);
+
+    // CONTRIBUTI COMPLETI (stato + created_at) per Community & Crescita
+    const { data: contributiData } = await supabase
+      .from('contributi')
+      .select('stato,created_at')
+      .order('created_at', { ascending: false });
+    setContributiAll(contributiData ?? []);
 
     setStats({
       salette: saletteCount ?? 0,
@@ -491,6 +506,8 @@ export default function AdminScreen({ adminPin }: Props) {
       await supabase
         .from('saletta_verifiche')
         .select('is_correct, tipo_problema, saletta_id, created_at');
+
+    setVerificheRaw((verificheData ?? []).map((v: any) => ({ is_correct: v.is_correct, created_at: v.created_at })));
 
     if (verificheData) {
 
@@ -563,6 +580,8 @@ export default function AdminScreen({ adminPin }: Props) {
       await supabase
         .from('attivita_verifiche')
         .select('is_correct, tipo_problema, attivita_id, created_at');
+
+    setVerificheAttivitaRaw((verificheAttivitaData ?? []).map((v: any) => ({ is_correct: v.is_correct, created_at: v.created_at })));
 
     if (verificheAttivitaData) {
 
@@ -903,6 +922,49 @@ export default function AdminScreen({ adminPin }: Props) {
 
     return { totaleCriticita, voci: vociFiltrate, livello };
   }, [stats.pending, verificheStats, verificheAttivitaStats, integrita]);
+
+  // =========================
+  // COMMUNITY & CRESCITA (memo)
+  // =========================
+
+  const community = useMemo(() => {
+    const ora  = Date.now();
+    const g7   = 7  * 24 * 60 * 60 * 1000;
+    const g30  = 30 * 24 * 60 * 60 * 1000;
+
+    // ── Contributi ──────────────────────────────────────────
+    const c30    = contributiAll.filter((c) => ora - new Date(c.created_at).getTime() < g30);
+    const c7     = contributiAll.filter((c) => ora - new Date(c.created_at).getTime() < g7);
+    const approvati  = c30.filter((c) => c.stato === 'approved').length;
+    const respinti   = c30.filter((c) => c.stato === 'rejected').length;
+    const ricevuti   = c30.length;
+    const tassoApprovazione = (approvati + respinti) > 0
+      ? Math.round((approvati / (approvati + respinti)) * 100)
+      : null;
+
+    // ── Crescita DB (ultimi 30gg) ────────────────────────────
+    const nuoveStazioni  = stazioniAll.filter((s: any) => s.created_at && ora - new Date(s.created_at).getTime() < g30).length;
+    const nuoveAttivita  = attivitaAll.filter((a: any) => a.created_at && ora - new Date(a.created_at).getTime() < g30).length;
+    const nuoveSalette   = saletteAll.filter((s: any) => s.created_at && ora - new Date(s.created_at).getTime() < g30).length;
+
+    // ── Coinvolgimento ───────────────────────────────────────
+    const tutteVerifiche = [...verificheRaw, ...verificheAttivitaRaw];
+    const conferme30     = tutteVerifiche.filter((v) => v.is_correct  && ora - new Date(v.created_at).getTime() < g30).length;
+    const problemi30     = tutteVerifiche.filter((v) => !v.is_correct && ora - new Date(v.created_at).getTime() < g30).length;
+
+    // ── Badge trend ──────────────────────────────────────────
+    const badges: string[] = [];
+    if (ricevuti > 0) badges.push('📈 In crescita');
+    if (ricevuti === 0) badges.push('😴 Nessuna attività recente');
+    if (tassoApprovazione !== null && tassoApprovazione < 60) badges.push('⚠️ Molti contributi respinti');
+
+    return {
+      contributi: { ricevuti, approvati, respinti, ultimi7: c7.length, tassoApprovazione },
+      crescita:   { nuoveStazioni, nuoveAttivita, nuoveSalette },
+      engagement: { conferme: conferme30, problemi: problemi30 },
+      badges,
+    };
+  }, [contributiAll, stazioniAll, attivitaAll, saletteAll, verificheRaw, verificheAttivitaRaw]);
 
   // =========================
   // HELPERS QUALITÀ
@@ -1368,6 +1430,140 @@ export default function AdminScreen({ adminPin }: Props) {
           </button>
 
         </div>
+
+        {/* ========================= */}
+        {/* COMMUNITY & CRESCITA      */}
+        {/* ========================= */}
+
+        {!loading && (
+          <div className="bg-white rounded-2xl border border-gray-100 p-4 shadow-sm flex flex-col gap-4">
+
+            {/* TITOLO + BADGE */}
+            <div>
+              <h2 className="font-semibold text-gray-900">📈 Community & Crescita</h2>
+              <p className="text-xs text-gray-400 mt-0.5">Ultimi 30 giorni</p>
+              {community.badges.length > 0 && (
+                <div className="flex flex-wrap gap-2 mt-2">
+                  {community.badges.map((b) => (
+                    <span key={b} className="text-xs px-2.5 py-1 rounded-full bg-gray-100 text-gray-600 font-medium">
+                      {b}
+                    </span>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* BLOCCO 1 — CONTRIBUTI */}
+            <div className="flex flex-col gap-2">
+              <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide">Contributi ricevuti</p>
+              <div className="grid grid-cols-2 gap-3">
+
+                <div className="rounded-2xl border border-gray-100 bg-gray-50 p-3 flex flex-col gap-1">
+                  <span className="text-2xl font-bold text-gray-900">{community.contributi.ricevuti}</span>
+                  <span className="text-xs text-gray-500 uppercase tracking-wide">Totali</span>
+                </div>
+
+                <div className="rounded-2xl border border-emerald-100 bg-emerald-50 p-3 flex flex-col gap-1">
+                  <span className="text-2xl font-bold text-emerald-700">{community.contributi.approvati}</span>
+                  <span className="text-xs text-gray-500 uppercase tracking-wide">Approvati</span>
+                </div>
+
+                <div className="rounded-2xl border border-red-100 bg-red-50 p-3 flex flex-col gap-1">
+                  <span className="text-2xl font-bold text-red-600">{community.contributi.respinti}</span>
+                  <span className="text-xs text-gray-500 uppercase tracking-wide">Respinti</span>
+                </div>
+
+                <div className={`rounded-2xl border p-3 flex flex-col gap-1 ${
+                  community.contributi.tassoApprovazione === null
+                    ? 'border-gray-100 bg-gray-50'
+                    : community.contributi.tassoApprovazione >= 60
+                    ? 'border-emerald-100 bg-emerald-50'
+                    : 'border-amber-100 bg-amber-50'
+                }`}>
+                  <span className={`text-2xl font-bold ${
+                    community.contributi.tassoApprovazione === null
+                      ? 'text-gray-400'
+                      : community.contributi.tassoApprovazione >= 60
+                      ? 'text-emerald-700'
+                      : 'text-amber-700'
+                  }`}>
+                    {community.contributi.tassoApprovazione !== null
+                      ? `${community.contributi.tassoApprovazione}%`
+                      : '—'}
+                  </span>
+                  <span className="text-xs text-gray-500 uppercase tracking-wide">Tasso approv.</span>
+                </div>
+
+              </div>
+            </div>
+
+            {/* BLOCCO 2 — CRESCITA DB */}
+            <div className="flex flex-col gap-2">
+              <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide">Crescita database</p>
+              <div className="grid grid-cols-3 gap-3">
+
+                <div className="rounded-2xl border border-gray-100 bg-gray-50 p-3 flex flex-col gap-1">
+                  <span className="text-2xl font-bold text-gray-900">{community.crescita.nuoveStazioni}</span>
+                  <span className="text-xs text-gray-500 uppercase tracking-wide">Stazioni</span>
+                </div>
+
+                <div className="rounded-2xl border border-gray-100 bg-gray-50 p-3 flex flex-col gap-1">
+                  <span className="text-2xl font-bold text-gray-900">{community.crescita.nuoveAttivita}</span>
+                  <span className="text-xs text-gray-500 uppercase tracking-wide">Attività</span>
+                </div>
+
+                <div className="rounded-2xl border border-gray-100 bg-gray-50 p-3 flex flex-col gap-1">
+                  <span className="text-2xl font-bold text-gray-900">{community.crescita.nuoveSalette}</span>
+                  <span className="text-xs text-gray-500 uppercase tracking-wide">Salette</span>
+                </div>
+
+              </div>
+            </div>
+
+            {/* BLOCCO 3 — COINVOLGIMENTO */}
+            <div className="flex flex-col gap-2">
+              <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide">Coinvolgimento community</p>
+              <div className="grid grid-cols-2 gap-3">
+
+                <div className="rounded-2xl border border-emerald-100 bg-emerald-50 p-3 flex flex-col gap-1">
+                  <span className="text-2xl font-bold text-emerald-700">{community.engagement.conferme}</span>
+                  <span className="text-xs text-gray-500 uppercase tracking-wide">Conferme</span>
+                </div>
+
+                <div className={`rounded-2xl border p-3 flex flex-col gap-1 ${
+                  community.engagement.problemi > 0
+                    ? 'border-amber-100 bg-amber-50'
+                    : 'border-gray-100 bg-gray-50'
+                }`}>
+                  <span className={`text-2xl font-bold ${community.engagement.problemi > 0 ? 'text-amber-700' : 'text-gray-400'}`}>
+                    {community.engagement.problemi}
+                  </span>
+                  <span className="text-xs text-gray-500 uppercase tracking-wide">Segnalazioni</span>
+                </div>
+
+              </div>
+            </div>
+
+            {/* BLOCCO 4 — TREND */}
+            <div className="flex flex-col gap-2">
+              <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide">Trend contributi</p>
+              <div className="grid grid-cols-2 gap-3">
+
+                <div className="rounded-2xl border border-gray-100 bg-gray-50 p-3 flex flex-col gap-1">
+                  <span className="text-2xl font-bold text-gray-900">{community.contributi.ultimi7}</span>
+                  <span className="text-xs text-gray-500 uppercase tracking-wide">Ultimi 7 giorni</span>
+                </div>
+
+                <div className="rounded-2xl border border-gray-100 bg-gray-50 p-3 flex flex-col gap-1">
+                  <span className="text-2xl font-bold text-gray-900">{community.contributi.ricevuti}</span>
+                  <span className="text-xs text-gray-500 uppercase tracking-wide">Ultimi 30 giorni</span>
+                </div>
+
+              </div>
+            </div>
+
+          </div>
+        )}
 
         {/* ========================= */}
         {/* COPERTURA DATABASE        */}
