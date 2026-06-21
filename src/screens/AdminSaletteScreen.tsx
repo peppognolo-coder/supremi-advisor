@@ -128,7 +128,7 @@ function AddSalettaModal({
             value={stazione}
             onChange={(e) => setStazione(e.target.value)}
             placeholder="es. Milano Centrale"
-            className="border border-gray-200 rounded-xl px-3 py-2 text-sm"
+            className="border border-gray-200 rounded-xl px-3 py-2 text-base"
             autoFocus
           />
         </div>
@@ -140,7 +140,7 @@ function AddSalettaModal({
           <select
             value={tipo}
             onChange={(e) => setTipo(e.target.value)}
-            className="border border-gray-200 rounded-xl px-3 py-2 text-sm"
+            className="border border-gray-200 rounded-xl px-3 py-2 text-base"
           >
             <option>Equipaggi</option>
             <option>Macchinisti</option>
@@ -369,7 +369,7 @@ export default function AdminSaletteScreen({
             placeholder="Cerca stazione o tipo..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full bg-white border border-gray-200 rounded-xl pl-9 pr-9 py-2.5 text-sm"
+            className="w-full bg-white border border-gray-200 rounded-xl pl-9 pr-9 py-2.5 text-base"
           />
           {search.length > 0 && (
             <button
@@ -429,7 +429,7 @@ export default function AdminSaletteScreen({
                   <input
                     value={s.stazione ?? ''}
                     onChange={(e) => updateField(s.id, 'stazione', e.target.value)}
-                    className="mt-1 w-full border border-gray-200 rounded-xl px-3 py-2 text-sm"
+                    className="mt-1 w-full border border-gray-200 rounded-xl px-3 py-2 text-base"
                   />
                 </div>
 
@@ -438,7 +438,7 @@ export default function AdminSaletteScreen({
                   <input
                     value={formatTitle(s.tipo ?? '')}
                     onChange={(e) => updateField(s.id, 'tipo', e.target.value)}
-                    className="mt-1 w-full border border-gray-200 rounded-xl px-3 py-2 text-sm"
+                    className="mt-1 w-full border border-gray-200 rounded-xl px-3 py-2 text-base"
                   />
                 </div>
 
@@ -447,7 +447,7 @@ export default function AdminSaletteScreen({
                   <input
                     value={s.codice_accesso ?? ''}
                     onChange={(e) => updateField(s.id, 'codice_accesso', e.target.value || null)}
-                    className="mt-1 w-full border border-gray-200 rounded-xl px-3 py-2 text-sm"
+                    className="mt-1 w-full border border-gray-200 rounded-xl px-3 py-2 text-base"
                   />
                 </div>
 
@@ -456,7 +456,7 @@ export default function AdminSaletteScreen({
                   <input
                     value={s.ubicazione ?? ''}
                     onChange={(e) => updateField(s.id, 'ubicazione', e.target.value || null)}
-                    className="mt-1 w-full border border-gray-200 rounded-xl px-3 py-2 text-sm"
+                    className="mt-1 w-full border border-gray-200 rounded-xl px-3 py-2 text-base"
                   />
                 </div>
 
@@ -465,7 +465,7 @@ export default function AdminSaletteScreen({
                   <textarea
                     value={s.note ?? ''}
                     onChange={(e) => updateField(s.id, 'note', e.target.value || null)}
-                    className="mt-1 w-full border border-gray-200 rounded-xl px-3 py-2 text-sm min-h-[80px]"
+                    className="mt-1 w-full border border-gray-200 rounded-xl px-3 py-2 text-base min-h-[80px]"
                   />
                 </div>
 
