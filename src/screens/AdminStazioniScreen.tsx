@@ -29,8 +29,22 @@ import {
 // PROPS
 // =========================
 
+type FiltroQualita =
+  | '__coord__'
+  | '__maps__'
+  | '__indirizzo__'
+  | '__pluscode__'
+  | '__no_coord__'
+  | '__no_maps__'
+  | '__no_indirizzo__'
+  | '__no_codice__'
+  | '__disattivate__'
+  | '';
+
 interface Props {
   adminPin: string;
+  initialFiltro?: 'tutte' | 'attive' | 'disattivate';
+  initialSearchQualita?: string;
 }
 
 // =========================
@@ -92,13 +106,18 @@ function ConfirmModal({
 // COMPONENTE PRINCIPALE
 // =========================
 
-export default function AdminStazioniScreen({ adminPin }: Props) {
+export default function AdminStazioniScreen({
+  adminPin,
+  initialFiltro = 'tutte',
+  initialSearchQualita = '',
+}: Props) {
   console.log('ADMIN PIN', adminPin);
 
   const [loading, setLoading]   = useState(true);
   const [stazioni, setStazioni] = useState<StazioneCompleta[]>([]);
   const [search, setSearch]     = useState('');
-  const [filtro, setFiltro]     = useState<FiltroMode>('tutte');
+  const [filtro, setFiltro]         = useState<FiltroMode>(initialFiltro);
+  const [filtroQualita, setFiltroQualita] = useState<string>(initialSearchQualita);
   const [processingId, setProcessingId] = useState<string | null>(null);
   const [editing, setEditing]   = useState<StazioneCompleta | null>(null);
   const [saving, setSaving]     = useState(false);
@@ -146,14 +165,28 @@ export default function AdminStazioniScreen({ adminPin }: Props) {
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
     return stazioni.filter((s) => {
+      // Filtro stato
       const matchFiltro =
         filtro === 'tutte'       ? true :
         filtro === 'attive'      ? s.attiva :
         !s.attiva;
-
       if (!matchFiltro) return false;
-      if (!q) return true;
 
+      // Filtro qualità (proveniente dalla dashboard)
+      if (filtroQualita) {
+        if (filtroQualita === '__coord__'       && !(s.lat && s.lng))          return false;
+        if (filtroQualita === '__maps__'        && !s.maps_query?.trim())      return false;
+        if (filtroQualita === '__indirizzo__'   && !s.indirizzo?.trim())       return false;
+        if (filtroQualita === '__pluscode__'    && !s.plus_code?.trim())       return false;
+        if (filtroQualita === '__no_coord__'    && (s.lat && s.lng))           return false;
+        if (filtroQualita === '__no_maps__'     && s.maps_query?.trim())       return false;
+        if (filtroQualita === '__no_indirizzo__'&& s.indirizzo?.trim())        return false;
+        if (filtroQualita === '__no_codice__'   && s.codice?.trim())           return false;
+        if (filtroQualita === '__disattivate__' && s.attiva)                   return false;
+      }
+
+      // Ricerca testuale
+      if (!q) return true;
       return (
         s.nome?.toLowerCase().includes(q) ||
         s.codice?.toLowerCase().includes(q) ||
@@ -161,7 +194,7 @@ export default function AdminStazioniScreen({ adminPin }: Props) {
         s.provincia?.toLowerCase().includes(q)
       );
     });
-  }, [stazioni, filtro, search]);
+  }, [stazioni, filtro, filtroQualita, search]);
 
   // =========================
   // TOGGLE ATTIVA
@@ -341,6 +374,31 @@ export default function AdminStazioniScreen({ adminPin }: Props) {
                 )}
               </button>
             ))}
+          </div>
+        )}
+
+        {/* BANNER FILTRO QUALITA */}
+        {filtroQualita !== '' && (
+          <div className="flex items-center justify-between bg-blue-50 border border-blue-200 rounded-xl px-4 py-2.5">
+            <span className="text-sm text-blue-700 font-medium">
+              Filtro dashboard: {{
+                '__coord__': 'Con coordinate',
+                '__maps__': 'Con Maps Query',
+                '__indirizzo__': 'Con indirizzo',
+                '__pluscode__': 'Con Plus Code',
+                '__no_coord__': 'Senza coordinate',
+                '__no_maps__': 'Senza Maps Query',
+                '__no_indirizzo__': 'Senza indirizzo',
+                '__no_codice__': 'Senza codice RFI',
+                '__disattivate__': 'Disattivate',
+              }[filtroQualita] ?? filtroQualita}
+            </span>
+            <button
+              onClick={() => setFiltroQualita('')}
+              className="text-blue-500 hover:text-blue-700 text-xs underline"
+            >
+              Rimuovi filtro
+            </button>
           </div>
         )}
 
