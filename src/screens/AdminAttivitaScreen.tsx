@@ -461,7 +461,7 @@ export default function AdminAttivitaScreen({ adminPin, initialEditId }: Props) 
             <div className="flex flex-col gap-1">
               <label className="text-xs text-gray-500">Stazione</label>
               <input value={getNomeStazione(editingAttivita.stazione_id)} disabled
-                className="border rounded-xl px-3 py-2 bg-gray-100 text-gray-500" />
+                className="border rounded-xl px-3 py-2 bg-gray-100 text-gray-500 text-base" />
             </div>
 
             {/* NOME */}
@@ -469,7 +469,7 @@ export default function AdminAttivitaScreen({ adminPin, initialEditId }: Props) 
               <label className="text-xs text-gray-500">Nome *</label>
               <input value={editingAttivita.nome}
                 onChange={(e) => setEditingAttivita({ ...editingAttivita, nome: e.target.value })}
-                className="border rounded-xl px-3 py-2" />
+                className="border rounded-xl px-3 py-2 text-base" />
             </div>
 
             {/* CATEGORIA */}
@@ -477,7 +477,7 @@ export default function AdminAttivitaScreen({ adminPin, initialEditId }: Props) 
               <label className="text-xs text-gray-500">Categoria *</label>
               <select value={editingAttivita.categoria || ''}
                 onChange={(e) => setEditingAttivita({ ...editingAttivita, categoria: e.target.value })}
-                className="border rounded-xl px-3 py-2">
+                className="border rounded-xl px-3 py-2 text-base">
                 <option value="">Seleziona categoria</option>
                 {CATEGORIE.map((c) => <option key={c} value={c}>{c}</option>)}
               </select>
@@ -488,7 +488,7 @@ export default function AdminAttivitaScreen({ adminPin, initialEditId }: Props) 
               <label className="text-xs text-gray-500">Indirizzo</label>
               <input value={editingAttivita.indirizzo || ''}
                 onChange={(e) => setEditingAttivita({ ...editingAttivita, indirizzo: e.target.value })}
-                className="border rounded-xl px-3 py-2" />
+                className="border rounded-xl px-3 py-2 text-base" />
             </div>
 
             {/* UBICAZIONE */}
@@ -496,7 +496,7 @@ export default function AdminAttivitaScreen({ adminPin, initialEditId }: Props) 
               <label className="text-xs text-gray-500">Ubicazione</label>
               <input value={editingAttivita.ubicazione || ''}
                 onChange={(e) => setEditingAttivita({ ...editingAttivita, ubicazione: e.target.value })}
-                className="border rounded-xl px-3 py-2" />
+                className="border rounded-xl px-3 py-2 text-base" />
             </div>
 
             {/* MAPS QUERY */}
@@ -504,7 +504,7 @@ export default function AdminAttivitaScreen({ adminPin, initialEditId }: Props) 
               <label className="text-xs text-gray-500">Maps Query</label>
               <input value={editingAttivita.maps_query || ''}
                 onChange={(e) => setEditingAttivita({ ...editingAttivita, maps_query: e.target.value })}
-                className="border rounded-xl px-3 py-2" />
+                className="border rounded-xl px-3 py-2 text-base" />
             </div>
 
             {/* DISTANZA */}
@@ -512,7 +512,7 @@ export default function AdminAttivitaScreen({ adminPin, initialEditId }: Props) 
               <label className="text-xs text-gray-500">Distanza a piedi</label>
               <select value={editingAttivita.distanza_piedi || ''}
                 onChange={(e) => setEditingAttivita({ ...editingAttivita, distanza_piedi: e.target.value || null })}
-                className="border rounded-xl px-3 py-2">
+                className="border rounded-xl px-3 py-2 text-base">
                 <option value="">Non specificata</option>
                 {DISTANZE.map((d) => <option key={d} value={d}>{d}</option>)}
               </select>
@@ -523,7 +523,7 @@ export default function AdminAttivitaScreen({ adminPin, initialEditId }: Props) 
               <input type="checkbox" id="convenzionato-edit"
                 checked={Boolean(editingAttivita.convenzionato)}
                 onChange={(e) => setEditingAttivita({ ...editingAttivita, convenzionato: e.target.checked })}
-                className="w-4 h-4" />
+                className="w-4 h-4 text-base" />
               <label htmlFor="convenzionato-edit" className="font-medium text-sm cursor-pointer">
                 Convenzionato Trenord
               </label>
@@ -563,13 +563,13 @@ export default function AdminAttivitaScreen({ adminPin, initialEditId }: Props) 
                         <label className="text-xs text-gray-500">Apertura</label>
                         <input type="time" value={fascia.apertura || ''}
                           onChange={(e) => updateFascia(index, 'apertura', e.target.value)}
-                          className="border rounded-xl px-3 py-2" />
+                          className="border rounded-xl px-3 py-2 text-base" />
                       </div>
                       <div className="flex flex-col gap-1">
                         <label className="text-xs text-gray-500">Chiusura</label>
                         <input type="time" value={fascia.chiusura || ''}
                           onChange={(e) => updateFascia(index, 'chiusura', e.target.value)}
-                          className="border rounded-xl px-3 py-2" />
+                          className="border rounded-xl px-3 py-2 text-base" />
                       </div>
                     </div>
                   </div>
@@ -588,7 +588,7 @@ export default function AdminAttivitaScreen({ adminPin, initialEditId }: Props) 
               <label className="text-xs text-gray-500">Note</label>
               <textarea value={editingAttivita.note || ''}
                 onChange={(e) => setEditingAttivita({ ...editingAttivita, note: e.target.value || null })}
-                rows={3} className="border rounded-xl px-3 py-2 resize-none" placeholder="Note aggiuntive..." />
+                rows={3} className="border rounded-xl px-3 py-2 resize-none text-base" placeholder="Note aggiuntive..." />
             </div>
 
             {/* SALVA */}
