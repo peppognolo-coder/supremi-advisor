@@ -9,6 +9,7 @@ import {
   Droplets,
   Snowflake,
   MessageSquarePlus,
+  TriangleAlert,
 } from 'lucide-react';
 
 import type {
@@ -20,6 +21,8 @@ import { formatTitle } from '../lib/format';
 import SegnalazioneModal from './SegnalazioneModal';
 
 import SalettaVerifica from './SalettaVerifica';
+
+import SegnalaProblemaFisicoModal from './SegnalaProblemaFisicoModal';
 
 interface Props {
   stazioneName?: string;
@@ -39,6 +42,12 @@ export default function SalettaCard({
 
   const [selectedSalettaId, setSelectedSalettaId] =
     useState<string | null>(null);
+
+  const [showProblemaModal, setShowProblemaModal] =
+    useState(false);
+
+  const [problemaTargetSaletta, setProblemaTargetSaletta] =
+    useState<{ id: string; nome: string } | null>(null);
 
   return (
 
@@ -242,24 +251,35 @@ export default function SalettaCard({
                   </div>
                 )}
 
-                {/* BUTTON */}
-                <button
-                  onClick={() => {
+                {/* BUTTONS */}
+                <div className="flex gap-2 flex-wrap">
 
-                    setSelectedSalettaId(
-                      saletta.id
-                    );
+                  <button
+                    onClick={() => {
+                      setSelectedSalettaId(saletta.id);
+                      setShowModal(true);
+                    }}
+                    className="flex items-center gap-2 px-3 py-2 rounded-xl bg-trenord-green text-white text-xs font-medium hover:opacity-90 transition-opacity"
+                  >
+                    <MessageSquarePlus className="w-4 h-4" />
+                    Segnala modifica
+                  </button>
 
-                    setShowModal(true);
-                  }}
-                  className="self-start flex items-center gap-2 px-3 py-2 rounded-xl bg-trenord-green text-white text-xs font-medium hover:opacity-90 transition-opacity"
-                >
+                  <button
+                    onClick={() => {
+                      setProblemaTargetSaletta({
+                        id: saletta.id,
+                        nome: `${stazioneName ?? ''} — ${saletta.tipo ?? ''}`.trim(),
+                      });
+                      setShowProblemaModal(true);
+                    }}
+                    className="flex items-center gap-2 px-3 py-2 rounded-xl bg-red-600 text-white text-xs font-medium hover:opacity-90 transition-opacity"
+                  >
+                    <TriangleAlert className="w-4 h-4" />
+                    Segnala problema
+                  </button>
 
-                  <MessageSquarePlus className="w-4 h-4" />
-
-                  Segnala modifica
-
-                </button>
+                </div>
 
                 {/* VERIFICA RAPIDA */}
                 <SalettaVerifica
@@ -274,17 +294,23 @@ export default function SalettaCard({
 
       </div>
 
-      {/* MODAL */}
-      {showModal &&
-        selectedSalettaId && (
-
+      {/* MODAL SEGNALA MODIFICA */}
+      {showModal && selectedSalettaId && (
         <SegnalazioneModal
-          salettaId={
-            selectedSalettaId
-          }
-          onClose={() =>
-            setShowModal(false)
-          }
+          salettaId={selectedSalettaId}
+          onClose={() => setShowModal(false)}
+        />
+      )}
+
+      {/* MODAL SEGNALA PROBLEMA FISICO */}
+      {showProblemaModal && problemaTargetSaletta && (
+        <SegnalaProblemaFisicoModal
+          salettaId={problemaTargetSaletta.id}
+          salettaNome={problemaTargetSaletta.nome}
+          onClose={() => {
+            setShowProblemaModal(false);
+            setProblemaTargetSaletta(null);
+          }}
         />
       )}
 
