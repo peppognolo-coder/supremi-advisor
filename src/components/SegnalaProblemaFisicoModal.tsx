@@ -9,6 +9,8 @@ import { supabase } from '../lib/supabase';
 
 import { TIPI_PROBLEMA_SALETTA } from '../lib/adminApi';
 
+import { useSwipeDown } from '../lib/useSwipeDown';
+
 // =========================
 // PROPS
 // =========================
@@ -28,6 +30,7 @@ export default function SegnalaProblemaFisicoModal({
   salettaNome,
   onClose,
 }: Props) {
+  const { panelRef, dragStyle, handleDragStart } = useSwipeDown({ onClose: onClose });
   useScrollLock();
 
 
@@ -95,7 +98,11 @@ export default function SegnalaProblemaFisicoModal({
       className="fixed inset-0 bg-black/40 z-[9999] flex items-end sm:items-center justify-center p-0 sm:p-4"
       onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
     >
-      <div className="bg-white rounded-t-3xl sm:rounded-3xl w-full sm:max-w-md flex flex-col gap-0 max-h-[90vh] overflow-y-auto">
+      <div ref={panelRef} style={dragStyle} onTouchStart={handleDragStart} className="bg-white rounded-t-3xl sm:rounded-3xl w-full sm:max-w-md flex flex-col gap-0 max-h-[90vh] overflow-y-auto">
+          {/* DRAG INDICATOR */}
+          <div className="flex justify-center pt-3 pb-1 cursor-grab active:cursor-grabbing flex-shrink-0">
+            <div className="w-10 h-1 rounded-full bg-gray-200" />
+          </div>
 
         {/* HEADER */}
         <div className="flex items-center justify-between p-5 pb-4 border-b border-gray-100">
