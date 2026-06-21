@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useScrollLock } from '../lib/useScrollLock';
 
 import {
   X,
@@ -56,6 +57,8 @@ export default function SegnalaProblemaModal({
   onClose,
   onSuccess,
 }: Props) {
+  useScrollLock();
+
 
   const [tipoProblem, setTipoProblema] =
     useState<string>('');
