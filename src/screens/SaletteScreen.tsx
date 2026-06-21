@@ -284,7 +284,7 @@ export default function SaletteScreen({
             onChange={(e) =>
               setSearch(e.target.value)
             }
-            className="w-full bg-white border border-gray-200 rounded-xl pl-9 pr-9 py-2.5 text-sm"
+            className="w-full bg-white border border-gray-200 rounded-xl pl-9 pr-9 py-2.5 text-base"
           />
 
           {/* X per cancellare */}
