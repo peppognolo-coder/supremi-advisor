@@ -86,7 +86,7 @@ export default function SegnalazioneModal({
 
   return (
 
-    <div className="fixed inset-0 z-[999] bg-black/40 flex items-center justify-center p-4 overflow-y-auto">
+    <div className="fixed inset-0 z-[9999] bg-black/40 flex items-center justify-center p-4 overflow-y-auto">
 
       <div className="bg-white rounded-3xl p-5 w-full max-w-md flex flex-col gap-4 shadow-2xl animate-in fade-in zoom-in-95 duration-200 my-auto">
 
@@ -104,10 +104,11 @@ export default function SegnalazioneModal({
             <div>
 
               <h2 className="text-lg font-semibold text-gray-900">
-
-                Segnala info
-
+                Modifica informazioni saletta
               </h2>
+              <p className="text-xs text-gray-400 mt-0.5">
+                Aiutaci a mantenere aggiornati i dati della saletta
+              </p>
 
               <p className="text-xs text-gray-400 mt-0.5">
 
