@@ -339,22 +339,45 @@ export const handler: Handler = async (event: HandlerEvent) => {
           .from('attivita_stazione').select('id')
           .eq('stazione_id', dati.stazione_id).eq('nome', dati.nome).maybeSingle();
 
-        if (existing) {
-          const { error } = await supabase.from('attivita_stazione')
-            .update({ categoria: dati.categoria, indirizzo: dati.indirizzo, maps_query: dati.maps_query,
-                      distanza_piedi: dati.distanza_piedi, ubicazione: dati.ubicazione, note: dati.note,
-                      convenzionato: dati.convenzionato, fasce_orarie: fasceSalvate })
-            .eq('id', existing.id);
-          if (error) return dbErr(error.message);
-        } else {
-          const { error } = await supabase.from('attivita_stazione')
-            .insert({ stazione_id: dati.stazione_id, nome: dati.nome, categoria: dati.categoria,
-                      indirizzo: dati.indirizzo, maps_query: dati.maps_query, distanza_piedi: dati.distanza_piedi,
-                      ubicazione: dati.ubicazione, note: dati.note, convenzionato: dati.convenzionato,
-                      fasce_orarie: fasceSalvate, is_active: true, deleted_at: null,
-                      dati_extra: dati.dati_extra ?? null });
-          if (error) return dbErr(error.message);
-        }
+       if (existing) {
+  const { error } = await supabase
+    .from('attivita_stazione')
+    .update({
+      categoria: dati.categoria,
+      indirizzo: dati.indirizzo,
+      maps_query: dati.maps_query,
+      distanza_piedi: dati.distanza_piedi,
+      ubicazione: dati.ubicazione,
+      note: dati.note,
+      convenzionato: dati.convenzionato,
+      fasce_orarie: fasceSalvate,
+      dati_extra: dati.dati_extra ?? null
+    })
+    .eq('id', existing.id);
+
+  if (error) return dbErr(error.message);
+
+} else {
+  const { error } = await supabase
+    .from('attivita_stazione')
+    .insert({
+      stazione_id: dati.stazione_id,
+      nome: dati.nome,
+      categoria: dati.categoria,
+      indirizzo: dati.indirizzo,
+      maps_query: dati.maps_query,
+      distanza_piedi: dati.distanza_piedi,
+      ubicazione: dati.ubicazione,
+      note: dati.note,
+      convenzionato: dati.convenzionato,
+      fasce_orarie: fasceSalvate,
+      is_active: true,
+      deleted_at: null,
+      dati_extra: dati.dati_extra ?? null
+    });
+
+  if (error) return dbErr(error.message);
+}
       }
 
       // ------ STAZIONE ------
