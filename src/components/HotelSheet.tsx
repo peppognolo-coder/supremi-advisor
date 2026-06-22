@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
 
 import {
-  MapPin, Phone, Wifi, Coffee, Bus, Utensils,
-  Clock, ShieldCheck, Star, X, AlertTriangle, CheckCircle,
+  MapPin, Phone,
+  Clock, Star, X, AlertTriangle, CheckCircle,
 } from 'lucide-react';
 
 import toast from 'react-hot-toast';
@@ -11,6 +11,7 @@ import { supabase } from '../lib/supabase';
 import { useScrollLock } from '../lib/useScrollLock';
 import { useSwipeDown } from '../lib/useSwipeDown';
 import type { AttivitaRow, HotelDatiExtra } from '../lib/adminApi';
+import { TIPI_PROBLEMA_HOTEL } from '../lib/adminApi'; // FIX P3: import da adminApi, rimossa dichiarazione locale
 
 // =========================
 // TIPI
@@ -45,25 +46,6 @@ const BADGE_CONFIG: {
 ];
 
 // =========================
-// TIPI PROBLEMA HOTEL
-// =========================
-
-const TIPI_PROBLEMA_HOTEL = [
-  'Pulizia insufficiente',
-  'Camere rumorose',
-  'Colazione scarsa',
-  'Personale poco disponibile',
-  'WiFi non funzionante',
-  'Climatizzazione guasta',
-  'Problemi nella camera',
-  'Struttura deteriorata',
-  'Navetta non disponibile',
-  'Servizio navetta inaffidabile',
-  'Informazioni non aggiornate',
-  'Altro',
-];
-
-// =========================
 // MODAL SEGNALAZIONE
 // =========================
 
@@ -74,9 +56,12 @@ function SegnalaProblemaHotelModal({
   attivitaId: string;
   onClose: () => void;
 }) {
-  const [tipo, setTipo]     = useState('');
-  const [nota, setNota]     = useState('');
+  const [tipo, setTipo]       = useState('');
+  const [nota, setNota]       = useState('');
   const [loading, setLoading] = useState(false);
+
+  // FIX P3: TIPI_PROBLEMA_HOTEL ora viene dall'import — nessuna dichiarazione locale
+
   const deviceId = useRef(localStorage.getItem('supremi_device_id') ?? (() => {
     const id = crypto.randomUUID();
     localStorage.setItem('supremi_device_id', id);
@@ -142,9 +127,9 @@ export default function HotelSheet({ hotel, onClose }: Props) {
   useScrollLock();
   const { panelRef, dragStyle, handleDragStart } = useSwipeDown({ onClose });
 
-  const [stats, setStats]           = useState<VerificaStats | null>(null);
+  const [stats, setStats]             = useState<VerificaStats | null>(null);
   const [showSegnala, setShowSegnala] = useState(false);
-  const [myRating, setMyRating]     = useState<number | null>(null);
+  const [myRating, setMyRating]       = useState<number | null>(null);
   const [submittingRating, setSubmittingRating] = useState(false);
 
   const dati = (hotel.dati_extra ?? {}) as HotelDatiExtra;
