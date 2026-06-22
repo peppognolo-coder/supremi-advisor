@@ -9,7 +9,6 @@ import {
   Plus,
   X,
   MessageSquarePlus,
-  X,
 } from 'lucide-react';
 
 import toast from 'react-hot-toast';
