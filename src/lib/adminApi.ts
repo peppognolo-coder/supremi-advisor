@@ -195,13 +195,24 @@ export async function ripristinaAttivita(
 export async function updateAttivita(
   adminPin: string,
   payload: {
-    id: string; nome: string; categoria: string;
-    indirizzo: string | null; ubicazione: string | null; maps_query: string | null;
-    distanza_piedi: string | null; convenzionato: boolean; note: string | null;
+    id: string;
+    nome: string;
+    categoria: string;
+    indirizzo: string | null;
+    ubicazione: string | null;
+    maps_query: string | null;
+    distanza_piedi: string | null;
+    convenzionato: boolean;
+    note: string | null;
     fasce_orarie: FasciaOraria[];
+    dati_extra: HotelDatiExtra | null;
   }
 ): Promise<AdminApiResult<AttivitaRow>> {
-  return call<AttivitaRow>('updateAttivita', adminPin, payload as unknown as Record<string, unknown>);
+  return call<AttivitaRow>(
+    'updateAttivita',
+    adminPin,
+    payload as unknown as Record<string, unknown>
+  );
 }
 
 // =============================================================
