@@ -24,6 +24,8 @@ import {
   updateContributoDati,
   approveContributo,
   rejectContributo,
+  CATEGORIE_ATTIVITA,   // FIX P2: import da adminApi invece di array locale
+  DISTANZE_ATTIVITA,    // FIX P2: import da adminApi invece di array locale
 } from '../lib/adminApi';
 
 // =========================
@@ -38,11 +40,12 @@ interface Props {
 // COSTANTI
 // =========================
 
+// FIX P2: CATEGORIE e DISTANZE rimosse — ora importate da adminApi come
+// CATEGORIE_ATTIVITA e DISTANZE_ATTIVITA (sorgente di verità unica)
+
 const GIORNI_SETTIMANA = ['Lun', 'Mar', 'Mer', 'Gio', 'Ven', 'Sab', 'Dom'];
 const TIPI_SALETTA    = ['Equipaggi', 'Bagni', 'Cancelletto', 'Trenitalia', 'Sala Relax'];
 const STATI_SALETTA   = ['Aperta', 'Chiusa', 'Pulizie', 'Guasto'];
-const CATEGORIE       = ['Bar', 'Fast Food', 'Market', 'Ristorante', 'Farmacia', 'Tabacchi', 'Hotel', 'Altro'];
-const DISTANZE        = ['In stazione', 'Entro 2 minuti', 'Entro 5 minuti', 'Entro 10 minuti', 'Oltre 10 minuti'];
 
 // =========================
 // HELPER renderValore
@@ -346,10 +349,10 @@ export default function AdminContributiScreen({ adminPin }: Props) {
                 <div className="flex flex-col gap-3">
                   <label className="text-xs font-semibold text-gray-400 uppercase">Servizi</label>
                   {[
-                    { key: 'microonde',   label: 'Microonde',    icon: <Microwave className="w-5 h-5" /> },
-                    { key: 'distributori',label: 'Distributori', icon: <Coffee className="w-5 h-5" /> },
-                    { key: 'acqua',       label: 'Acqua',        icon: <Droplets className="w-5 h-5" /> },
-                    { key: 'climatizzata',label: 'Climatizzata', icon: <Snowflake className="w-5 h-5" /> },
+                    { key: 'microonde',    label: 'Microonde',    icon: <Microwave className="w-5 h-5" /> },
+                    { key: 'distributori', label: 'Distributori', icon: <Coffee className="w-5 h-5" /> },
+                    { key: 'acqua',        label: 'Acqua',        icon: <Droplets className="w-5 h-5" /> },
+                    { key: 'climatizzata', label: 'Climatizzata', icon: <Snowflake className="w-5 h-5" /> },
                   ].map(({ key, label, icon }) => {
                     const val = editingContributo.dati?.[key] ?? editingContributo.dati?.servizi?.[key] ?? false;
                     return (
@@ -383,11 +386,11 @@ export default function AdminContributiScreen({ adminPin }: Props) {
                       className="border rounded-xl px-3 py-2 bg-gray-100 text-base" />
                   </div>
                   {[
-                    { key: 'nome',      label: 'Nome' },
-                    { key: 'indirizzo', label: 'Indirizzo' },
-                    { key: 'ubicazione',label: 'Ubicazione' },
-                    { key: 'note',      label: 'Note' },
-                    { key: 'maps_query',label: 'Maps Query' },
+                    { key: 'nome',       label: 'Nome' },
+                    { key: 'indirizzo',  label: 'Indirizzo' },
+                    { key: 'ubicazione', label: 'Ubicazione' },
+                    { key: 'note',       label: 'Note' },
+                    { key: 'maps_query', label: 'Maps Query' },
                   ].map(({ key, label }) => (
                     <div key={key} className="flex flex-col gap-1">
                       <label className="text-xs text-gray-500">{label}</label>
@@ -396,22 +399,29 @@ export default function AdminContributiScreen({ adminPin }: Props) {
                         className="border rounded-xl px-3 py-2 text-base" />
                     </div>
                   ))}
+
+                  {/* CATEGORIA — FIX P2: usa CATEGORIE_ATTIVITA */}
                   <div className="flex flex-col gap-1">
                     <label className="text-xs text-gray-500">Categoria</label>
                     <select value={editingContributo?.dati?.categoria || ''}
                       onChange={(e) => setEditingContributo({ ...editingContributo, dati: { ...editingContributo.dati, categoria: e.target.value } })}
                       className="border rounded-xl px-3 py-2 text-base">
-                      {CATEGORIE.map((c) => <option key={c} value={c}>{c}</option>)}
+                      <option value="">Seleziona categoria</option>
+                      {CATEGORIE_ATTIVITA.map((c) => <option key={c} value={c}>{c}</option>)}
                     </select>
                   </div>
+
+                  {/* DISTANZA — FIX P2: usa DISTANZE_ATTIVITA (valori canonici con "a piedi") */}
                   <div className="flex flex-col gap-1">
                     <label className="text-xs text-gray-500">Distanza a piedi</label>
                     <select value={editingContributo?.dati?.distanza_piedi || ''}
                       onChange={(e) => setEditingContributo({ ...editingContributo, dati: { ...editingContributo.dati, distanza_piedi: e.target.value } })}
                       className="border rounded-xl px-3 py-2 text-base">
-                      {DISTANZE.map((d) => <option key={d} value={d}>{d}</option>)}
+                      <option value="">Non specificata</option>
+                      {DISTANZE_ATTIVITA.map((d) => <option key={d} value={d}>{d}</option>)}
                     </select>
                   </div>
+
                   <div className="flex items-center gap-3">
                     <input type="checkbox" checked={Boolean(editingContributo?.dati?.convenzionato)}
                       onChange={(e) => setEditingContributo({ ...editingContributo, dati: { ...editingContributo.dati, convenzionato: e.target.checked } })} />
@@ -419,251 +429,209 @@ export default function AdminContributiScreen({ adminPin }: Props) {
                   </div>
                 </div>
 
-                {/* FASCE ORARIE */}
-                <div className="flex flex-col gap-4">
-                  <div className="flex items-center justify-between">
-                    <h3 className="font-semibold">Fasce orarie</h3>
-                    <button type="button" onClick={addFasciaAdmin} className="text-sm text-trenord-green">+ Aggiungi fascia</button>
+                {/* FASCE ORARIE (solo NON Hotel) */}
+                {editingContributo.dati?.categoria !== 'Hotel' && (
+                  <div className="flex flex-col gap-4">
+                    <div className="flex items-center justify-between">
+                      <h3 className="font-semibold">Fasce orarie</h3>
+                      <button type="button" onClick={addFasciaAdmin} className="text-sm text-trenord-green">+ Aggiungi fascia</button>
+                    </div>
+                    {(editingContributo?.dati?.fasce_orarie || []).map((fascia: any, index: number) => {
+                      const giorniAttuali = Array.isArray(fascia.giorni) ? fascia.giorni : [];
+                      return (
+                        <div key={index} className="border rounded-2xl p-4 flex flex-col gap-4">
+                          <div className="flex items-center justify-between">
+                            <div className="font-medium">Fascia {index + 1}</div>
+                            {(editingContributo?.dati?.fasce_orarie?.length || 0) > 1 && (
+                              <button type="button" onClick={() => removeFasciaAdmin(index)} className="text-red-600 text-sm">Elimina</button>
+                            )}
+                          </div>
+                          <div className="grid grid-cols-4 gap-2">
+                            {GIORNI_SETTIMANA.map((giorno) => (
+                              <button key={giorno} type="button" onClick={() => toggleGiornoAdmin(index, giorno)}
+                                className={`rounded-xl border py-2 text-sm ${giorniAttuali.includes(giorno) ? 'bg-trenord-green text-white' : 'bg-white'}`}>
+                                {giorno}
+                              </button>
+                            ))}
+                          </div>
+                          <div className="grid grid-cols-2 gap-3">
+                            <input type="time" value={fascia.apertura || ''}
+                              onChange={(e) => updateFasciaAdmin(index, 'apertura', e.target.value)}
+                              className="border rounded-xl px-3 py-2 text-base" />
+                            <input type="time" value={fascia.chiusura || ''}
+                              onChange={(e) => updateFasciaAdmin(index, 'chiusura', e.target.value)}
+                              className="border rounded-xl px-3 py-2 text-base" />
+                          </div>
+                        </div>
+                      );
+                    })}
                   </div>
-                  {(editingContributo?.dati?.fasce_orarie || []).map((fascia: any, index: number) => {
-                    const giorniAttuali = Array.isArray(fascia.giorni) ? fascia.giorni : [];
-                    return (
-                      <div key={index} className="border rounded-2xl p-4 flex flex-col gap-4">
-                        <div className="flex items-center justify-between">
-                          <div className="font-medium">Fascia {index + 1}</div>
-                          {(editingContributo?.dati?.fasce_orarie?.length || 0) > 1 && (
-                            <button type="button" onClick={() => removeFasciaAdmin(index)} className="text-red-600 text-sm">Elimina</button>
-                          )}
-                        </div>
-                        <div className="grid grid-cols-4 gap-2">
-                          {GIORNI_SETTIMANA.map((giorno) => (
-                            <button key={giorno} type="button" onClick={() => toggleGiornoAdmin(index, giorno)}
-                              className={`rounded-xl border py-2 text-sm ${giorniAttuali.includes(giorno) ? 'bg-trenord-green text-white' : 'bg-white'}`}>
-                              {giorno}
-                            </button>
-                          ))}
-                        </div>
-                        <div className="grid grid-cols-2 gap-3">
-                          <input type="time" value={fascia.apertura || ''}
-                            onChange={(e) => updateFasciaAdmin(index, 'apertura', e.target.value)}
-                            className="border rounded-xl px-3 py-2 text-base" />
-                          <input type="time" value={fascia.chiusura || ''}
-                            onChange={(e) => updateFasciaAdmin(index, 'chiusura', e.target.value)}
-                            className="border rounded-xl px-3 py-2 text-base" />
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
+                )}
+
+                {/* SEZIONE HOTEL — visibile solo se categoria === 'Hotel' */}
+                {editingContributo.dati?.categoria === 'Hotel' && (
+                  <div className="bg-blue-50 border border-blue-100 rounded-2xl p-4 flex flex-col gap-3">
+                    <h3 className="font-semibold text-blue-700">Informazioni Hotel</h3>
+
+                    <div className="flex flex-col gap-1">
+                      <label className="text-xs text-gray-500">Telefono</label>
+                      <input
+                        value={editingContributo.dati?.dati_extra?.telefono || ''}
+                        onChange={(e) => setEditingContributo({
+                          ...editingContributo,
+                          dati: {
+                            ...editingContributo.dati,
+                            dati_extra: { ...(editingContributo.dati?.dati_extra ?? {}), telefono: e.target.value },
+                          },
+                        })}
+                        className="border rounded-xl px-3 py-2 text-base"
+                      />
+                    </div>
+
+                    {[
+                      { key: 'reception_h24', label: 'Reception H24' },
+                      { key: 'colazione',     label: 'Colazione disponibile' },
+                      { key: 'wifi',          label: 'WiFi disponibile' },
+                      { key: 'navetta',       label: 'Navetta disponibile' },
+                      { key: 'ristorante',    label: 'Ristorante interno' },
+                    ].map(({ key, label }) => (
+                      <label key={key} className="flex items-center gap-2">
+                        <input
+                          type="checkbox"
+                          checked={Boolean(editingContributo.dati?.dati_extra?.[key])}
+                          onChange={(e) => setEditingContributo({
+                            ...editingContributo,
+                            dati: {
+                              ...editingContributo.dati,
+                              dati_extra: { ...(editingContributo.dati?.dati_extra ?? {}), [key]: e.target.checked },
+                            },
+                          })}
+                        />
+                        {label}
+                      </label>
+                    ))}
+
+                    <div className="flex flex-col gap-1">
+                      <label className="text-xs text-gray-500">Note equipaggi</label>
+                      <textarea
+                        rows={3}
+                        value={editingContributo.dati?.dati_extra?.note_equipaggi || ''}
+                        onChange={(e) => setEditingContributo({
+                          ...editingContributo,
+                          dati: {
+                            ...editingContributo.dati,
+                            dati_extra: { ...(editingContributo.dati?.dati_extra ?? {}), note_equipaggi: e.target.value },
+                          },
+                        })}
+                        className="border rounded-xl px-3 py-2 resize-none text-base"
+                      />
+                    </div>
+                  </div>
+                )}
               </>
             )}
 
             {/* STAZIONE */}
-{editingContributo.tipo === 'stazione' && (
-  <div className="flex flex-col gap-4">
+            {editingContributo.tipo === 'stazione' && (
+              <div className="flex flex-col gap-4">
 
-    <div>
-      <label className="text-xs font-semibold text-gray-400 uppercase">
-        Nome stazione
-      </label>
-      <input
-        ref={firstInputRef}
-        value={editingContributo.dati?.nome || ''}
-        onChange={(e) =>
-          setEditingContributo({
-            ...editingContributo,
-            dati: {
-              ...editingContributo.dati,
-              nome: e.target.value,
-            },
-          })
-        }
-        className="mt-1 border border-gray-200 rounded-xl px-3 py-2 w-full text-base"
-      />
-    </div>
+                <div>
+                  <label className="text-xs font-semibold text-gray-400 uppercase">Nome stazione</label>
+                  <input
+                    ref={firstInputRef}
+                    value={editingContributo.dati?.nome || ''}
+                    onChange={(e) => setEditingContributo({ ...editingContributo, dati: { ...editingContributo.dati, nome: e.target.value } })}
+                    className="mt-1 border border-gray-200 rounded-xl px-3 py-2 w-full text-base"
+                  />
+                </div>
 
-    <div>
-      <label className="text-xs font-semibold text-gray-400 uppercase">
-        Codice
-      </label>
-      <input
-        value={editingContributo.dati?.codice || ''}
-        onChange={(e) =>
-          setEditingContributo({
-            ...editingContributo,
-            dati: {
-              ...editingContributo.dati,
-              codice: e.target.value,
-            },
-          })
-        }
-        className="mt-1 border border-gray-200 rounded-xl px-3 py-2 w-full text-base"
-      />
-    </div>
+                <div>
+                  <label className="text-xs font-semibold text-gray-400 uppercase">Codice</label>
+                  <input
+                    value={editingContributo.dati?.codice || ''}
+                    onChange={(e) => setEditingContributo({ ...editingContributo, dati: { ...editingContributo.dati, codice: e.target.value } })}
+                    className="mt-1 border border-gray-200 rounded-xl px-3 py-2 w-full text-base"
+                  />
+                </div>
 
-    <div>
-      <label className="text-xs font-semibold text-gray-400 uppercase">
-        Regione
-      </label>
-      <input
-        value={editingContributo.dati?.regione || ''}
-        onChange={(e) =>
-          setEditingContributo({
-            ...editingContributo,
-            dati: {
-              ...editingContributo.dati,
-              regione: e.target.value,
-            },
-          })
-        }
-        className="mt-1 border border-gray-200 rounded-xl px-3 py-2 w-full text-base"
-      />
-    </div>
+                <div>
+                  <label className="text-xs font-semibold text-gray-400 uppercase">Regione</label>
+                  <input
+                    value={editingContributo.dati?.regione || ''}
+                    onChange={(e) => setEditingContributo({ ...editingContributo, dati: { ...editingContributo.dati, regione: e.target.value } })}
+                    className="mt-1 border border-gray-200 rounded-xl px-3 py-2 w-full text-base"
+                  />
+                </div>
 
-    <div>
-      <label className="text-xs font-semibold text-gray-400 uppercase">
-        Provincia
-      </label>
-      <input
-        value={editingContributo.dati?.provincia || ''}
-        onChange={(e) =>
-          setEditingContributo({
-            ...editingContributo,
-            dati: {
-              ...editingContributo.dati,
-              provincia: e.target.value,
-            },
-          })
-        }
-        className="mt-1 border border-gray-200 rounded-xl px-3 py-2 w-full text-base"
-      />
-    </div>
+                <div>
+                  <label className="text-xs font-semibold text-gray-400 uppercase">Provincia</label>
+                  <input
+                    value={editingContributo.dati?.provincia || ''}
+                    onChange={(e) => setEditingContributo({ ...editingContributo, dati: { ...editingContributo.dati, provincia: e.target.value } })}
+                    className="mt-1 border border-gray-200 rounded-xl px-3 py-2 w-full text-base"
+                  />
+                </div>
 
-    <div>
-      <label className="text-xs font-semibold text-gray-400 uppercase">
-        Indirizzo
-      </label>
-      <input
-        value={editingContributo.dati?.indirizzo || ''}
-        onChange={(e) =>
-          setEditingContributo({
-            ...editingContributo,
-            dati: {
-              ...editingContributo.dati,
-              indirizzo: e.target.value,
-            },
-          })
-        }
-        className="mt-1 border border-gray-200 rounded-xl px-3 py-2 w-full text-base"
-      />
-    </div>
+                <div>
+                  <label className="text-xs font-semibold text-gray-400 uppercase">Indirizzo</label>
+                  <input
+                    value={editingContributo.dati?.indirizzo || ''}
+                    onChange={(e) => setEditingContributo({ ...editingContributo, dati: { ...editingContributo.dati, indirizzo: e.target.value } })}
+                    className="mt-1 border border-gray-200 rounded-xl px-3 py-2 w-full text-base"
+                  />
+                </div>
 
-    <div>
-      <label className="text-xs font-semibold text-gray-400 uppercase">
-        Maps Query
-      </label>
-      <input
-        value={editingContributo.dati?.maps_query || ''}
-        onChange={(e) =>
-          setEditingContributo({
-            ...editingContributo,
-            dati: {
-              ...editingContributo.dati,
-              maps_query: e.target.value,
-            },
-          })
-        }
-        className="mt-1 border border-gray-200 rounded-xl px-3 py-2 w-full text-base"
-      />
-    </div>
+                <div>
+                  <label className="text-xs font-semibold text-gray-400 uppercase">Maps Query</label>
+                  <input
+                    value={editingContributo.dati?.maps_query || ''}
+                    onChange={(e) => setEditingContributo({ ...editingContributo, dati: { ...editingContributo.dati, maps_query: e.target.value } })}
+                    className="mt-1 border border-gray-200 rounded-xl px-3 py-2 w-full text-base"
+                  />
+                </div>
 
-    <div>
-      <label className="text-xs font-semibold text-gray-400 uppercase">
-        Plus Code
-      </label>
-      <input
-        value={editingContributo.dati?.plus_code || ''}
-        onChange={(e) =>
-          setEditingContributo({
-            ...editingContributo,
-            dati: {
-              ...editingContributo.dati,
-              plus_code: e.target.value,
-            },
-          })
-        }
-        className="mt-1 border border-gray-200 rounded-xl px-3 py-2 w-full text-base"
-      />
-    </div>
+                <div>
+                  <label className="text-xs font-semibold text-gray-400 uppercase">Plus Code</label>
+                  <input
+                    value={editingContributo.dati?.plus_code || ''}
+                    onChange={(e) => setEditingContributo({ ...editingContributo, dati: { ...editingContributo.dati, plus_code: e.target.value } })}
+                    className="mt-1 border border-gray-200 rounded-xl px-3 py-2 w-full text-base"
+                  />
+                </div>
 
-    <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-xs font-semibold text-gray-400 uppercase">Latitudine</label>
+                    <input
+                      type="number" step="any"
+                      value={editingContributo.dati?.lat ?? ''}
+                      onChange={(e) => setEditingContributo({ ...editingContributo, dati: { ...editingContributo.dati, lat: e.target.value } })}
+                      className="mt-1 border border-gray-200 rounded-xl px-3 py-2 w-full text-base"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs font-semibold text-gray-400 uppercase">Longitudine</label>
+                    <input
+                      type="number" step="any"
+                      value={editingContributo.dati?.lng ?? ''}
+                      onChange={(e) => setEditingContributo({ ...editingContributo, dati: { ...editingContributo.dati, lng: e.target.value } })}
+                      className="mt-1 border border-gray-200 rounded-xl px-3 py-2 w-full text-base"
+                    />
+                  </div>
+                </div>
 
-      <div>
-        <label className="text-xs font-semibold text-gray-400 uppercase">
-          Latitudine
-        </label>
-        <input
-          type="number"
-          step="any"
-          value={editingContributo.dati?.lat ?? ''}
-          onChange={(e) =>
-            setEditingContributo({
-              ...editingContributo,
-              dati: {
-                ...editingContributo.dati,
-                lat: e.target.value,
-              },
-            })
-          }
-          className="mt-1 border border-gray-200 rounded-xl px-3 py-2 w-full text-base"
-        />
-      </div>
+                <div>
+                  <label className="text-xs font-semibold text-gray-400 uppercase">Note</label>
+                  <textarea
+                    value={editingContributo.dati?.note || ''}
+                    onChange={(e) => setEditingContributo({ ...editingContributo, dati: { ...editingContributo.dati, note: e.target.value } })}
+                    className="mt-1 border border-gray-200 rounded-xl px-3 py-2 w-full min-h-[120px] text-base"
+                  />
+                </div>
 
-      <div>
-        <label className="text-xs font-semibold text-gray-400 uppercase">
-          Longitudine
-        </label>
-        <input
-          type="number"
-          step="any"
-          value={editingContributo.dati?.lng ?? ''}
-          onChange={(e) =>
-            setEditingContributo({
-              ...editingContributo,
-              dati: {
-                ...editingContributo.dati,
-                lng: e.target.value,
-              },
-            })
-          }
-          className="mt-1 border border-gray-200 rounded-xl px-3 py-2 w-full text-base"
-        />
-      </div>
+              </div>
+            )}
 
-    </div>
-
-    <div>
-      <label className="text-xs font-semibold text-gray-400 uppercase">
-        Note
-      </label>
-      <textarea
-        value={editingContributo.dati?.note || ''}
-        onChange={(e) =>
-          setEditingContributo({
-            ...editingContributo,
-            dati: {
-              ...editingContributo.dati,
-              note: e.target.value,
-            },
-          })
-        }
-        className="mt-1 border border-gray-200 rounded-xl px-3 py-2 w-full min-h-[120px] text-base"
-      />
-    </div>
-
-  </div>
-)}
-            
             <button onClick={saveContributoModificato}
               className="bg-blue-600 text-white rounded-xl py-3 font-medium hover:opacity-90">
               Salva modifiche
