@@ -252,18 +252,19 @@ export default function AdminAttivitaScreen({ adminPin, initialEditId }: Props) 
     if (!editingAttivita.categoria?.trim()) { toast.error('Inserisci la categoria'); return; }
 
     setSaving(true);
-    const res = await updateAttivita(adminPin, {
-      id:             editingAttivita.id,
-      nome:           editingAttivita.nome.trim(),
-      categoria:      editingAttivita.categoria,
-      indirizzo:      editingAttivita.indirizzo,
-      ubicazione:     editingAttivita.ubicazione,
-      maps_query:     editingAttivita.maps_query,
-      distanza_piedi: editingAttivita.distanza_piedi,
-      convenzionato:  editingAttivita.convenzionato,
-      note:           editingAttivita.note,
-      fasce_orarie:   (editingAttivita.fasce_orarie ?? []) as FasciaOraria[],
-    });
+   const res = await updateAttivita(adminPin, {
+  id: editingAttivita.id,
+  nome: editingAttivita.nome.trim(),
+  categoria: editingAttivita.categoria,
+  indirizzo: editingAttivita.indirizzo,
+  ubicazione: editingAttivita.ubicazione,
+  maps_query: editingAttivita.maps_query,
+  distanza_piedi: editingAttivita.distanza_piedi,
+  convenzionato: editingAttivita.convenzionato,
+  note: editingAttivita.note,
+  fasce_orarie: (editingAttivita.fasce_orarie ?? []) as FasciaOraria[],
+  dati_extra: editingAttivita.dati_extra ?? null,
+});
     setSaving(false);
 
     if (!res.ok) { toast.error(res.error?.message ?? 'Errore salvataggio'); return; }
