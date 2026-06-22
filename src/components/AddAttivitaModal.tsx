@@ -120,14 +120,24 @@ export default function AddAttivitaModal({ stazioneId, onClose, onSuccess }: Pro
   }
 
   return (
-    <div className="fixed inset-0 z-[9999] bg-black/40 flex items-end justify-center"
+   <div
+  className="
+    fixed inset-0 z-[9999]
+    bg-black/40
+    flex
+    items-end
+    md:items-center
+    justify-center
+    p-0 md:p-4
+  "
       onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
 
       {/* PANNELLO — flex-col, overflow-hidden */}
       <div
         ref={panelRef}
         style={dragStyle}
-        className="bg-white w-full rounded-t-3xl flex flex-col max-h-[92vh] overflow-hidden"
+        className="
+ className="bg-white w-full md:max-w-2xl lg:max-w-3xl rounded-t-3xl md:rounded-3xl flex flex-col max-h-[92vh] md:max-h-[80vh] overflow-hidden shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
 
@@ -161,7 +171,7 @@ export default function AddAttivitaModal({ stazioneId, onClose, onSuccess }: Pro
           <div className="flex flex-col gap-1">
             <label className="text-xs font-semibold text-gray-400 uppercase tracking-wide">Nome *</label>
             <input value={nome} onChange={(e) => setNome(e.target.value)}
-              placeholder="es. Hotel Milano Centrale"
+              placeholder="es.  Caffè Napoli"
               className="border border-gray-200 rounded-xl px-3 py-2.5 text-base" />
           </div>
 
@@ -243,13 +253,23 @@ export default function AddAttivitaModal({ stazioneId, onClose, onSuccess }: Pro
               className="border border-gray-200 rounded-xl px-3 py-2.5 text-base" />
           </div>
 
-          {/* MAPS QUERY */}
-          <div className="flex flex-col gap-1">
-            <label className="text-xs font-semibold text-gray-400 uppercase tracking-wide">Maps Query</label>
-            <input value={mapsQuery} onChange={(e) => setMapsQuery(e.target.value)}
-              placeholder="es. Hotel Milano Centrale via Pisani"
-              className="border border-gray-200 rounded-xl px-3 py-2.5 text-base" />
-          </div>
+         {/* MAPS QUERY */}
+<div className="flex flex-col gap-1">
+  <label className="text-xs font-semibold text-gray-400 uppercase tracking-wide">
+    Google Maps
+  </label>
+
+  <input
+    value={mapsQuery}
+    onChange={(e) => setMapsQuery(e.target.value)}
+    placeholder="es. Bar Napoli Milano Centrale"
+    className="border border-gray-200 rounded-xl px-3 py-2.5 text-base"
+  />
+
+  <p className="text-xs text-gray-500 mt-1">
+    Inserisci il nome dell'attività come compare su Google Maps.
+  </p>
+</div>
 
           {/* NOTE (solo per non-hotel — hotel usa note_equipaggi) */}
           {!isHotel && (
