@@ -200,6 +200,7 @@ export default function AdminAttivitaScreen({ adminPin, initialEditId }: Props) 
       fasce_orarie: Array.isArray(a.fasce_orarie)
         ? a.fasce_orarie.map((f) => ({ ...f, giorni: Array.isArray(f.giorni) ? [...f.giorni] : [] }))
         : [],
+      dati_extra: a.dati_extra ?? null,
     });
   }
 
@@ -250,19 +251,19 @@ export default function AdminAttivitaScreen({ adminPin, initialEditId }: Props) 
     if (!editingAttivita.categoria?.trim()) { toast.error('Inserisci la categoria'); return; }
 
     setSaving(true);
-   const res = await updateAttivita(adminPin, {
-  id: editingAttivita.id,
-  nome: editingAttivita.nome.trim(),
-  categoria: editingAttivita.categoria,
-  indirizzo: editingAttivita.indirizzo,
-  ubicazione: editingAttivita.ubicazione,
-  maps_query: editingAttivita.maps_query,
-  distanza_piedi: editingAttivita.distanza_piedi,
-  convenzionato: editingAttivita.convenzionato,
-  note: editingAttivita.note,
-  fasce_orarie: (editingAttivita.fasce_orarie ?? []) as FasciaOraria[],
-  dati_extra: editingAttivita.dati_extra ?? null,
-});
+    const res = await updateAttivita(adminPin, {
+      id: editingAttivita.id,
+      nome: editingAttivita.nome.trim(),
+      categoria: editingAttivita.categoria,
+      indirizzo: editingAttivita.indirizzo,
+      ubicazione: editingAttivita.ubicazione,
+      maps_query: editingAttivita.maps_query,
+      distanza_piedi: editingAttivita.distanza_piedi,
+      convenzionato: editingAttivita.convenzionato,
+      note: editingAttivita.note,
+      fasce_orarie: (editingAttivita.fasce_orarie ?? []) as FasciaOraria[],
+      dati_extra: editingAttivita.dati_extra ?? null,
+    });
     setSaving(false);
 
     if (!res.ok) { toast.error(res.error?.message ?? 'Errore salvataggio'); return; }
@@ -478,142 +479,141 @@ export default function AdminAttivitaScreen({ adminPin, initialEditId }: Props) 
                 onChange={(e) => setEditingAttivita({ ...editingAttivita, categoria: e.target.value })}
                 className="border rounded-xl px-3 py-2 text-base">
                 <option value="">Seleziona categoria</option>
-               {CATEGORIE_ATTIVITA.map((c) => <option key={c} value={c}>{c}</option>)}
+                {CATEGORIE_ATTIVITA.map((c) => <option key={c} value={c}>{c}</option>)}
               </select>
             </div>
 
+            {/* SEZIONE HOTEL */}
             {editingAttivita.categoria === 'Hotel' && (
-  <div className="bg-blue-50 border border-blue-100 rounded-2xl p-4 flex flex-col gap-3">
+              <div className="bg-blue-50 border border-blue-100 rounded-2xl p-4 flex flex-col gap-3">
 
-    <h3 className="font-semibold text-blue-700">
-      Informazioni Hotel
-    </h3>
+                <h3 className="font-semibold text-blue-700">
+                  Informazioni Hotel
+                </h3>
 
-    <div className="flex flex-col gap-1">
-      <label className="text-xs text-gray-500">Telefono</label>
-      <input
-        value={editingAttivita.dati_extra?.telefono || ''}
-        onChange={(e) =>
-          setEditingAttivita({
-            ...editingAttivita,
-            dati_extra: {
-  ...(editingAttivita.dati_extra ?? {}),
-  telefono: e.target.value,
-},
-          })
-        }
-        className="border rounded-xl px-3 py-2 text-base"
-      />
-    </div>
+                <div className="flex flex-col gap-1">
+                  <label className="text-xs text-gray-500">Telefono</label>
+                  <input
+                    value={editingAttivita.dati_extra?.telefono || ''}
+                    onChange={(e) =>
+                      setEditingAttivita({
+                        ...editingAttivita,
+                        dati_extra: {
+                          ...(editingAttivita.dati_extra ?? {}),
+                          telefono: e.target.value,
+                        },
+                      })
+                    }
+                    className="border rounded-xl px-3 py-2 text-base"
+                  />
+                </div>
 
-    <label className="flex items-center gap-2">
-      <input
-        type="checkbox"
-        checked={Boolean(editingAttivita.dati_extra?.reception_h24)}
-        onChange={(e) =>
-          setEditingAttivita({
-            ...editingAttivita,
-            dati_extra: {
-  ...(editingAttivita.dati_extra ?? {}),
-  reception_h24: e.target.checked,
-},
-          })
-        }
-      />
-      Reception H24
-    </label>
+                <label className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    checked={Boolean(editingAttivita.dati_extra?.reception_h24)}
+                    onChange={(e) =>
+                      setEditingAttivita({
+                        ...editingAttivita,
+                        dati_extra: {
+                          ...(editingAttivita.dati_extra ?? {}),
+                          reception_h24: e.target.checked,
+                        },
+                      })
+                    }
+                  />
+                  Reception H24
+                </label>
 
-    <label className="flex items-center gap-2">
-      <input
-        type="checkbox"
-        checked={Boolean(editingAttivita.dati_extra?.colazione)}
-        onChange={(e) =>
-          setEditingAttivita({
-            ...editingAttivita,
-            dati_extra: {
-             ...(editingAttivita.dati_extra ?? {}),
-              colazione: e.target.checked,
-            },
-          })
-        }
-      />
-      Colazione disponibile
-    </label>
+                <label className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    checked={Boolean(editingAttivita.dati_extra?.colazione)}
+                    onChange={(e) =>
+                      setEditingAttivita({
+                        ...editingAttivita,
+                        dati_extra: {
+                          ...(editingAttivita.dati_extra ?? {}),
+                          colazione: e.target.checked,
+                        },
+                      })
+                    }
+                  />
+                  Colazione disponibile
+                </label>
 
-    <label className="flex items-center gap-2">
-      <input
-        type="checkbox"
-        checked={Boolean(editingAttivita.dati_extra?.wifi)}
-        onChange={(e) =>
-          setEditingAttivita({
-            ...editingAttivita,
-            dati_extra: {
-              ...(editingAttivita.dati_extra ?? {}),
-              wifi: e.target.checked,
-            },
-          })
-        }
-      />
-      WiFi disponibile
-    </label>
+                <label className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    checked={Boolean(editingAttivita.dati_extra?.wifi)}
+                    onChange={(e) =>
+                      setEditingAttivita({
+                        ...editingAttivita,
+                        dati_extra: {
+                          ...(editingAttivita.dati_extra ?? {}),
+                          wifi: e.target.checked,
+                        },
+                      })
+                    }
+                  />
+                  WiFi disponibile
+                </label>
 
-    <label className="flex items-center gap-2">
-      <input
-        type="checkbox"
-        checked={Boolean(editingAttivita.dati_extra?.navetta)}
-        onChange={(e) =>
-          setEditingAttivita({
-            ...editingAttivita,
-            dati_extra: {
-             ...(editingAttivita.dati_extra ?? {}),
-              navetta: e.target.checked,
-            },
-          })
-        }
-      />
-      Navetta disponibile
-    </label>
+                <label className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    checked={Boolean(editingAttivita.dati_extra?.navetta)}
+                    onChange={(e) =>
+                      setEditingAttivita({
+                        ...editingAttivita,
+                        dati_extra: {
+                          ...(editingAttivita.dati_extra ?? {}),
+                          navetta: e.target.checked,
+                        },
+                      })
+                    }
+                  />
+                  Navetta disponibile
+                </label>
 
-    <label className="flex items-center gap-2">
-      <input
-        type="checkbox"
-        checked={Boolean(editingAttivita.dati_extra?.ristorante)}
-        onChange={(e) =>
-          setEditingAttivita({
-            ...editingAttivita,
-            dati_extra: {
-             ...(editingAttivita.dati_extra ?? {}),
-              ristorante: e.target.checked,
-            },
-          })
-        }
-      />
-      Ristorante interno
-    </label>
+                <label className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    checked={Boolean(editingAttivita.dati_extra?.ristorante)}
+                    onChange={(e) =>
+                      setEditingAttivita({
+                        ...editingAttivita,
+                        dati_extra: {
+                          ...(editingAttivita.dati_extra ?? {}),
+                          ristorante: e.target.checked,
+                        },
+                      })
+                    }
+                  />
+                  Ristorante interno
+                </label>
 
-    <div className="flex flex-col gap-1">
-      <label className="text-xs text-gray-500">
-        Note equipaggi
-      </label>
-      <textarea
-        rows={3}
-        value={editingAttivita.dati_extra?.note_equipaggi || ''}
-        onChange={(e) =>
-          setEditingAttivita({
-            ...editingAttivita,
-            dati_extra: {
-             ...(editingAttivita.dati_extra ?? {}),
-              note_equipaggi: e.target.value,
-            },
-          })
-        }
-        className="border rounded-xl px-3 py-2 resize-none text-base"
-      />
-    </div>
+                <div className="flex flex-col gap-1">
+                  <label className="text-xs text-gray-500">Note equipaggi</label>
+                  <textarea
+                    rows={3}
+                    value={editingAttivita.dati_extra?.note_equipaggi || ''}
+                    onChange={(e) =>
+                      setEditingAttivita({
+                        ...editingAttivita,
+                        dati_extra: {
+                          ...(editingAttivita.dati_extra ?? {}),
+                          note_equipaggi: e.target.value,  // ← FIX P1: virgola corretta dopo lo spread
+                        },
+                      })
+                    }
+                    className="border rounded-xl px-3 py-2 resize-none text-base"
+                  />
+                </div>
 
-  </div>
-)}
-            
+              </div>
+            )}
+
             {/* INDIRIZZO */}
             <div className="flex flex-col gap-1">
               <label className="text-xs text-gray-500">Indirizzo</label>
@@ -645,9 +645,9 @@ export default function AdminAttivitaScreen({ adminPin, initialEditId }: Props) 
                 onChange={(e) => setEditingAttivita({ ...editingAttivita, distanza_piedi: e.target.value || null })}
                 className="border rounded-xl px-3 py-2 text-base">
                 <option value="">Non specificata</option>
-               {DISTANZE_ATTIVITA.map((d) => (
-  <option key={d} value={d}>{d}</option>
-))}
+                {DISTANZE_ATTIVITA.map((d) => (
+                  <option key={d} value={d}>{d}</option>
+                ))}
               </select>
             </div>
 
@@ -662,128 +662,102 @@ export default function AdminAttivitaScreen({ adminPin, initialEditId }: Props) 
               </label>
             </div>
 
-          {/* FASCE ORARIE (solo NON Hotel) */}
-{editingAttivita.categoria !== 'Hotel' && (
-  <div className="flex flex-col gap-4">
-    <div className="flex items-center justify-between">
-      <h3 className="font-semibold">Fasce orarie</h3>
+            {/* FASCE ORARIE (solo NON Hotel) */}
+            {editingAttivita.categoria !== 'Hotel' && (
+              <div className="flex flex-col gap-4">
+                <div className="flex items-center justify-between">
+                  <h3 className="font-semibold">Fasce orarie</h3>
+                  <button
+                    type="button"
+                    onClick={addFascia}
+                    className="text-sm text-trenord-green font-medium"
+                  >
+                    + Aggiungi fascia
+                  </button>
+                </div>
 
-      <button
-        type="button"
-        onClick={addFascia}
-        className="text-sm text-trenord-green font-medium"
-      >
-        + Aggiungi fascia
-      </button>
-    </div>
+                {(editingAttivita.fasce_orarie ?? []).map((fascia, index) => {
+                  const giorni = Array.isArray(fascia.giorni) ? fascia.giorni : [];
+                  return (
+                    <div key={index} className="border rounded-2xl p-4 flex flex-col gap-4">
+                      <div className="flex items-center justify-between">
+                        <div className="font-medium text-sm">Fascia {index + 1}</div>
+                        {(editingAttivita.fasce_orarie?.length ?? 0) > 1 && (
+                          <button
+                            type="button"
+                            onClick={() => removeFascia(index)}
+                            className="text-red-600 text-sm"
+                          >
+                            Elimina
+                          </button>
+                        )}
+                      </div>
+                      <div className="grid grid-cols-4 gap-2">
+                        {GIORNI_SETTIMANA.map((giorno) => (
+                          <button
+                            key={giorno}
+                            type="button"
+                            onClick={() => toggleGiorno(index, giorno)}
+                            className={`rounded-xl border py-2 text-sm ${
+                              giorni.includes(giorno)
+                                ? 'bg-trenord-green text-white border-trenord-green'
+                                : 'bg-white text-gray-700 border-gray-200'
+                            }`}
+                          >
+                            {giorno}
+                          </button>
+                        ))}
+                      </div>
+                      <div className="grid grid-cols-2 gap-3">
+                        <div className="flex flex-col gap-1">
+                          <label className="text-xs text-gray-500">Apertura</label>
+                          <input
+                            type="time"
+                            value={fascia.apertura || ''}
+                            onChange={(e) => updateFascia(index, 'apertura', e.target.value)}
+                            className="border rounded-xl px-3 py-2 text-base"
+                          />
+                        </div>
+                        <div className="flex flex-col gap-1">
+                          <label className="text-xs text-gray-500">Chiusura</label>
+                          <input
+                            type="time"
+                            value={fascia.chiusura || ''}
+                            onChange={(e) => updateFascia(index, 'chiusura', e.target.value)}
+                            className="border rounded-xl px-3 py-2 text-base"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
 
-    {(editingAttivita.fasce_orarie ?? []).map((fascia, index) => {
-      const giorni = Array.isArray(fascia.giorni)
-        ? fascia.giorni
-        : [];
-
-      return (
-        <div
-          key={index}
-          className="border rounded-2xl p-4 flex flex-col gap-4"
-        >
-          <div className="flex items-center justify-between">
-            <div className="font-medium text-sm">
-              Fascia {index + 1}
-            </div>
-
-            {(editingAttivita.fasce_orarie?.length ?? 0) > 1 && (
-              <button
-                type="button"
-                onClick={() => removeFascia(index)}
-                className="text-red-600 text-sm"
-              >
-                Elimina
-              </button>
+                {(editingAttivita.fasce_orarie?.length ?? 0) === 0 && (
+                  <p className="text-sm text-gray-400 text-center py-2">
+                    Nessuna fascia. Clicca "+ Aggiungi fascia" per aggiungerne una.
+                  </p>
+                )}
+              </div>
             )}
-          </div>
 
-          <div className="grid grid-cols-4 gap-2">
-            {GIORNI_SETTIMANA.map((giorno) => (
-              <button
-                key={giorno}
-                type="button"
-                onClick={() => toggleGiorno(index, giorno)}
-                className={`rounded-xl border py-2 text-sm ${
-                  giorni.includes(giorno)
-                    ? 'bg-trenord-green text-white border-trenord-green'
-                    : 'bg-white text-gray-700 border-gray-200'
-                }`}
-              >
-                {giorno}
-              </button>
-            ))}
-          </div>
-
-          <div className="grid grid-cols-2 gap-3">
-            <div className="flex flex-col gap-1">
-              <label className="text-xs text-gray-500">
-                Apertura
-              </label>
-
-              <input
-                type="time"
-                value={fascia.apertura || ''}
-                onChange={(e) =>
-                  updateFascia(index, 'apertura', e.target.value)
-                }
-                className="border rounded-xl px-3 py-2 text-base"
-              />
-            </div>
-
-            <div className="flex flex-col gap-1">
-              <label className="text-xs text-gray-500">
-                Chiusura
-              </label>
-
-              <input
-                type="time"
-                value={fascia.chiusura || ''}
-                onChange={(e) =>
-                  updateFascia(index, 'chiusura', e.target.value)
-                }
-                className="border rounded-xl px-3 py-2 text-base"
-              />
-            </div>
-          </div>
-        </div>
-      );
-    })}
-
-    {(editingAttivita.fasce_orarie?.length ?? 0) === 0 && (
-      <p className="text-sm text-gray-400 text-center py-2">
-        Nessuna fascia. Clicca "+ Aggiungi fascia" per aggiungerne una.
-      </p>
-    )}
-  </div>
-)}
-
-           {/* NOTE (solo NON Hotel) */}
-{editingAttivita.categoria !== 'Hotel' && (
-  <div className="flex flex-col gap-1">
-    <label className="text-xs text-gray-500">
-      Note
-    </label>
-
-    <textarea
-      value={editingAttivita.note || ''}
-      onChange={(e) =>
-        setEditingAttivita({
-          ...editingAttivita,
-          note: e.target.value || null,
-        })
-      }
-      rows={3}
-      className="border rounded-xl px-3 py-2 resize-none text-base"
-      placeholder="Note aggiuntive..."
-    />
-  </div>
-)}
+            {/* NOTE (solo NON Hotel) */}
+            {editingAttivita.categoria !== 'Hotel' && (
+              <div className="flex flex-col gap-1">
+                <label className="text-xs text-gray-500">Note</label>
+                <textarea
+                  value={editingAttivita.note || ''}
+                  onChange={(e) =>
+                    setEditingAttivita({
+                      ...editingAttivita,
+                      note: e.target.value || null,
+                    })
+                  }
+                  rows={3}
+                  className="border rounded-xl px-3 py-2 resize-none text-base"
+                  placeholder="Note aggiuntive..."
+                />
+              </div>
+            )}
 
             {/* SALVA */}
             <button type="button" onClick={salvaModifica} disabled={saving}
