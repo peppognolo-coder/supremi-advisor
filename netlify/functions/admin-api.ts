@@ -233,7 +233,7 @@ export const handler: Handler = async (event: HandlerEvent) => {
 
     if (action === 'updateAttivita') {
       const { id, nome, categoria, indirizzo, ubicazione, maps_query,
-              distanza_piedi, convenzionato, note, fasce_orarie } = (payload ?? {}) as any;
+              distanza_piedi, convenzionato, note, fasce_orarie, dati_extra } = (payload ?? {}) as any;
       if (!id)     return err({ ...ERRORS.MISSING_PAYLOAD, message: 'Campo obbligatorio: id' });
       if (!nome?.trim())     return err({ ...ERRORS.MISSING_PAYLOAD, message: 'Campo obbligatorio: nome' });
       if (!categoria?.trim()) return err({ ...ERRORS.MISSING_PAYLOAD, message: 'Campo obbligatorio: categoria' });
@@ -242,7 +242,8 @@ export const handler: Handler = async (event: HandlerEvent) => {
         .update({ nome: nome.trim(), categoria, indirizzo: indirizzo ?? null,
                   ubicazione: ubicazione ?? null, maps_query: maps_query ?? null,
                   distanza_piedi: distanza_piedi ?? null, convenzionato: convenzionato ?? false,
-                  note: note ?? null, fasce_orarie: fasce_orarie ?? [] })
+                  note: note ?? null, fasce_orarie: fasce_orarie ?? [],
+                  dati_extra: dati_extra ?? null })
         .eq('id', id).select().single();
       if (error) return dbErr(error.message);
       return ok(data);
@@ -350,7 +351,8 @@ export const handler: Handler = async (event: HandlerEvent) => {
             .insert({ stazione_id: dati.stazione_id, nome: dati.nome, categoria: dati.categoria,
                       indirizzo: dati.indirizzo, maps_query: dati.maps_query, distanza_piedi: dati.distanza_piedi,
                       ubicazione: dati.ubicazione, note: dati.note, convenzionato: dati.convenzionato,
-                      fasce_orarie: fasceSalvate, is_active: true, deleted_at: null });
+                      fasce_orarie: fasceSalvate, is_active: true, deleted_at: null,
+                      dati_extra: dati.dati_extra ?? null });
           if (error) return dbErr(error.message);
         }
       }
