@@ -16,6 +16,7 @@ import toast from 'react-hot-toast';
 import { supabase } from '../lib/supabase';
 
 import { useSwipeDown } from '../lib/useSwipeDown';
+import HotelSheet from '../components/HotelSheet';
 import { useScrollLock } from '../lib/useScrollLock';
 
 import { getDeviceId } from '../lib/device';
@@ -113,6 +114,9 @@ export default function StazioniScreen({
     useState(false);
 
   const [selectedAttivita, setSelectedAttivita] =
+    useState<any>(null);
+
+  const [selectedHotel, setSelectedHotel] =
     useState<any>(null);
 
   const [mediaRating, setMediaRating] =
@@ -879,14 +883,12 @@ export default function StazioniScreen({
                       <button
                         type="button"
                         onClick={() => {
-
-                          setSelectedAttivita(
-                            attivita
-                          );
-
-                          loadRating(
-                            attivita.id
-                          );
+                          if (attivita.categoria === 'Hotel') {
+                            setSelectedHotel(attivita);
+                          } else {
+                            setSelectedAttivita(attivita);
+                            loadRating(attivita.id);
+                          }
                         }}
                         className="
                           w-full
@@ -1280,6 +1282,13 @@ export default function StazioniScreen({
       )}
 
       {/* DETTAGLIO ATTIVITA */}
+      {selectedHotel && (
+        <HotelSheet
+          hotel={selectedHotel}
+          onClose={() => setSelectedHotel(null)}
+        />
+      )}
+
       {selectedAttivita && (
         <AttivitaSheet
           onClose={() => setSelectedAttivita(null)}
