@@ -136,8 +136,7 @@ export default function AddAttivitaModal({ stazioneId, onClose, onSuccess }: Pro
       <div
         ref={panelRef}
         style={dragStyle}
-        className="
- className="bg-white w-full md:max-w-2xl lg:max-w-3xl rounded-t-3xl md:rounded-3xl flex flex-col max-h-[92vh] md:max-h-[80vh] overflow-hidden shadow-2xl"
+        className="bg-white w-full md:max-w-2xl lg:max-w-3xl rounded-t-3xl md:rounded-3xl flex flex-col max-h-[92vh] md:max-h-[80vh] overflow-hidden shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
 
