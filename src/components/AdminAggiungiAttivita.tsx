@@ -6,21 +6,12 @@ import {
 
 import { supabase } from '../lib/supabase';
 
+import { CATEGORIE_ATTIVITA } from '../lib/adminApi';
+
 interface Stazione {
   id: string;
   nome: string;
 }
-
-const categorie = [
-  'bar',
-  'fast_food',
-  'ristorante',
-  'supermercato',
-  'farmacia',
-  'tabacchi',
-  'hotel',
-  'altro',
-];
 
 export default function AdminAggiungiAttivita() {
 
@@ -33,8 +24,8 @@ export default function AdminAggiungiAttivita() {
   const [nome, setNome] =
     useState('');
 
-  const [categoria, setCategoria] =
-    useState('bar');
+const [categoria, setCategoria] =
+  useState('Bar');
 
   const [ubicazione, setUbicazione] =
     useState('');
@@ -122,6 +113,7 @@ export default function AdminAggiungiAttivita() {
       setUbicazione('');
       setMapsQuery('');
       setNote('');
+      setCategoria('Bar');
     }
 
     setLoading(false);
@@ -215,7 +207,7 @@ export default function AdminAggiungiAttivita() {
               e.target.value
             )
           }
-          placeholder="McDonald's"
+          placeholder="Bar Centrale"
           className="border border-gray-200 rounded-2xl px-4 py-3 text-base"
         />
 
@@ -240,8 +232,8 @@ export default function AdminAggiungiAttivita() {
           className="border border-gray-200 rounded-2xl px-4 py-3 text-base"
         >
 
-          {categorie.map(
-            (categoria) => (
+          {CATEGORIE_ATTIVITA.map(
+  (categoria) => (
 
               <option
                 key={categoria}
@@ -298,7 +290,7 @@ export default function AdminAggiungiAttivita() {
               e.target.value
             )
           }
-          placeholder="McDonald's Milano Centrale"
+         placeholder="Nome attività come appare su Google Maps"
           className="border border-gray-200 rounded-2xl px-4 py-3 text-base"
         />
 
