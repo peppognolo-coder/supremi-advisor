@@ -602,7 +602,7 @@ export default function AdminAttivitaScreen({ adminPin, initialEditId }: Props) 
           setEditingAttivita({
             ...editingAttivita,
             dati_extra: {
-             ...(editingAttivita.dati_extra ?? {})
+             ...(editingAttivita.dati_extra ?? {}),
               note_equipaggi: e.target.value,
             },
           })
