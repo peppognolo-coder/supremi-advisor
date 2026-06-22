@@ -39,6 +39,16 @@ export interface FasciaOraria {
   chiusura: string;
 }
 
+export interface HotelDatiExtra {
+  telefono?: string | null;
+  reception_h24?: boolean;
+  colazione?: boolean;
+  wifi?: boolean;
+  navetta?: boolean;
+  ristorante?: boolean;
+  note_equipaggi?: string | null;
+}
+
 export interface AttivitaRow {
   id: string;
   stazione_id: string;
@@ -53,7 +63,37 @@ export interface AttivitaRow {
   deleted_at: string | null;
   note: string | null;
   fasce_orarie: FasciaOraria[] | null;
+  dati_extra: HotelDatiExtra | null;
+  created_at?: string;
 }
+
+export const CATEGORIE_ATTIVITA = [
+  'Bar', 'Fast Food', 'Market', 'Ristorante',
+  'Farmacia', 'Tabacchi', 'Hotel', 'Altro',
+] as const;
+
+export const DISTANZE_ATTIVITA = [
+  'In stazione',
+  'Entro 2 minuti a piedi',
+  'Entro 5 minuti a piedi',
+  'Entro 10 minuti a piedi',
+  'Oltre 10 minuti',
+] as const;
+
+export const TIPI_PROBLEMA_HOTEL = [
+  'Pulizia insufficiente',
+  'Camere rumorose',
+  'Colazione scarsa',
+  'Personale poco disponibile',
+  'WiFi non funzionante',
+  'Climatizzazione guasta',
+  'Problemi nella camera',
+  'Struttura deteriorata',
+  'Navetta non disponibile',
+  'Servizio navetta inaffidabile',
+  'Informazioni non aggiornate',
+  'Altro',
+] as const;
 
 export interface StazioneRow {
   id: string;
