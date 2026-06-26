@@ -97,6 +97,14 @@ export default function App() {
     setActiveTab('stazioni');
   }
 
+  // Segnala problema dalla Home → Salette pre-filtrate per stazione attiva
+  const [pendingSaletteStationName, setPendingSaletteStationName] = useState<string | null>(null);
+
+  function handleOpenSegnalazione(stationName: string) {
+    setPendingSaletteStationName(stationName);
+    setActiveTab('salette');
+  }
+
   // =========================
   // META TAGS PWA
   // =========================
@@ -275,12 +283,17 @@ export default function App() {
             onStationSelected={setActiveStation}
             onStationCleared={clearActiveStation}
             onOpenStazione={handleOpenStazione}
+            onOpenSegnalazione={handleOpenSegnalazione}
           />
         )}
 
         {activeTab === 'salette' && (
           <div className="max-w-2xl mx-auto px-4 py-4">
-            <SaletteScreen refreshKey={refreshKey} onNavigateToContributi={() => setActiveTab('contributi')} />
+            <SaletteScreen
+              refreshKey={refreshKey}
+              onNavigateToContributi={() => setActiveTab('contributi')}
+              initialStationName={pendingSaletteStationName}
+            />
           </div>
         )}
 
