@@ -100,8 +100,10 @@ export default function SaletteScreen({
     async function load() {
       setLoading(true);
 
-      const { data, error } = await supabase.from('salette').select('*');
-      const { data: stazioniData } = await supabase.from('stazioni').select('nome, lat, lng');
+      const [{ data, error }, { data: stazioniData }] = await Promise.all([
+        supabase.from('salette').select('*'),
+        supabase.from('stazioni').select('nome, lat, lng'),
+      ]);
 
       if (error) {
         console.error(error);
@@ -265,6 +267,10 @@ export default function SaletteScreen({
               <SalettaCard
                 stazioneName={group.stazione}
                 salette={group.salette}
+                initialExpanded={
+                  !!initialStationName &&
+                  group.stazione.toLowerCase() === initialStationName.toLowerCase()
+                }
               />
             </div>
           ))}
