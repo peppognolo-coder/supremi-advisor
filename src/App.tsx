@@ -69,11 +69,10 @@ export default function App() {
     loading: stationLoading,
     setActiveStation,
     clearActiveStation,
-  } = useHomeStation(refreshKey);
+  } = useHomeStation(refreshKey, activeTab === 'home');
 
   // =========================
   // NAVIGAZIONE DEEP-LINK
-  // Quando Home chiede di aprire StazioniScreen con stazione espansa
   // =========================
 
   const [pendingExpandId, setPendingExpandId] = useState<string | null>(null);
@@ -84,10 +83,6 @@ export default function App() {
     setPendingCategoriaFilter(categoriaFilter ?? null);
     setActiveTab('stazioni');
   }
-
-  // Reset del pending dopo che StazioniScreen lo ha consumato
-  // (usiamo una key per forzare il re-mount di StazioniScreen quando cambia il target)
-  const stazioniKey = pendingExpandId ?? 'default';
 
   // =========================
   // META TAGS PWA
@@ -215,7 +210,7 @@ export default function App() {
     <div className="min-h-screen bg-gray-100 flex flex-col">
 
       {/* PULL REFRESH INDICATOR */}
-      <div className={`fixed top-[72px] left-1/2 -translate-x-1/2 z-[100] transition-all duration-300 ${refreshing ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-4'}`}>
+      <div className={`fixed top-[72px] left-1/2 -translate-x-1/2 z-[100] pointer-events-none transition-all duration-300 ${refreshing ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-4'}`}>
         <div className="bg-white shadow-lg border border-gray-200 rounded-full px-4 py-2 flex items-center gap-2">
           <RefreshCw className="w-4 h-4 animate-spin text-trenord-green" />
           <span className="text-xs font-medium text-gray-700">Aggiornamento...</span>
@@ -277,11 +272,7 @@ export default function App() {
 
         {activeTab === 'stazioni' && (
           <div className="max-w-2xl mx-auto px-4 py-4">
-            {/* key={stazioniKey} forza il re-mount quando cambia la stazione target,
-                garantendo che initialExpandedId venga applicato anche se
-                StazioniScreen era già montato. */}
             <StazioniScreen
-              key={stazioniKey}
               refreshKey={refreshKey}
               onNavigateToContributi={() => setActiveTab('contributi')}
               initialExpandedId={pendingExpandId}
