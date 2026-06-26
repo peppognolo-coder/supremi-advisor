@@ -36,34 +36,22 @@ export interface HomeStationData {
 // ---------------------------------------------------------------------------
 
 function readPersistedId(): string | null {
-  try {
-    return localStorage.getItem(STORAGE_KEY);
-  } catch {
-    return null;
-  }
+  try { return localStorage.getItem(STORAGE_KEY); } catch { return null; }
 }
 
 function persistId(id: string): void {
-  try {
-    localStorage.setItem(STORAGE_KEY, id);
-  } catch {
-    // silently ignore — non è critico
-  }
+  try { localStorage.setItem(STORAGE_KEY, id); } catch {}
 }
 
 function clearPersistedId(): void {
-  try {
-    localStorage.removeItem(STORAGE_KEY);
-  } catch {
-    // silently ignore
-  }
+  try { localStorage.removeItem(STORAGE_KEY); } catch {}
 }
 
 // ---------------------------------------------------------------------------
 // Hook
 // ---------------------------------------------------------------------------
 
-export function useHomeStation() {
+export function useHomeStation(refreshKey = 0) {
   const [activeStationId, setActiveStationId] = useState<string | null>(
     readPersistedId
   );
@@ -73,7 +61,7 @@ export function useHomeStation() {
   const [error, setError] = useState<string | null>(null);
 
   // =========================================================================
-  // Carica i dati completi della stazione attiva
+  // Carica dati completi della stazione attiva
   // =========================================================================
 
   const loadStationData = useCallback(async (id: string) => {
@@ -81,7 +69,6 @@ export function useHomeStation() {
     setError(null);
 
     try {
-      // --- 1. Dati stazione -----------------------------------------------
       const { data: stazione, error: stazioneErr } = await supabase
         .from('stazioni')
         .select('*')
@@ -90,31 +77,24 @@ export function useHomeStation() {
         .single();
 
       if (stazioneErr || !stazione) {
-        // La stazione non esiste più o non è attiva — reset
         clearPersistedId();
         setActiveStationId(null);
         setData(null);
         return;
       }
 
-      // --- 2. Conteggi in parallelo ----------------------------------------
       const [saletteRes, attivitaRes, hotelRes] = await Promise.all([
-        // Salette non chiuse
         supabase
           .from('salette')
           .select('id', { count: 'exact', head: true })
           .eq('stazione_id', id)
           .neq('stato', 'chiusa'),
-
-        // Attività attive, escludendo Hotel
         supabase
           .from('attivita_stazione')
           .select('id', { count: 'exact', head: true })
           .eq('stazione_id', id)
           .eq('is_active', true)
           .neq('categoria', 'Hotel'),
-
-        // Solo Hotel
         supabase
           .from('attivita_stazione')
           .select('id', { count: 'exact', head: true })
@@ -129,8 +109,6 @@ export function useHomeStation() {
         hotel: hotelRes.count ?? 0,
       };
 
-      // --- 3. Problemi aperti (via JOIN salette → saletta_segnalazioni) -----
-      // saletta_segnalazioni.saletta_id → salette.id → salette.stazione_id
       const { data: problemiRaw } = await supabase
         .from('saletta_segnalazioni')
         .select('id, tipo, nota, stato, salette!inner(stazione_id)')
@@ -140,17 +118,12 @@ export function useHomeStation() {
         .limit(5);
 
       const problemiAperti: HomeStationProblema[] = (problemiRaw ?? []).map(
-        (p: any) => ({
-          id: p.id,
-          tipo: p.tipo,
-          nota: p.nota,
-          stato: p.stato,
-        })
+        (p: any) => ({ id: p.id, tipo: p.tipo, nota: p.nota, stato: p.stato })
       );
 
       setData({ stazione, counts, problemiAperti });
     } catch (err) {
-      console.error('[useHomeStation] Errore caricamento:', err);
+      console.error('[useHomeStation] Errore:', err);
       setError('Impossibile caricare i dati della stazione.');
     } finally {
       setLoading(false);
@@ -158,7 +131,8 @@ export function useHomeStation() {
   }, []);
 
   // =========================================================================
-  // Effetto: carica quando cambia l'ID attivo
+  // Effetto: ricarica quando cambia stazione O quando refreshKey cambia
+  // refreshKey viene incrementato dal pull-to-refresh globale di App.tsx
   // =========================================================================
 
   useEffect(() => {
@@ -168,10 +142,10 @@ export function useHomeStation() {
       return;
     }
     loadStationData(activeStationId);
-  }, [activeStationId, loadStationData]);
+  }, [activeStationId, loadStationData, refreshKey]);
 
   // =========================================================================
-  // Azione: imposta stazione attiva
+  // Azioni
   // =========================================================================
 
   const setActiveStation = useCallback((id: string) => {
@@ -179,38 +153,23 @@ export function useHomeStation() {
     setActiveStationId(id);
   }, []);
 
-  // =========================================================================
-  // Azione: deseleziona stazione attiva
-  // =========================================================================
-
   const clearActiveStation = useCallback(() => {
     clearPersistedId();
     setActiveStationId(null);
     setData(null);
   }, []);
 
-  // =========================================================================
-  // Azione: refresh manuale
-  // =========================================================================
-
   const refresh = useCallback(() => {
-    if (activeStationId) {
-      loadStationData(activeStationId);
-    }
+    if (activeStationId) loadStationData(activeStationId);
   }, [activeStationId, loadStationData]);
 
   return {
-    /** ID della stazione attiva (null se nessuna selezionata) */
     activeStationId,
-    /** Dati completi: stazione + conteggi + problemi aperti */
     data,
     loading,
     error,
-    /** Imposta e persiste la stazione attiva */
     setActiveStation,
-    /** Rimuove la stazione attiva */
     clearActiveStation,
-    /** Ricarica i dati senza cambiare stazione */
     refresh,
   };
 }
