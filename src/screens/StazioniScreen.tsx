@@ -116,24 +116,43 @@ export default function StazioniScreen({
 
   // Ref per lo scroll automatico alla card espansa programmaticamente
   const expandedCardRef = React.useRef<HTMLDivElement | null>(null);
+  // Garantisce che scrollIntoView venga eseguito una sola volta per ogni target,
+  // anche se stazioni si aggiorna più volte (realtime, refresh, toggle preferiti)
+  const scrollDone = React.useRef(false);
 
-  // Al mount e quando initialExpandedId cambia: espandi la stazione target e scrolla
+  // Al mount e quando initialExpandedId cambia: imposta espansione e filtro categoria.
+  // Resetta scrollDone così il secondo useEffect eseguirà lo scroll per il nuovo target.
   useEffect(() => {
     if (!initialExpandedId) return;
+    scrollDone.current = false;
     setExpandedId(initialExpandedId);
 
     if (initialCategoriaFilter && initialCategoriaFilter !== 'attivita') {
       setCategoriaFilters({ [initialExpandedId]: initialCategoriaFilter });
     }
+  }, [initialExpandedId]);
 
-    const t = setTimeout(() => {
-      expandedCardRef.current?.scrollIntoView({
+  // Esegue scrollIntoView una sola volta, dopo che tutte le condizioni sono vere:
+  // 1. initialExpandedId è presente
+  // 2. expandedId corrisponde a initialExpandedId (espansione avvenuta)
+  // 3. la lista stazioni è stata caricata (stazioni.length > 0)
+  // 4. expandedCardRef.current non è null (card presente nel DOM)
+  // 5. scrollDone.current è false (scroll non ancora eseguito per questo target)
+  useEffect(() => {
+    if (
+      !scrollDone.current &&
+      initialExpandedId &&
+      expandedId === initialExpandedId &&
+      stazioni.length > 0 &&
+      expandedCardRef.current
+    ) {
+      expandedCardRef.current.scrollIntoView({
         behavior: 'smooth',
         block: 'start',
       });
-    }, 120);
-    return () => clearTimeout(t);
-  }, [initialExpandedId]); // reagisce ogni volta che cambia la stazione target
+      scrollDone.current = true;
+    }
+  }, [stazioni, expandedId, initialExpandedId]);
 
   const [
     addAttivitaStazioneId,
