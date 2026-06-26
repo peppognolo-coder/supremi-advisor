@@ -147,7 +147,7 @@ export const StazioneCard: React.FC<StazioneCardProps> = ({
           <div className="flex items-center gap-3">
             <button
               onClick={onRimuovi}
-              className="flex items-center gap-1 text-xs font-medium text-white/50 active:text-white/80 transition-colors"
+              className="flex items-center gap-1 text-xs font-medium text-white/80 active:text-white transition-colors"
             >
               <X className="w-3 h-3" />
               Rimuovi
