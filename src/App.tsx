@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 
 import type { Tab } from './types';
 
@@ -38,7 +38,7 @@ export default function App() {
 
   // =========================
   // SEARCH OVERLAY
-  // searchIsPersonal=true  → "Cambia" nella card: salva come stazione personale
+  // searchIsPersonal=true  → "Cambia": salva come stazione personale
   // searchIsPersonal=false → SearchBar globale: naviga senza modificare activeStation
   // =========================
 
@@ -56,24 +56,23 @@ export default function App() {
   }
 
   // =========================
-  // REFRESH KEY
-  // Condiviso con tutte le schermate, inclusa Home
+  // REFRESH KEY + refreshApp
+  // useCallback garantisce referenza stabile → HomeScreen.useEffect([onRefresh])
+  // non si riregistra ad ogni render di App (fix P2 + P8 doppio-tap)
   // =========================
 
   const [refreshKey, setRefreshKey] = useState(0);
   const [refreshing, setRefreshing] = useState(false);
 
-  function refreshApp() {
+  const refreshApp = useCallback(() => {
     setRefreshing(true);
     setRefreshKey((prev) => prev + 1);
     toast.success('Aggiornamento app...');
     setTimeout(() => setRefreshing(false), 1200);
-  }
+  }, []);
 
   // =========================
   // HOME STATION — UNICA ISTANZA
-  // Elevata qui per condividere stato tra HomeScreen e SearchOverlay.
-  // refreshKey passato come dipendenza → pull-to-refresh aggiorna anche la Home.
   // =========================
 
   const {
@@ -85,24 +84,35 @@ export default function App() {
   } = useHomeStation(refreshKey, activeTab === 'home');
 
   // =========================
-  // NAVIGAZIONE DEEP-LINK
+  // NAVIGAZIONE CONTESTUALE (one-shot)
+  // I pending vengono resettati da handleTabChange quando l'utente
+  // naviga manualmente via TabBar — mai da handleOpenStazione/Segnalazione.
   // =========================
 
   const [pendingExpandId, setPendingExpandId] = useState<string | null>(null);
   const [pendingCategoriaFilter, setPendingCategoriaFilter] = useState<string | null>(null);
+  const [pendingSaletteStationName, setPendingSaletteStationName] = useState<string | null>(null);
 
+  // Deep-link contestuali dalla Home — settano i pending PRIMA di cambiare tab
   function handleOpenStazione(stationId: string, categoriaFilter?: string) {
     setPendingExpandId(stationId);
     setPendingCategoriaFilter(categoriaFilter ?? null);
     setActiveTab('stazioni');
   }
 
-  // Segnala problema dalla Home → Salette pre-filtrate per stazione attiva
-  const [pendingSaletteStationName, setPendingSaletteStationName] = useState<string | null>(null);
-
   function handleOpenSegnalazione(stationName: string) {
     setPendingSaletteStationName(stationName);
     setActiveTab('salette');
+  }
+
+  // Navigazione manuale via TabBar — P1+P6+P7
+  // Resetta tutti i pending (one-shot) e porta lo scroll a 0
+  function handleTabChange(tab: Tab) {
+    setPendingExpandId(null);
+    setPendingCategoriaFilter(null);
+    setPendingSaletteStationName(null);
+    window.scrollTo(0, 0);
+    setActiveTab(tab);
   }
 
   // =========================
@@ -130,7 +140,7 @@ export default function App() {
   }, []);
 
   // =========================
-  // PULL TO REFRESH
+  // PULL TO REFRESH (su window — per schermate body-scroll)
   // =========================
 
   const touchStartY = useRef(0);
@@ -186,7 +196,7 @@ export default function App() {
       window.removeEventListener('touchmove', handleTouchMove);
       window.removeEventListener('touchend', handleTouchEnd);
     };
-  }, [refreshing]);
+  }, [refreshing, refreshApp]);
 
   // =========================
   // ADMIN MODE
@@ -243,7 +253,7 @@ export default function App() {
         <NavBar
           title={adminMode ? 'Supremi Advisor • ADMIN' : 'Supremi Advisor'}
           onAdminAccess={handleAdminAccess}
-          onLogoClick={() => setActiveTab('home')}
+          onLogoClick={() => handleTabChange('home')}
         />
       )}
 
@@ -269,10 +279,9 @@ export default function App() {
       {/* CONTENT */}
       <main className={isHomeTab ? 'flex-1' : 'flex-1 pt-[112px] pb-[72px]'}>
 
-        {/* HOME — riceve tutto dallo stato elevato in App */}
         {activeTab === 'home' && (
           <HomeScreen
-            onNavigate={setActiveTab}
+            onNavigate={handleTabChange}
             onOpenSearch={openSearchNavigate}
             onOpenSearchPersonal={openSearchPersonal}
             onAdminAccess={handleAdminAccess}
@@ -292,7 +301,7 @@ export default function App() {
           <div className="max-w-2xl mx-auto px-4 py-4">
             <SaletteScreen
               refreshKey={refreshKey}
-              onNavigateToContributi={() => setActiveTab('contributi')}
+              onNavigateToContributi={() => handleTabChange('contributi')}
               initialStationName={pendingSaletteStationName}
             />
           </div>
@@ -302,7 +311,7 @@ export default function App() {
           <div className="max-w-2xl mx-auto px-4 py-4">
             <StazioniScreen
               refreshKey={refreshKey}
-              onNavigateToContributi={() => setActiveTab('contributi')}
+              onNavigateToContributi={() => handleTabChange('contributi')}
               initialExpandedId={pendingExpandId}
               initialCategoriaFilter={pendingCategoriaFilter}
             />
@@ -328,10 +337,18 @@ export default function App() {
         )}
       </main>
 
-      {/* TABBAR */}
-      <TabBar activeTab={activeTab} onChange={setActiveTab} adminMode={adminMode} hidden={searchOpen} />
+      {/* TABBAR — onChange usa handleTabChange per reset dei pending */}
+      <TabBar
+        activeTab={activeTab}
+        onChange={handleTabChange}
+        adminMode={adminMode}
+        hidden={searchOpen}
+      />
 
-      {/* SEARCH OVERLAY GLOBALE — unica istanza, z-[60] */}
+      {/* SEARCH OVERLAY GLOBALE
+          P3: in modalità navigate (searchIsPersonal=false),
+          passa activeStationId=null → ricerca parte neutra, nessun badge "Attiva"
+      */}
       <SearchOverlay
         isOpen={searchOpen}
         onClose={() => setSearchOpen(false)}
@@ -343,7 +360,7 @@ export default function App() {
           }
           setSearchOpen(false);
         }}
-        activeStationId={activeStationId}
+        activeStationId={searchIsPersonal ? activeStationId : null}
       />
 
       {/* ADMIN PIN MODAL */}
