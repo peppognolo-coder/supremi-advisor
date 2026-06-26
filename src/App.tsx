@@ -3,68 +3,50 @@ import { useState, useEffect, useRef } from 'react';
 import type { Tab } from './types';
 
 import NavBar from './components/NavBar';
-
 import TabBar from './components/TabBar';
 
+import HomeScreen from './screens/HomeScreen';
 import SaletteScreen from './screens/SaletteScreen';
-
 import StazioniScreen from './screens/StazioniScreen';
-
 import AdminScreen from './screens/AdminScreen';
-
 import SegnalazioniScreen from './screens/SegnalazioniScreen';
-
 import ContributiScreen from './screens/ContributiScreen';
 
 import { Toaster } from 'react-hot-toast';
-
 import toast from 'react-hot-toast';
-
-import {
-  RefreshCw,
-} from 'lucide-react';
+import { RefreshCw } from 'lucide-react';
 
 import AdminPinModal from './components/AdminPinModal';
-
 import { modalOpenCount } from './lib/useScrollLock';
 
 const ADMIN_PIN = '1105';
 
 const screenTitles: Record<Tab, string> = {
-
+  home: 'Home',
   salette: 'Salette',
-
   stazioni: 'Stazioni',
-
   contributi: 'Contributi',
-
   segnalazioni: 'Segnalazioni',
-
   admin: 'Amministrazione',
 };
 
 export default function App() {
-
-  const [activeTab, setActiveTab] =
-    useState<Tab>('salette');
+  // Home è ora il tab iniziale
+  const [activeTab, setActiveTab] = useState<Tab>('home');
 
   // =========================
   // META TAGS PWA
   // =========================
 
   useEffect(() => {
-
     // TITLE
     document.title = 'Supremi Advisor';
 
     // FAVICON
     const favicon =
-      (document.querySelector(
-        "link[rel='icon']"
-      ) as HTMLLinkElement) ||
+      (document.querySelector("link[rel='icon']") as HTMLLinkElement) ||
       (() => {
-        const el =
-          document.createElement('link');
+        const el = document.createElement('link');
         el.rel = 'icon';
         document.head.appendChild(el);
         return el;
@@ -74,60 +56,40 @@ export default function App() {
 
     // APPLE TOUCH ICON
     const apple =
-      (document.querySelector(
-        "link[rel='apple-touch-icon']"
-      ) as HTMLLinkElement) ||
+      (document.querySelector("link[rel='apple-touch-icon']") as HTMLLinkElement) ||
       (() => {
-        const el =
-          document.createElement('link');
+        const el = document.createElement('link');
         el.rel = 'apple-touch-icon';
         document.head.appendChild(el);
         return el;
       })();
-   apple.href = '/apple-touch-icon.png';
+    apple.href = '/apple-touch-icon.png';
 
     // THEME COLOR
     const themeColor =
-      (document.querySelector(
-        "meta[name='theme-color']"
-      ) as HTMLMetaElement) ||
+      (document.querySelector("meta[name='theme-color']") as HTMLMetaElement) ||
       (() => {
-        const el =
-          document.createElement('meta');
+        const el = document.createElement('meta');
         el.name = 'theme-color';
         document.head.appendChild(el);
         return el;
       })();
     themeColor.content = '#007A3D';
-
-     }, []);
+  }, []);
 
   // =========================
   // GLOBAL REFRESH
   // =========================
 
-  const [refreshKey, setRefreshKey] =
-    useState(0);
-
-  const [refreshing, setRefreshing] =
-    useState(false);
+  const [refreshKey, setRefreshKey] = useState(0);
+  const [refreshing, setRefreshing] = useState(false);
 
   function refreshApp() {
-
     setRefreshing(true);
-
-    setRefreshKey(
-      (prev) => prev + 1
-    );
-
-    toast.success(
-      'Aggiornamento app...'
-    );
-
+    setRefreshKey((prev) => prev + 1);
+    toast.success('Aggiornamento app...');
     setTimeout(() => {
-
       setRefreshing(false);
-
     }, 1200);
   }
 
@@ -135,28 +97,24 @@ export default function App() {
   // PULL TO REFRESH
   // =========================
 
-  const touchStartY   = useRef(0);
-  const touchStartX   = useRef(0);
-  const touchEndY     = useRef(0);
-  const pulling       = useRef(false);
-  const directionLocked = useRef(false); // true = gesto confermato verticale
+  const touchStartY = useRef(0);
+  const touchStartX = useRef(0);
+  const touchEndY = useRef(0);
+  const pulling = useRef(false);
+  const directionLocked = useRef(false);
 
-  // Soglia minima px verso il basso per attivare il refresh
-  const PULL_THRESHOLD = 180; // px — soglia alta per evitare refresh accidentali
-  // Quanti px percorrere prima di decidere se il gesto è verticale o orizzontale
-  const DIRECTION_LOCK_PX = 20; // px prima di decidere la direzione del gesto
+  const PULL_THRESHOLD = 180;
+  const DIRECTION_LOCK_PX = 20;
 
   useEffect(() => {
-
     function handleTouchStart(e: TouchEvent) {
-      // Attiva solo se siamo in cima e nessun modal è aperto
       if (window.scrollY > 0) return;
       if (modalOpenCount.current > 0) return;
 
-      touchStartY.current   = e.touches[0].clientY;
-      touchStartX.current   = e.touches[0].clientX;
-      touchEndY.current     = e.touches[0].clientY;
-      pulling.current       = true;
+      touchStartY.current = e.touches[0].clientY;
+      touchStartX.current = e.touches[0].clientX;
+      touchEndY.current = e.touches[0].clientY;
+      pulling.current = true;
       directionLocked.current = false;
     }
 
@@ -165,21 +123,19 @@ export default function App() {
 
       const currentY = e.touches[0].clientY;
       const currentX = e.touches[0].clientX;
-      const deltaY   = currentY - touchStartY.current;
-      const deltaX   = currentX - touchStartX.current;
+      const deltaY = currentY - touchStartY.current;
+      const deltaX = currentX - touchStartX.current;
 
-      // Se la direzione non è ancora bloccata, decidila
       if (!directionLocked.current) {
-        const movedEnough = Math.abs(deltaY) > DIRECTION_LOCK_PX || Math.abs(deltaX) > DIRECTION_LOCK_PX;
+        const movedEnough =
+          Math.abs(deltaY) > DIRECTION_LOCK_PX || Math.abs(deltaX) > DIRECTION_LOCK_PX;
         if (!movedEnough) return;
 
-        // Se il gesto è più orizzontale che verticale, annulla il pull
         if (Math.abs(deltaX) > Math.abs(deltaY)) {
           pulling.current = false;
           return;
         }
 
-        // Se il gesto è verso l'alto, non è un pull-to-refresh
         if (deltaY < 0) {
           pulling.current = false;
           return;
@@ -188,9 +144,8 @@ export default function App() {
         directionLocked.current = true;
       }
 
-      // Annulla se durante il gesto la pagina ha scrollato (momentum scroll / bounce)
       if (window.scrollY > 5) {
-        pulling.current         = false;
+        pulling.current = false;
         directionLocked.current = false;
         return;
       }
@@ -203,7 +158,6 @@ export default function App() {
 
       const distance = touchEndY.current - touchStartY.current;
 
-      // Refresh solo se: abbastanza distanza, ancora in cima, direzione confermata
       if (
         distance > PULL_THRESHOLD &&
         directionLocked.current &&
@@ -214,76 +168,37 @@ export default function App() {
         refreshApp();
       }
 
-      pulling.current         = false;
+      pulling.current = false;
       directionLocked.current = false;
-      touchStartY.current     = 0;
-      touchStartX.current     = 0;
-      touchEndY.current       = 0;
+      touchStartY.current = 0;
+      touchStartX.current = 0;
+      touchEndY.current = 0;
     }
 
-    window.addEventListener(
-      'touchstart',
-      handleTouchStart,
-      { passive: true }
-    );
-
-    window.addEventListener(
-      'touchmove',
-      handleTouchMove,
-      { passive: true }
-    );
-
-    window.addEventListener(
-      'touchend',
-      handleTouchEnd
-    );
+    window.addEventListener('touchstart', handleTouchStart, { passive: true });
+    window.addEventListener('touchmove', handleTouchMove, { passive: true });
+    window.addEventListener('touchend', handleTouchEnd);
 
     return () => {
-
-      window.removeEventListener(
-        'touchstart',
-        handleTouchStart
-      );
-
-      window.removeEventListener(
-        'touchmove',
-        handleTouchMove
-      );
-
-      window.removeEventListener(
-        'touchend',
-        handleTouchEnd
-      );
+      window.removeEventListener('touchstart', handleTouchStart);
+      window.removeEventListener('touchmove', handleTouchMove);
+      window.removeEventListener('touchend', handleTouchEnd);
     };
-
   }, [refreshing]);
 
   // =========================
   // ADMIN MODE PERSISTENTE
   // =========================
 
-  const [adminMode, setAdminMode] =
-    useState(false);
-
-  const [showPinModal, setShowPinModal] =
-    useState<'login' | 'logout' | null>(null);
+  const [adminMode, setAdminMode] = useState(false);
+  const [showPinModal, setShowPinModal] = useState<'login' | 'logout' | null>(null);
 
   useEffect(() => {
-
-    const stored =
-      localStorage.getItem(
-        'trenord_admin'
-      );
-
+    const stored = localStorage.getItem('trenord_admin');
     if (stored === 'true') {
-
       setAdminMode(true);
-
-      toast.success(
-        'Modalità admin ripristinata'
-      );
+      toast.success('Modalità admin ripristinata');
     }
-
   }, []);
 
   // =========================
@@ -291,180 +206,156 @@ export default function App() {
   // =========================
 
   function handleAdminAccess() {
-
     if (adminMode) {
-
       setShowPinModal('logout');
-
     } else {
-
       setShowPinModal('login');
     }
   }
 
   function handlePinConfirm(pin?: string) {
-
     if (showPinModal === 'login') {
-
       if (pin === ADMIN_PIN) {
-
-        localStorage.setItem(
-          'trenord_admin',
-          'true'
-        );
-
+        localStorage.setItem('trenord_admin', 'true');
         setAdminMode(true);
-
-        toast.success(
-          'Modalità admin attivata'
-        );
-
+        toast.success('Modalità admin attivata');
       } else {
-
         toast.error('PIN errato');
       }
-
     } else {
-
-      localStorage.removeItem(
-        'trenord_admin'
-      );
-
+      localStorage.removeItem('trenord_admin');
       setAdminMode(false);
-
-      setActiveTab('salette');
-
-      toast.success(
-        'Modalità admin disattivata'
-      );
+      // Al logout admin, ritorna alla Home (non più a 'salette')
+      setActiveTab('home');
+      toast.success('Modalità admin disattivata');
     }
 
     setShowPinModal(null);
   }
 
-  return (
+  // =========================
+  // NAVIGAZIONE DA HOME
+  // =========================
 
+  // Handler passato a HomeScreen per navigare verso altre schermate
+  function handleHomeNavigate(tab: Tab) {
+    setActiveTab(tab);
+  }
+
+  // =========================
+  // LAYOUT: Home ha layout proprio (no NavBar/TitleBar/padding)
+  // Le altre schermate mantengono il layout esistente invariato
+  // =========================
+
+  const isHomeTab = activeTab === 'home';
+
+  return (
     <div className="min-h-screen bg-gray-100 flex flex-col">
 
       {/* PULL REFRESH INDICATOR */}
       <div
         className={`fixed top-[72px] left-1/2 -translate-x-1/2 z-[100] transition-all duration-300 ${
-          refreshing
-            ? 'opacity-100 translate-y-0'
-            : 'opacity-0 -translate-y-4'
+          refreshing ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-4'
         }`}
       >
-
         <div className="bg-white shadow-lg border border-gray-200 rounded-full px-4 py-2 flex items-center gap-2">
-
           <RefreshCw className="w-4 h-4 animate-spin text-trenord-green" />
-
-          <span className="text-xs font-medium text-gray-700">
-
-            Aggiornamento...
-
-          </span>
-
+          <span className="text-xs font-medium text-gray-700">Aggiornamento...</span>
         </div>
-
       </div>
 
-      {/* NAVBAR */}
-      <NavBar
-        title={
-          adminMode
-            ? 'Supremi Advisor • ADMIN'
-            : 'Supremi Advisor'
-        }
-        onAdminAccess={handleAdminAccess}
-      />
+      {/* NAVBAR — nascosta sulla Home: ha il proprio header integrato */}
+      {!isHomeTab && (
+        <NavBar
+          title={adminMode ? 'Supremi Advisor • ADMIN' : 'Supremi Advisor'}
+          onAdminAccess={handleAdminAccess}
+        />
+      )}
 
-      {/* TITLE BAR */}
-      <div className="fixed top-14 left-0 right-0 z-40 bg-white border-b border-gray-100 shadow-sm">
-
-        <div className="max-w-2xl mx-auto px-4 py-3 flex items-center justify-between">
-
-          <div className="flex items-center gap-3">
-
-            <h1 className="text-lg font-bold text-gray-900">
-
-              {screenTitles[activeTab]}
-
-            </h1>
-
-            {adminMode && (
-
-              <div className="px-2 py-1 rounded-full bg-trenord-green text-white text-[10px] font-bold tracking-wide shadow-sm">
-
-                ADMIN
-
-              </div>
-            )}
-
+      {/* TITLE BAR — nascosta sulla Home */}
+      {!isHomeTab && (
+        <div className="fixed top-14 left-0 right-0 z-40 bg-white border-b border-gray-100 shadow-sm">
+          <div className="max-w-2xl mx-auto px-4 py-3 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <h1 className="text-lg font-bold text-gray-900">
+                {screenTitles[activeTab]}
+              </h1>
+              {adminMode && (
+                <div className="px-2 py-1 rounded-full bg-trenord-green text-white text-[10px] font-bold tracking-wide shadow-sm">
+                  ADMIN
+                </div>
+              )}
+            </div>
+            <button
+              onClick={refreshApp}
+              className="w-10 h-10 rounded-2xl bg-gray-100 border border-gray-200 flex items-center justify-center hover:bg-gray-200 transition-colors"
+            >
+              <RefreshCw
+                className={`w-4 h-4 text-gray-600 ${refreshing ? 'animate-spin' : ''}`}
+              />
+            </button>
           </div>
-
-          <button
-            onClick={refreshApp}
-            className="w-10 h-10 rounded-2xl bg-gray-100 border border-gray-200 flex items-center justify-center hover:bg-gray-200 transition-colors"
-          >
-
-            <RefreshCw
-              className={`w-4 h-4 text-gray-600 ${
-                refreshing ? 'animate-spin' : ''
-              }`}
-            />
-
-          </button>
-
         </div>
-
-      </div>
+      )}
 
       {/* CONTENT */}
-      <main className="flex-1 pt-[112px] pb-[72px]">
+      <main
+        className={
+          isHomeTab
+            ? // Home: fullscreen, nessun padding top (gestisce il proprio header sticky)
+              'flex-1 overflow-hidden'
+            : // Altre schermate: layout esistente invariato
+              'flex-1 pt-[112px] pb-[72px]'
+        }
+      >
+        {/* HOME */}
+        {activeTab === 'home' && (
+          <HomeScreen onNavigate={handleHomeNavigate} />
+        )}
 
-        <div className="max-w-2xl mx-auto px-4 py-4">
-
-          {activeTab === 'salette' && (
+        {/* Le schermate esistenti rimangono esattamente come prima */}
+        {activeTab === 'salette' && (
+          <div className="max-w-2xl mx-auto px-4 py-4">
             <SaletteScreen
               refreshKey={refreshKey}
               onNavigateToContributi={() => setActiveTab('contributi')}
             />
-          )}
+          </div>
+        )}
 
-          {activeTab === 'stazioni' && (
+        {activeTab === 'stazioni' && (
+          <div className="max-w-2xl mx-auto px-4 py-4">
             <StazioniScreen
               refreshKey={refreshKey}
               onNavigateToContributi={() => setActiveTab('contributi')}
             />
-          )}
+          </div>
+        )}
 
-          {activeTab === 'contributi' && (
+        {activeTab === 'contributi' && (
+          <div className="max-w-2xl mx-auto px-4 py-4">
             <ContributiScreen />
-          )}
+          </div>
+        )}
 
-          {activeTab === 'segnalazioni' && adminMode && (
+        {activeTab === 'segnalazioni' && adminMode && (
+          <div className="max-w-2xl mx-auto px-4 py-4">
             <SegnalazioniScreen refreshKey={refreshKey} />
-          )}
+          </div>
+        )}
 
-          {activeTab === 'admin' && adminMode && (
+        {activeTab === 'admin' && adminMode && (
+          <div className="max-w-2xl mx-auto px-4 py-4">
             <AdminScreen refreshKey={refreshKey} adminPin={ADMIN_PIN} />
-          )}
-
-        </div>
-
+          </div>
+        )}
       </main>
 
       {/* TABBAR */}
-      <TabBar
-        activeTab={activeTab}
-        onChange={setActiveTab}
-        adminMode={adminMode}
-      />
+      <TabBar activeTab={activeTab} onChange={setActiveTab} adminMode={adminMode} />
 
       {/* ADMIN PIN MODAL */}
       {showPinModal && (
-
         <AdminPinModal
           mode={showPinModal}
           onConfirm={handlePinConfirm}
@@ -496,7 +387,6 @@ export default function App() {
           },
         }}
       />
-
     </div>
   );
 }
