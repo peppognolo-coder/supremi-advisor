@@ -59,6 +59,19 @@ interface Props {
   refreshKey?: number;
 
   onNavigateToContributi?: () => void;
+
+  /**
+   * Se fornito, apre questa stazione al mount e fa scroll fino alla card.
+   * Usato dalla Home → "Apri stazione".
+   */
+  initialExpandedId?: string | null;
+
+  /**
+   * Se fornito, pre-imposta il filtro categoria al mount.
+   * Usato dalla Home → chip Attività / Hotel.
+   * Valore speciale 'attivita' = nessun filtro (mostra tutto tranne Hotel).
+   */
+  initialCategoriaFilter?: string | null;
 }
 
 // =========================
@@ -77,6 +90,8 @@ interface Valutazione {
 export default function StazioniScreen({
   refreshKey = 0,
   onNavigateToContributi,
+  initialExpandedId = null,
+  initialCategoriaFilter = null,
 }: Props) {
 
   const [stazioni, setStazioni] =
@@ -98,6 +113,31 @@ export default function StazioniScreen({
 
   const [expandedId, setExpandedId] =
     useState<string | null>(null);
+
+  // Ref per lo scroll automatico alla card espansa programmaticamente
+  const expandedCardRef = React.useRef<HTMLDivElement | null>(null);
+
+  // Al mount: se arriva initialExpandedId dalla Home, espandi e scrolla
+  useEffect(() => {
+    if (!initialExpandedId) return;
+    setExpandedId(initialExpandedId);
+
+    // Applica anche il filtro categoria se presente
+    if (initialCategoriaFilter && initialCategoriaFilter !== 'attivita') {
+      setCategoriaFilters({ [initialExpandedId]: initialCategoriaFilter });
+    }
+
+    // Scroll dopo che il DOM si è aggiornato
+    const t = setTimeout(() => {
+      expandedCardRef.current?.scrollIntoView({
+        behavior: 'smooth',
+        block: 'start',
+      });
+    }, 120);
+    return () => clearTimeout(t);
+  // Eseguito solo al mount — le props non cambieranno dopo
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const [
     addAttivitaStazioneId,
@@ -589,6 +629,7 @@ export default function StazioniScreen({
 
       <div
         key={stazione.id}
+        ref={stazione.id === initialExpandedId ? expandedCardRef : null}
         className={`bg-white rounded-3xl border shadow-sm overflow-hidden ${
           isNearest
             ? 'border-trenord-green ring-2 ring-trenord-green/20'
