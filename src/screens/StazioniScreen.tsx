@@ -117,17 +117,15 @@ export default function StazioniScreen({
   // Ref per lo scroll automatico alla card espansa programmaticamente
   const expandedCardRef = React.useRef<HTMLDivElement | null>(null);
 
-  // Al mount: se arriva initialExpandedId dalla Home, espandi e scrolla
+  // Al mount e quando initialExpandedId cambia: espandi la stazione target e scrolla
   useEffect(() => {
     if (!initialExpandedId) return;
     setExpandedId(initialExpandedId);
 
-    // Applica anche il filtro categoria se presente
     if (initialCategoriaFilter && initialCategoriaFilter !== 'attivita') {
       setCategoriaFilters({ [initialExpandedId]: initialCategoriaFilter });
     }
 
-    // Scroll dopo che il DOM si è aggiornato
     const t = setTimeout(() => {
       expandedCardRef.current?.scrollIntoView({
         behavior: 'smooth',
@@ -135,9 +133,7 @@ export default function StazioniScreen({
       });
     }, 120);
     return () => clearTimeout(t);
-  // Eseguito solo al mount — le props non cambieranno dopo
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [initialExpandedId]); // reagisce ogni volta che cambia la stazione target
 
   const [
     addAttivitaStazioneId,
