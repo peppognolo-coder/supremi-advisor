@@ -251,7 +251,7 @@ export default function App() {
       )}
 
       {/* CONTENT */}
-      <main className={isHomeTab ? 'flex-1 overflow-hidden' : 'flex-1 pt-[112px] pb-[72px]'}>
+      <main className={isHomeTab ? 'flex-1' : 'flex-1 pt-[112px] pb-[72px]'}>
 
         {/* HOME — riceve tutto dallo stato elevato in App */}
         {activeTab === 'home' && (
