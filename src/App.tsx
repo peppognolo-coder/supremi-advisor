@@ -269,6 +269,7 @@ export default function App() {
         <NavBar
           title={adminMode ? 'Supremi Advisor • ADMIN' : 'Supremi Advisor'}
           onAdminAccess={handleAdminAccess}
+          onLogoClick={() => setActiveTab('home')}
         />
       )}
 
@@ -310,7 +311,11 @@ export default function App() {
       >
         {/* HOME */}
         {activeTab === 'home' && (
-          <HomeScreen onNavigate={handleHomeNavigate} />
+          <HomeScreen
+            onNavigate={handleHomeNavigate}
+            onAdminAccess={handleAdminAccess}
+            adminMode={adminMode}
+          />
         )}
 
         {/* Le schermate esistenti rimangono esattamente come prima */}
