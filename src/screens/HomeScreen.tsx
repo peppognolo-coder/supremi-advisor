@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Bell, Settings } from 'lucide-react';
+import { Settings } from 'lucide-react';
 
 import type { Tab } from '../types';
 
@@ -17,7 +17,7 @@ import {
 } from '../components/home';
 
 // ---------------------------------------------------------------------------
-// Dati statici temporanei — SOLO il feed, in attesa dell'Iterazione 3
+// Dati statici temporanei — SOLO il feed, rimosso in Iterazione 3
 // ---------------------------------------------------------------------------
 
 const STATIC_FEED_ITEMS: FeedItem[] = [
@@ -56,14 +56,21 @@ const STATIC_FEED_ITEMS: FeedItem[] = [
 
 interface HomeScreenProps {
   onNavigate: (tab: Tab) => void;
+  /** Apre il modal login/logout admin — ricevuto da App.tsx */
+  onAdminAccess: () => void;
+  /** Stato attuale della modalità admin — ricevuto da App.tsx */
+  adminMode: boolean;
 }
 
 // ---------------------------------------------------------------------------
 // HomeScreen
 // ---------------------------------------------------------------------------
 
-const HomeScreen: React.FC<HomeScreenProps> = ({ onNavigate }) => {
-  // ── Logica reale ──────────────────────────────────────────────────────────
+const HomeScreen: React.FC<HomeScreenProps> = ({
+  onNavigate,
+  onAdminAccess,
+  adminMode,
+}) => {
   const {
     activeStationId,
     data: stationData,
@@ -71,12 +78,8 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ onNavigate }) => {
     setActiveStation,
   } = useHomeStation();
 
-  const {
-    favoriteStations,
-    loading: favLoading,
-  } = useHomeFavorites(activeStationId);
+  const { favoriteStations, loading: favLoading } = useHomeFavorites(activeStationId);
 
-  // ── UI state ──────────────────────────────────────────────────────────────
   const [searchOpen, setSearchOpen] = useState(false);
 
   // ── Handlers ──────────────────────────────────────────────────────────────
@@ -90,7 +93,6 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ onNavigate }) => {
   }
 
   function handleSegnalaProblema() {
-    // Il flusso di segnalazione saletta esiste già in SaletteScreen
     onNavigate('salette');
   }
 
@@ -102,7 +104,6 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ onNavigate }) => {
     setActiveStation(id);
   }
 
-  // Conteggio badge notifiche = problemi aperti sulla stazione attiva
   const badgeCount = stationData?.problemiAperti.length ?? 0;
 
   // ---------------------------------------------------------------------------
@@ -113,13 +114,10 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ onNavigate }) => {
     <>
       <div className="flex flex-col h-full bg-gray-50 overflow-y-auto scrollbar-hide">
 
-        {/* ── HEADER ──────────────────────────────────────────────────────── */}
-        {/*
-          Safe area top: env(safe-area-inset-top) è già gestita dal body::before
-          in index.css (white block sopra il contenuto). L'header sticky si
-          posiziona subito sotto, senza gap. Su notch/camera hole funziona
-          correttamente perché NavBar (che usa safe-top) è assente sulla Home.
-        */}
+        {/* ── HEADER ────────────────────────────────────────────────────────
+            safe-area-inset-top: gestisce notch/Dynamic Island/camera hole.
+            Il padding minimo è 12px, cresce fino all'altezza dell'inset.
+        ── */}
         <div className="sticky top-0 z-10 bg-white border-b border-gray-100">
           <div
             className="flex items-center justify-between px-4 py-3"
@@ -133,38 +131,48 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ onNavigate }) => {
                 <p className="text-xs text-gray-400">Seleziona la tua stazione</p>
               )}
             </div>
+
             <div className="flex items-center gap-2">
-              {/* Bell con badge problemi aperti */}
-              <button className="relative w-9 h-9 flex items-center justify-center rounded-xl bg-gray-50 text-gray-500 active:bg-gray-100 transition-colors">
-                <Bell className="w-[18px] h-[18px]" />
-                {badgeCount > 0 && (
-                  <span className="absolute top-1 right-1 min-w-[14px] h-[14px] rounded-full bg-red-500 flex items-center justify-center">
-                    <span className="text-[9px] font-bold text-white leading-none px-0.5">
-                      {badgeCount > 9 ? '9+' : badgeCount}
-                    </span>
+              {/* Badge problemi aperti — visibile solo se > 0 */}
+              {badgeCount > 0 && (
+                <span className="min-w-[22px] h-[22px] rounded-full bg-red-500 flex items-center justify-center px-1">
+                  <span className="text-[10px] font-bold text-white leading-none">
+                    {badgeCount > 9 ? '9+' : badgeCount}
                   </span>
+                </span>
+              )}
+
+              {/* Pulsante Admin — stesso comportamento di NavBar nelle altre schermate.
+                  Mostra l'icona Settings. Quando adminMode è attivo, mostra il badge ADMIN.
+              */}
+              <button
+                onClick={onAdminAccess}
+                className={[
+                  'flex items-center gap-1.5 h-9 px-3 rounded-xl transition-colors',
+                  adminMode
+                    ? 'bg-trenord-green text-white'
+                    : 'bg-gray-50 text-gray-500 active:bg-gray-100',
+                ].join(' ')}
+              >
+                <Settings className="w-[17px] h-[17px]" />
+                {adminMode && (
+                  <span className="text-[10px] font-bold tracking-wide">ADMIN</span>
                 )}
-              </button>
-              <button className="w-9 h-9 flex items-center justify-center rounded-xl bg-gray-50 text-gray-500 active:bg-gray-100 transition-colors">
-                <Settings className="w-[18px] h-[18px]" />
               </button>
             </div>
           </div>
         </div>
 
-        {/* ── CONTENUTO SCROLLABILE ───────────────────────────────────────── */}
-        {/*
-          Safe area bottom: pb usa calc per sommare il padding fisso alla
-          safe area inset, così il contenuto non finisce sotto la home bar
-          di iOS o la gesture bar di Android.
-        */}
+        {/* ── CONTENUTO SCROLLABILE ─────────────────────────────────────────
+            safe-area-inset-bottom: garantisce che l'ultimo elemento
+            non finisca sotto la home bar di iOS o la gesture bar di Android.
+        ── */}
         <div
           className="flex flex-col gap-6 py-5"
           style={{
             paddingBottom: 'calc(7rem + env(safe-area-inset-bottom, 0px))',
           }}
         >
-          {/* 1. LA TUA STAZIONE */}
           <StazioneCard
             data={stationData}
             loading={stationLoading}
@@ -172,7 +180,6 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ onNavigate }) => {
             onCambia={() => setSearchOpen(true)}
           />
 
-          {/* 2. AZIONI RAPIDE */}
           <QuickActions
             stazioneId={activeStationId ?? undefined}
             onNuovoContributo={handleNuovoContributo}
@@ -180,7 +187,6 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ onNavigate }) => {
             onApriStazione={handleApriStazione}
           />
 
-          {/* 3. LE MIE STAZIONI */}
           <FavoriteStations
             stations={favoriteStations}
             activeStationId={activeStationId}
@@ -188,15 +194,13 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ onNavigate }) => {
             onSelect={handleSelectFavorite}
           />
 
-          {/* 4. RICERCA */}
           <SearchBar onFocus={() => setSearchOpen(true)} />
 
-          {/* 5. DA SAPERE — ancora statico, Iterazione 3 */}
+          {/* Feed — statico fino a Iterazione 3 */}
           <UpdateFeed items={STATIC_FEED_ITEMS} />
         </div>
       </div>
 
-      {/* ── SEARCH OVERLAY ────────────────────────────────────────────────── */}
       <SearchOverlay
         isOpen={searchOpen}
         onClose={() => setSearchOpen(false)}
