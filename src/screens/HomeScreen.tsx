@@ -54,6 +54,7 @@ interface HomeScreenProps {
   // Navigazione
   onNavigate: (tab: Tab) => void;
   onOpenSearch: () => void;
+  onOpenSearchPersonal: () => void;
 
   // Admin
   onAdminAccess: () => void;
@@ -77,6 +78,7 @@ interface HomeScreenProps {
 const HomeScreen: React.FC<HomeScreenProps> = ({
   onNavigate,
   onOpenSearch,
+  onOpenSearchPersonal,
   onAdminAccess,
   adminMode,
   activeStationId,
@@ -172,7 +174,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({
           data={stationData}
           loading={stationLoading}
           onApri={handleApriStazione}
-          onCambia={onOpenSearch}
+          onCambia={onOpenSearchPersonal}
           onRimuovi={onStationCleared}
           onOpenSalette={handleOpenSalette}
           onOpenAttivita={handleOpenAttivita}
@@ -184,7 +186,6 @@ const HomeScreen: React.FC<HomeScreenProps> = ({
           stazioneId={activeStationId ?? undefined}
           onNuovoContributo={handleNuovoContributo}
           onSegnalaProblema={handleSegnalaProblema}
-          onApriStazione={handleApriStazione}
         />
 
         <FavoriteStations
