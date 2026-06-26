@@ -1,6 +1,7 @@
 import React, { useEffect, useRef } from 'react';
-import { Search, X, MapPin, ChevronRight } from 'lucide-react';
+import { Search, X, MapPin, ChevronRight, ArrowLeft } from 'lucide-react';
 import { useStationSearch } from '../../hooks/useStationSearch';
+import { useScrollLock } from '../../lib/useScrollLock';
 
 // ---------------------------------------------------------------------------
 // Props
@@ -14,13 +15,29 @@ interface SearchOverlayProps {
 }
 
 // ---------------------------------------------------------------------------
-// SearchOverlay
+// SearchOverlay — schermata modale fullscreen
 //
-// Note iOS/Android:
-// - input font-size 16px (text-base) → evita auto-zoom Safari iOS
-// - maxHeight usa dvh con fallback vh per compatibilità iOS < 15.4
-// - lista usa overscroll-behavior: contain → niente bounce propagato
-// - pb usa env(safe-area-inset-bottom) → funziona sopra home bar iOS
+// Architettura:
+//   fixed inset-0          → occupa TUTTO il viewport (no bottom-sheet)
+//   flex flex-col          → layout verticale rigido
+//   header   flex-shrink-0 → altezza fissa, non comprime
+//   searchbar flex-shrink-0→ altezza fissa, non comprime
+//   lista    flex-1        → occupa tutto lo spazio RIMANENTE
+//            overflow-y-auto → scorribile internamente
+//
+// iOS Safari:
+//   - inset-0 ancorato al layout viewport → stabile con tastiera aperta
+//   - La lista scrolla dentro il pannello, non il body
+//   - input font-size 16px → nessun auto-zoom
+//   - inputMode="search" → tastiera ottimizzata
+//
+// Android Chrome:
+//   - inset-0 si adatta al visual viewport ridotto dalla tastiera
+//   - La lista risultati rimane sopra la tastiera perché è flex-1 bounded
+//
+// Scroll lock:
+//   - document.body overflow-hidden mentre aperto → nessun body scroll
+//   - modalOpenCount incrementato → disabilita pull-to-refresh di App.tsx
 // ---------------------------------------------------------------------------
 
 export const SearchOverlay: React.FC<SearchOverlayProps> = ({
@@ -32,18 +49,25 @@ export const SearchOverlay: React.FC<SearchOverlayProps> = ({
   const { query, setQuery, results, loadingAll, reset } = useStationSearch();
   const inputRef = useRef<HTMLInputElement>(null);
 
-  // Focus automatico all'apertura — delay minimo per attendere il mount
-  // e la fine dell'animazione su iOS
+  // ── Scroll lock ────────────────────────────────────────────────────────────
+  // useScrollLock gestisce body overflow + modalOpenCount (pull-to-refresh).
+  // Il componente monta solo quando isOpen=true (App.tsx usa `isOpen && <SearchOverlay>`
+  // tramite il conditional render), quindi il lock è attivo per tutta la vita del mount.
+  useScrollLock();
+
+  // ── Focus automatico ───────────────────────────────────────────────────────
   useEffect(() => {
     if (isOpen) {
-      const t = setTimeout(() => inputRef.current?.focus(), 120);
+      // Delay per attendere che l'animazione CSS sia terminata
+      // e che iOS abbia processato il mount del componente
+      const t = setTimeout(() => inputRef.current?.focus(), 100);
       return () => clearTimeout(t);
     } else {
       reset();
     }
   }, [isOpen, reset]);
 
-  // Chiudi con ESC (desktop/tastiera hardware)
+  // ── ESC da tastiera hardware ───────────────────────────────────────────────
   useEffect(() => {
     if (!isOpen) return;
     const handler = (e: KeyboardEvent) => {
@@ -61,51 +85,34 @@ export const SearchOverlay: React.FC<SearchOverlayProps> = ({
   }
 
   return (
-    <>
-      {/* Backdrop */}
+    // Fullscreen — z-[60] supera TabBar (z-50) e qualsiasi altro fixed element
+    <div
+      className="fixed inset-0 z-[60] bg-white flex flex-col"
+      style={{ height: '100dvh' }}
+    >
+      {/* ── HEADER fisso ────────────────────────────────────────────────────
+          Padding top safe area → gestisce notch e Dynamic Island
+      ── */}
       <div
-        className="fixed inset-0 z-40 bg-black/40 backdrop-blur-sm"
-        onClick={onClose}
-        aria-hidden="true"
-      />
-
-      {/* Panel
-          - position fixed bottom-0: rimane ancorato al bordo basso visibile
-            anche quando la tastiera emerge (iOS Safari riduce il viewport visivo)
-          - max-height: usa dvh (dynamic viewport height) che si adatta
-            automaticamente all'altezza dopo la tastiera su iOS 15.4+;
-            il fallback vh è per versioni precedenti
-          - display flex + flex-col: permette alla lista di scrollare
-            indipendentemente senza che il panel cresca oltre il viewport
-      */}
-      <div
-        className="fixed inset-x-0 bottom-0 z-50 bg-white rounded-t-3xl shadow-2xl flex flex-col"
-        style={{
-          maxHeight: 'min(85dvh, 85vh)',
-        }}
+        className="flex-shrink-0 bg-white border-b border-gray-100"
+        style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}
       >
-        {/* Handle drag */}
-        <div className="flex justify-center pt-3 pb-1 flex-shrink-0">
-          <div className="w-10 h-1 rounded-full bg-gray-200" />
+        <div className="flex items-center gap-3 px-4 py-3">
+          <button
+            onClick={onClose}
+            className="w-9 h-9 flex items-center justify-center rounded-xl text-gray-500 active:bg-gray-100 transition-colors flex-shrink-0"
+          >
+            <ArrowLeft className="w-5 h-5" />
+          </button>
+          <h2 className="text-base font-bold text-gray-900 flex-1">Cambia stazione</h2>
         </div>
 
-        {/* Titolo + pulsante chiudi */}
-        <div className="px-4 pt-1 pb-3 flex-shrink-0">
-          <div className="flex items-center justify-between mb-3">
-            <h2 className="text-base font-bold text-gray-900">Cambia stazione</h2>
-            <button
-              onClick={onClose}
-              className="w-8 h-8 flex items-center justify-center rounded-xl bg-gray-100 text-gray-500 active:bg-gray-200 transition-colors"
-            >
-              <X className="w-4 h-4" />
-            </button>
-          </div>
-
-          {/* Campo di ricerca
-              - text-base (16px) → previene auto-zoom Safari iOS
-              - inputMode="search" → mostra tastiera ottimizzata + pulsante cerca
-              - autoComplete="off" → niente suggerimenti che coprono la lista
-          */}
+        {/* ── BARRA DI RICERCA fissa ──────────────────────────────────────
+            font-size 16px (text-base) → nessun auto-zoom Safari iOS
+            inputMode="search" → tastiera ottimizzata con tasto invio/cerca
+            autoComplete/Correct/Capitalize off → niente suggerimenti invasivi
+        ── */}
+        <div className="px-4 pb-3">
           <div className="flex items-center gap-3 bg-gray-50 border border-gray-200 rounded-2xl px-3 py-2.5">
             <Search className="w-4 h-4 text-gray-400 flex-shrink-0" />
             <input
@@ -119,51 +126,61 @@ export const SearchOverlay: React.FC<SearchOverlayProps> = ({
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="Cerca per nome o codice…"
-              className="flex-1 bg-transparent text-base placeholder:text-sm text-gray-800 placeholder-gray-400 outline-none"
+              className="flex-1 bg-transparent text-base placeholder:text-sm text-gray-800 placeholder-gray-400 outline-none min-w-0"
             />
-            {query && (
+            {query ? (
               <button
-                onMouseDown={(e) => e.preventDefault()} // evita blur dell'input su tap
+                // preventDefault evita blur dell'input su tap mobile
+                onMouseDown={(e) => e.preventDefault()}
+                onTouchStart={(e) => e.preventDefault()}
                 onClick={() => setQuery('')}
-                className="text-gray-400 active:text-gray-600 p-0.5"
+                className="text-gray-400 active:text-gray-600 p-1 -m-1"
               >
-                <X className="w-3.5 h-3.5" />
+                <X className="w-4 h-4" />
               </button>
-            )}
+            ) : null}
           </div>
         </div>
+      </div>
 
-        {/* Lista risultati
-            - overflow-y-auto + flex-1: la lista occupa lo spazio rimanente
-              e scrolla al suo interno — il panel non cresce
-            - overscroll-behavior: contain → lo scroll non si propaga
-              alla schermata sotto (evita bounce e navigazione accidentale)
-            - pb con env(safe-area-inset-bottom): l'ultimo elemento
-              non finisce sotto la home bar di iOS
-        */}
-        <div
-          className="overflow-y-auto flex-1 px-4"
-          style={{
-            overscrollBehavior: 'contain',
-            paddingBottom: 'max(1rem, env(safe-area-inset-bottom))',
-          }}
-        >
-          {loadingAll ? (
-            <div className="flex items-center justify-center py-12">
-              <div className="w-5 h-5 rounded-full border-2 border-trenord-green border-t-transparent animate-spin" />
+      {/* ── LISTA RISULTATI scrollabile ─────────────────────────────────────
+          flex-1 → occupa TUTTO lo spazio tra header e fine schermo
+          overflow-y-auto → scrolla internamente, mai il body
+          overscroll-behavior: contain → nessun bounce propagato
+          padding-bottom safe area → ultimo elemento visibile sopra home bar
+      ── */}
+      <div
+        className="flex-1 overflow-y-auto"
+        style={{
+          overscrollBehavior: 'contain',
+          paddingBottom: 'max(1.5rem, env(safe-area-inset-bottom))',
+        }}
+      >
+        {loadingAll ? (
+          <div className="flex items-center justify-center py-16">
+            <div className="w-6 h-6 rounded-full border-2 border-trenord-green border-t-transparent animate-spin" />
+          </div>
+        ) : results.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-16 px-6 text-center">
+            <div className="w-12 h-12 rounded-2xl bg-gray-100 flex items-center justify-center mb-3">
+              <Search className="w-5 h-5 text-gray-400" />
             </div>
-          ) : results.length === 0 ? (
-            <div className="text-center py-12">
-              <p className="text-sm text-gray-400 font-medium">Nessuna stazione trovata</p>
-              <p className="text-xs text-gray-400 mt-1">Prova con un nome o codice diverso</p>
-            </div>
-          ) : (
-            <div className="flex flex-col gap-1 pb-2">
-              {!query && (
-                <p className="text-xs text-gray-400 font-medium mb-2 mt-1">
-                  Stazioni disponibili
-                </p>
-              )}
+            <p className="text-sm font-semibold text-gray-500">Nessuna stazione trovata</p>
+            <p className="text-xs text-gray-400 mt-1">Prova con un nome o codice diverso</p>
+          </div>
+        ) : (
+          <div className="px-4 pt-2">
+            {!query && (
+              <p className="text-xs font-medium text-gray-400 mb-3 mt-1 uppercase tracking-wide">
+                Stazioni disponibili
+              </p>
+            )}
+            {query && (
+              <p className="text-xs font-medium text-gray-400 mb-3 mt-1">
+                {results.length} {results.length === 1 ? 'risultato' : 'risultati'}
+              </p>
+            )}
+            <div className="flex flex-col gap-1 pb-4">
               {results.map((station) => {
                 const isActive = station.id === activeStationId;
                 return (
@@ -174,11 +191,11 @@ export const SearchOverlay: React.FC<SearchOverlayProps> = ({
                       'w-full flex items-center gap-3 px-3 py-3 rounded-2xl text-left transition-colors',
                       isActive
                         ? 'bg-trenord-green/10 border border-trenord-green/20'
-                        : 'hover:bg-gray-50 active:bg-gray-100',
+                        : 'active:bg-gray-100',
                     ].join(' ')}
                   >
                     <div
-                      className={`w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0 ${
+                      className={`w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 ${
                         isActive ? 'bg-trenord-green' : 'bg-gray-100'
                       }`}
                     >
@@ -194,10 +211,10 @@ export const SearchOverlay: React.FC<SearchOverlayProps> = ({
                       >
                         {station.nome}
                       </p>
-                      <p className="text-xs text-gray-400 font-mono">{station.codice}</p>
+                      <p className="text-xs text-gray-400 font-mono mt-0.5">{station.codice}</p>
                     </div>
                     {isActive ? (
-                      <span className="text-[10px] font-bold text-trenord-green bg-trenord-green/10 px-2 py-1 rounded-full flex-shrink-0">
+                      <span className="text-[10px] font-bold text-trenord-green bg-trenord-green/10 px-2 py-1 rounded-full flex-shrink-0 whitespace-nowrap">
                         Attiva
                       </span>
                     ) : (
@@ -207,9 +224,9 @@ export const SearchOverlay: React.FC<SearchOverlayProps> = ({
                 );
               })}
             </div>
-          )}
-        </div>
+          </div>
+        )}
       </div>
-    </>
+    </div>
   );
 };
