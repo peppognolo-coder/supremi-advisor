@@ -1,57 +1,43 @@
-import {
-  Shield,
-  TrainFront,
-} from 'lucide-react';
+// =============================================================================
+// PATCH NavBar.tsx — UX 3: Logo cliccabile → ritorno alla Home
+// =============================================================================
+//
+// Modifica da applicare al file PRE-ESISTENTE src/components/NavBar.tsx
+//
+// 1. Aggiungere onLogoClick alle props dell'interfaccia:
+//
+//    interface NavBarProps {
+//      title: string;
+//      onAdminAccess: () => void;
+//      onLogoClick?: () => void;   // ← AGGIUNGERE
+//    }
+//
+// 2. Ricevere la prop nella firma della funzione:
+//
+//    export default function NavBar({ title, onAdminAccess, onLogoClick }: NavBarProps) {
+//
+// 3. Rendere il titolo/logo cliccabile — trovare l'elemento che mostra il titolo
+//    (es. <h1>, <span>, o <p> con il testo "Supremi Advisor") e wrapparlo:
+//
+//    PRIMA:
+//      <h1 className="...">Supremi Advisor</h1>
+//
+//    DOPO:
+//      <button
+//        onClick={onLogoClick}
+//        className="... cursor-pointer active:opacity-70 transition-opacity"
+//        disabled={!onLogoClick}
+//      >
+//        Supremi Advisor
+//      </button>
+//
+//    Se onLogoClick non è fornito (undefined), il button è disabled e
+//    non reagisce al tap — backward compatible con eventuali altri usi.
+//
+// =============================================================================
+//
+// Nessun'altra modifica necessaria — App.tsx passa già onLogoClick={() => setActiveTab('home')}
+//
+// =============================================================================
 
-interface Props {
-
-  title: string;
-
-  onAdminAccess: () => void;
-}
-
-export default function NavBar({
-  title,
-  onAdminAccess,
-}: Props) {
-
-  return (
-
-    <div className="fixed top-0 left-0 right-0 z-50 bg-trenord-green text-white shadow-sm">
-
-      <div className="max-w-2xl mx-auto px-4 h-14 flex items-center justify-between">
-
-        {/* TITLE */}
-        <div className="flex items-center gap-2 min-w-0">
-
-          {/* LOGO */}
-          <div className="w-8 h-8 rounded-xl bg-white/10 flex items-center justify-center flex-shrink-0">
-
-            <TrainFront className="w-4 h-4 text-white" />
-
-          </div>
-
-          {/* TITLE */}
-          <span className="font-semibold text-sm tracking-wide truncate">
-
-            {title}
-
-          </span>
-
-        </div>
-
-        {/* ADMIN BUTTON */}
-        <button
-          onClick={onAdminAccess}
-          className="w-9 h-9 rounded-xl bg-white/10 hover:bg-white/20 transition-colors flex items-center justify-center flex-shrink-0"
-        >
-
-          <Shield className="w-5 h-5" />
-
-        </button>
-
-      </div>
-
-    </div>
-  );
-}
+export {}; // file di sola documentazione — non importare nell'app
