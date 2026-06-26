@@ -1,10 +1,11 @@
-import React from 'react';
+import React, { useRef, useEffect } from 'react';
 import { Settings } from 'lucide-react';
 
 import type { Tab } from '../types';
 import type { HomeStationData } from '../hooks/useHomeStation';
 
 import { useHomeFavorites } from '../hooks/useHomeFavorites';
+import { modalOpenCount } from '../lib/useScrollLock';
 
 import {
   StazioneCard,
@@ -47,6 +48,13 @@ const STATIC_FEED_ITEMS: FeedItem[] = [
 ];
 
 // ---------------------------------------------------------------------------
+// Costanti PTR — identiche ad App.tsx per coerenza UX
+// ---------------------------------------------------------------------------
+
+const PULL_THRESHOLD = 180;
+const DIRECTION_LOCK_PX = 20;
+
+// ---------------------------------------------------------------------------
 // Props
 // ---------------------------------------------------------------------------
 
@@ -60,21 +68,29 @@ interface HomeScreenProps {
   onAdminAccess: () => void;
   adminMode: boolean;
 
-  // Stazione attiva — elevata in App.tsx (unica istanza di useHomeStation)
+  // Stazione attiva
   activeStationId: string | null;
   stationData: HomeStationData | null;
   stationLoading: boolean;
   onStationSelected: (id: string) => void;
   onStationCleared: () => void;
 
-  // Navigazione con deep-link verso StazioniScreen
+  // Deep-link
   onOpenStazione: (stationId: string, categoriaFilter?: string) => void;
-  /** Apre SaletteScreen pre-filtrata per la stazione attiva */
   onOpenSegnalazione: (stationName: string) => void;
+
+  /**
+   * Callback per il Pull-to-Refresh locale della Home.
+   * La Home ascolta i touch sul proprio container scrollabile
+   * (overflow-y-auto) dove window non riceve touchmove.
+   * App.tsx passa refreshApp() qui; il PTR su window gestisce
+   * le altre schermate senza modifiche.
+   */
+  onRefresh: () => void;
 }
 
 // ---------------------------------------------------------------------------
-// HomeScreen — "dumb" rispetto alla stazione, riceve tutto da App.tsx
+// HomeScreen
 // ---------------------------------------------------------------------------
 
 const HomeScreen: React.FC<HomeScreenProps> = ({
@@ -90,16 +106,105 @@ const HomeScreen: React.FC<HomeScreenProps> = ({
   onStationCleared,
   onOpenStazione,
   onOpenSegnalazione,
+  onRefresh,
 }) => {
   const { favoriteStations, loading: favLoading } = useHomeFavorites(activeStationId);
 
   const badgeCount = stationData?.problemiAperti.length ?? 0;
 
+  // ── Ref al container scrollabile ─────────────────────────────────────────
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  // ── Pull-to-Refresh locale ────────────────────────────────────────────────
+  // App.tsx ascolta window per le schermate con body-scroll (Salette, Stazioni).
+  // HomeScreen usa overflow-y-auto interno → window non riceve touchmove.
+  // Questo useEffect ascolta direttamente il div scrollabile.
+  // Stessi parametri e guardie di App.tsx per coerenza UX.
+
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+
+    let touchStartY = 0;
+    let touchStartX = 0;
+    let touchEndY = 0;
+    let pulling = false;
+    let directionLocked = false;
+
+    function handleTouchStart(e: TouchEvent) {
+      // Attiva solo se il container è scrollato in cima
+      if (el.scrollTop > 0) return;
+      // Nessun PTR se un modal è aperto
+      if (modalOpenCount.current > 0) return;
+
+      touchStartY = e.touches[0].clientY;
+      touchStartX = e.touches[0].clientX;
+      touchEndY = e.touches[0].clientY;
+      pulling = true;
+      directionLocked = false;
+    }
+
+    function handleTouchMove(e: TouchEvent) {
+      if (!pulling) return;
+
+      const currentY = e.touches[0].clientY;
+      const currentX = e.touches[0].clientX;
+      const deltaY = currentY - touchStartY;
+      const deltaX = currentX - touchStartX;
+
+      if (!directionLocked) {
+        const movedEnough =
+          Math.abs(deltaY) > DIRECTION_LOCK_PX || Math.abs(deltaX) > DIRECTION_LOCK_PX;
+        if (!movedEnough) return;
+        // Gesto orizzontale → non è PTR
+        if (Math.abs(deltaX) > Math.abs(deltaY)) { pulling = false; return; }
+        // Gesto verso l'alto → non è PTR
+        if (deltaY < 0) { pulling = false; return; }
+        directionLocked = true;
+      }
+
+      // Se nel frattempo il container ha scrollato (inerzia), annulla
+      if (el.scrollTop > 5) { pulling = false; directionLocked = false; return; }
+
+      touchEndY = currentY;
+    }
+
+    function handleTouchEnd() {
+      if (!pulling) return;
+
+      const distance = touchEndY - touchStartY;
+
+      if (
+        distance > PULL_THRESHOLD &&
+        directionLocked &&
+        el.scrollTop <= 0 &&
+        modalOpenCount.current === 0
+      ) {
+        onRefresh();
+      }
+
+      pulling = false;
+      directionLocked = false;
+      touchStartY = 0;
+      touchStartX = 0;
+      touchEndY = 0;
+    }
+
+    el.addEventListener('touchstart', handleTouchStart, { passive: true });
+    el.addEventListener('touchmove', handleTouchMove, { passive: true });
+    el.addEventListener('touchend', handleTouchEnd);
+
+    return () => {
+      el.removeEventListener('touchstart', handleTouchStart);
+      el.removeEventListener('touchmove', handleTouchMove);
+      el.removeEventListener('touchend', handleTouchEnd);
+    };
+  }, [onRefresh]);
+
   // ── Handlers ──────────────────────────────────────────────────────────────
 
   function handleApriStazione() {
     if (activeStationId) {
-      // Naviga a StazioniScreen con la stazione già espansa
       onOpenStazione(activeStationId);
     } else {
       onNavigate('stazioni');
@@ -107,6 +212,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({
   }
 
   function handleNuovoContributo() { onNavigate('contributi'); }
+
   function handleSegnalaProblema() {
     if (stationData?.stazione.nome) {
       onOpenSegnalazione(stationData.stazione.nome);
@@ -114,16 +220,16 @@ const HomeScreen: React.FC<HomeScreenProps> = ({
       onNavigate('salette');
     }
   }
+
   function handleSelectFavorite(id: string) { onStationSelected(id); }
 
-  // Chip → StazioniScreen con filtro categoria
-  function handleOpenSalette() { onNavigate('salette'); }
   function handleOpenAttivita() {
     if (activeStationId) onOpenStazione(activeStationId, 'attivita');
   }
   function handleOpenHotel() {
     if (activeStationId) onOpenStazione(activeStationId, 'Hotel');
   }
+  function handleOpenSalette() { onNavigate('salette'); }
   function handleOpenProblemi() { onNavigate('salette'); }
 
   // ---------------------------------------------------------------------------
@@ -131,8 +237,10 @@ const HomeScreen: React.FC<HomeScreenProps> = ({
   // ---------------------------------------------------------------------------
 
   return (
-    <div className="flex flex-col h-full bg-gray-50 overflow-y-auto scrollbar-hide">
-
+    <div
+      ref={scrollRef}
+      className="flex flex-col h-full bg-gray-50 overflow-y-auto scrollbar-hide"
+    >
       {/* ── HEADER ────────────────────────────────────────────────────────── */}
       <div className="sticky top-0 z-10 bg-white border-b border-gray-100">
         <div
@@ -174,7 +282,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({
         </div>
       </div>
 
-      {/* ── CONTENUTO SCROLLABILE ───────────────────────────────────────────── */}
+      {/* ── CONTENUTO SCROLLABILE ─────────────────────────────────────────── */}
       <div
         className="flex flex-col gap-6 py-5"
         style={{ paddingBottom: 'calc(7rem + env(safe-area-inset-bottom, 0px))' }}
