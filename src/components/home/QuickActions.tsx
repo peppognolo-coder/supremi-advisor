@@ -1,10 +1,12 @@
 import React from 'react';
-import { PlusCircle, AlertTriangle, ExternalLink } from 'lucide-react';
+import { PlusCircle, AlertTriangle } from 'lucide-react';
+
+// R5: rimosso "Apri stazione" — duplica il CTA già presente nella StazioneCard.
+// Restano due azioni: "Nuovo contributo" e "Segnala problema".
 
 interface QuickActionsProps {
   onNuovoContributo: () => void;
   onSegnalaProblema: () => void;
-  onApriStazione: () => void;
   /** Se undefined, i pulsanti sono disabilitati (nessuna stazione selezionata) */
   stazioneId?: string;
 }
@@ -20,7 +22,6 @@ interface ActionButton {
 export const QuickActions: React.FC<QuickActionsProps> = ({
   onNuovoContributo,
   onSegnalaProblema,
-  onApriStazione,
   stazioneId,
 }) => {
   const disabled = !stazioneId;
@@ -40,26 +41,19 @@ export const QuickActions: React.FC<QuickActionsProps> = ({
       color: 'text-orange-600',
       iconBg: 'bg-orange-50',
     },
-    {
-      label: 'Apri stazione',
-      icon: <ExternalLink className="w-5 h-5" />,
-      onClick: onApriStazione,
-      color: 'text-blue-600',
-      iconBg: 'bg-blue-50',
-    },
   ];
 
   return (
     <div className="px-4">
       <p className="section-title mb-3">Azioni rapide</p>
-      <div className="grid grid-cols-3 gap-2">
+      <div className="grid grid-cols-2 gap-3">
         {actions.map((action) => (
           <button
             key={action.label}
             onClick={action.onClick}
             disabled={disabled}
             className={[
-              'flex flex-col items-center gap-2 p-3 rounded-2xl bg-white border border-gray-100 shadow-sm',
+              'flex flex-col items-center gap-2 p-4 rounded-2xl bg-white border border-gray-100 shadow-sm',
               'active:scale-95 transition-all duration-150',
               disabled ? 'opacity-40 cursor-not-allowed' : 'hover:border-gray-200 hover:shadow',
             ].join(' ')}
