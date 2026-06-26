@@ -110,15 +110,15 @@ export function useHomeStation(refreshKey = 0, enabled = true) {
       };
 
       const { data: problemiRaw } = await supabase
-        .from('saletta_segnalazioni')
-        .select('id, tipo, nota, stato, salette!inner(stazione_id)')
+        .from('saletta_problemi')
+        .select('id, tipo_problema, note, stato, salette!inner(stazione_id)')
         .eq('salette.stazione_id', id)
         .in('stato', ['aperta', 'in_carico'])
         .order('created_at', { ascending: false })
         .limit(5);
 
       const problemiAperti: HomeStationProblema[] = (problemiRaw ?? []).map(
-        (p: any) => ({ id: p.id, tipo: p.tipo, nota: p.nota, stato: p.stato })
+        (p: any) => ({ id: p.id, tipo: p.tipo_problema, nota: p.note, stato: p.stato })
       );
 
       setData({ stazione, counts, problemiAperti });
