@@ -148,7 +148,7 @@ export default function StazioniScreen({
     ) {
       expandedCardRef.current.scrollIntoView({
         behavior: 'smooth',
-        block: 'start',
+        block: 'center',
       });
       scrollDone.current = true;
     }
