@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import { Search, X, MapPin, ChevronRight } from 'lucide-react';
-import { useStationSearch } from '../hooks/useStationSearch';
+import { useStationSearch } from '../../hooks/useStationSearch';
 
 // ---------------------------------------------------------------------------
 // Props
