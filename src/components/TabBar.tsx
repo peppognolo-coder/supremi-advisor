@@ -12,48 +12,35 @@ interface Props {
   activeTab: Tab;
   onChange: (tab: Tab) => void;
   adminMode?: boolean;
+  /** Nasconde la TabBar — usato quando SearchOverlay è aperto */
+  hidden?: boolean;
 }
 
 export default function TabBar({
   activeTab,
   onChange,
   adminMode = false,
+  hidden = false,
 }: Props) {
-  const tabs = [
-    {
-      id: 'home' as Tab,
-      label: 'Home',
-      icon: Home,
-    },
-    {
-      id: 'salette' as Tab,
-      label: 'Salette',
-      // Armchair: più semantica di BedDouble per una saletta del personale
-      icon: Armchair,
-    },
-    {
-      id: 'stazioni' as Tab,
-      label: 'Stazioni',
-      icon: TrainFront,
-    },
-    {
-      id: 'contributi' as Tab,
-      label: 'Contributi',
-      icon: Users,
-    },
+  // Struttura tab:
+  //   Utente normale → Home | Salette | Stazioni | Contributi
+  //   Admin          → Home | Salette | Stazioni | Admin
+  //   (Contributi e Segnalazioni in admin mode sono sezioni interne di AdminScreen)
+  const tabs = adminMode
+    ? [
+        { id: 'home' as Tab,     label: 'Home',     icon: Home },
+        { id: 'salette' as Tab,  label: 'Salette',  icon: Armchair },
+        { id: 'stazioni' as Tab, label: 'Stazioni', icon: TrainFront },
+        { id: 'admin' as Tab,    label: 'Admin',    icon: Shield },
+      ]
+    : [
+        { id: 'home' as Tab,       label: 'Home',      icon: Home },
+        { id: 'salette' as Tab,    label: 'Salette',   icon: Armchair },
+        { id: 'stazioni' as Tab,   label: 'Stazioni',  icon: TrainFront },
+        { id: 'contributi' as Tab, label: 'Contributi', icon: Users },
+      ];
 
-    // ADMIN ONLY — Segnalazioni rimossa dalla TabBar (UX 2):
-    // è una funzione consultiva, appartiene all'AdminScreen come sezione interna.
-    ...(adminMode
-      ? [
-          {
-            id: 'admin' as Tab,
-            label: 'Admin',
-            icon: Shield,
-          },
-        ]
-      : []),
-  ];
+  if (hidden) return null;
 
   return (
     <div className="fixed bottom-0 left-0 right-0 z-50 px-3 pb-[max(6px,env(safe-area-inset-bottom))]">
@@ -62,7 +49,6 @@ export default function TabBar({
           {tabs.map((tab) => {
             const Icon = tab.icon;
             const isActive = activeTab === tab.id;
-
             return (
               <button
                 key={tab.id}
