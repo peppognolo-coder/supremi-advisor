@@ -69,6 +69,8 @@ interface HomeScreenProps {
 
   // Navigazione con deep-link verso StazioniScreen
   onOpenStazione: (stationId: string, categoriaFilter?: string) => void;
+  /** Apre SaletteScreen pre-filtrata per la stazione attiva */
+  onOpenSegnalazione: (stationName: string) => void;
 }
 
 // ---------------------------------------------------------------------------
@@ -87,6 +89,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({
   onStationSelected,
   onStationCleared,
   onOpenStazione,
+  onOpenSegnalazione,
 }) => {
   const { favoriteStations, loading: favLoading } = useHomeFavorites(activeStationId);
 
@@ -104,7 +107,13 @@ const HomeScreen: React.FC<HomeScreenProps> = ({
   }
 
   function handleNuovoContributo() { onNavigate('contributi'); }
-  function handleSegnalaProblema() { onNavigate('salette'); }
+  function handleSegnalaProblema() {
+    if (stationData?.stazione.nome) {
+      onOpenSegnalazione(stationData.stazione.nome);
+    } else {
+      onNavigate('salette');
+    }
+  }
   function handleSelectFavorite(id: string) { onStationSelected(id); }
 
   // Chip → StazioniScreen con filtro categoria
