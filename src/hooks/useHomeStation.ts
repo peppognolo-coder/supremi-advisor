@@ -51,7 +51,7 @@ function clearPersistedId(): void {
 // Hook
 // ---------------------------------------------------------------------------
 
-export function useHomeStation(refreshKey = 0) {
+export function useHomeStation(refreshKey = 0, enabled = true) {
   const [activeStationId, setActiveStationId] = useState<string | null>(
     readPersistedId
   );
@@ -136,13 +136,14 @@ export function useHomeStation(refreshKey = 0) {
   // =========================================================================
 
   useEffect(() => {
+    if (!enabled) return;
     if (!activeStationId) {
       setData(null);
       setLoading(false);
       return;
     }
     loadStationData(activeStationId);
-  }, [activeStationId, loadStationData, refreshKey]);
+  }, [activeStationId, loadStationData, refreshKey, enabled]);
 
   // =========================================================================
   // Azioni
