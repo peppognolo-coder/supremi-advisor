@@ -38,9 +38,22 @@ export default function App() {
 
   // =========================
   // SEARCH OVERLAY
+  // searchIsPersonal=true  → "Cambia" nella card: salva come stazione personale
+  // searchIsPersonal=false → SearchBar globale: naviga senza modificare activeStation
   // =========================
 
   const [searchOpen, setSearchOpen] = useState(false);
+  const [searchIsPersonal, setSearchIsPersonal] = useState(false);
+
+  function openSearchPersonal() {
+    setSearchIsPersonal(true);
+    setSearchOpen(true);
+  }
+
+  function openSearchNavigate() {
+    setSearchIsPersonal(false);
+    setSearchOpen(true);
+  }
 
   // =========================
   // REFRESH KEY
@@ -252,7 +265,8 @@ export default function App() {
         {activeTab === 'home' && (
           <HomeScreen
             onNavigate={setActiveTab}
-            onOpenSearch={() => setSearchOpen(true)}
+            onOpenSearch={openSearchNavigate}
+            onOpenSearchPersonal={openSearchPersonal}
             onAdminAccess={handleAdminAccess}
             adminMode={adminMode}
             activeStationId={activeStationId}
@@ -308,7 +322,11 @@ export default function App() {
         isOpen={searchOpen}
         onClose={() => setSearchOpen(false)}
         onSelectStation={(id) => {
-          setActiveStation(id);
+          if (searchIsPersonal) {
+            setActiveStation(id);
+          } else {
+            handleOpenStazione(id);
+          }
           setSearchOpen(false);
         }}
         activeStationId={activeStationId}
