@@ -2,8 +2,8 @@ import React from 'react';
 import { Settings } from 'lucide-react';
 
 import type { Tab } from '../types';
+import type { HomeStationData } from '../hooks/useHomeStation';
 
-import { useHomeStation } from '../hooks/useHomeStation';
 import { useHomeFavorites } from '../hooks/useHomeFavorites';
 
 import {
@@ -16,7 +16,7 @@ import {
 } from '../components/home';
 
 // ---------------------------------------------------------------------------
-// Dati statici temporanei — SOLO il feed, rimosso in Iterazione 3
+// Feed statico — rimosso in Iterazione 3
 // ---------------------------------------------------------------------------
 
 const STATIC_FEED_ITEMS: FeedItem[] = [
@@ -25,8 +25,7 @@ const STATIC_FEED_ITEMS: FeedItem[] = [
     tipo: 'avviso',
     titolo: 'Saletta Equipaggi chiusa',
     stazione: 'Milano Porta Garibaldi',
-    descrizione:
-      'La saletta è temporaneamente chiusa per manutenzione straordinaria. Riapertura prevista domani.',
+    descrizione: 'La saletta è temporaneamente chiusa per manutenzione straordinaria.',
     tempo: '1h fa',
   },
   {
@@ -34,8 +33,7 @@ const STATIC_FEED_ITEMS: FeedItem[] = [
     tipo: 'info',
     titolo: 'Nuovo orario bar interno',
     stazione: 'Brescia',
-    descrizione:
-      'Il bar del piano 2 ha modificato gli orari: aperto 6:00–21:00 dal lunedì al sabato.',
+    descrizione: 'Il bar del piano 2 ha modificato gli orari: aperto 6:00–21:00.',
     tempo: '3h fa',
   },
   {
@@ -43,8 +41,7 @@ const STATIC_FEED_ITEMS: FeedItem[] = [
     tipo: 'risolto',
     titolo: 'Problema risolto',
     stazione: 'Bergamo',
-    descrizione:
-      'Il guasto alla porta principale è stato riparato. Accesso normale ripristinato.',
+    descrizione: 'Il guasto alla porta principale è stato riparato.',
     tempo: 'Ieri',
   },
 ];
@@ -54,56 +51,69 @@ const STATIC_FEED_ITEMS: FeedItem[] = [
 // ---------------------------------------------------------------------------
 
 interface HomeScreenProps {
+  // Navigazione
   onNavigate: (tab: Tab) => void;
+  onOpenSearch: () => void;
+
+  // Admin
   onAdminAccess: () => void;
   adminMode: boolean;
-  /** Apre il SearchOverlay — gestito in App.tsx per nascondere la TabBar */
-  onOpenSearch: () => void;
-  /** ID stazione attiva selezionata dalla ricerca — viene impostato dall'overlay */
+
+  // Stazione attiva — elevata in App.tsx (unica istanza di useHomeStation)
+  activeStationId: string | null;
+  stationData: HomeStationData | null;
+  stationLoading: boolean;
   onStationSelected: (id: string) => void;
+  onStationCleared: () => void;
+
+  // Navigazione con deep-link verso StazioniScreen
+  onOpenStazione: (stationId: string, categoriaFilter?: string) => void;
 }
 
 // ---------------------------------------------------------------------------
-// HomeScreen
+// HomeScreen — "dumb" rispetto alla stazione, riceve tutto da App.tsx
 // ---------------------------------------------------------------------------
 
 const HomeScreen: React.FC<HomeScreenProps> = ({
   onNavigate,
+  onOpenSearch,
   onAdminAccess,
   adminMode,
-  onOpenSearch,
+  activeStationId,
+  stationData,
+  stationLoading,
   onStationSelected,
+  onStationCleared,
+  onOpenStazione,
 }) => {
-  const {
-    activeStationId,
-    data: stationData,
-    loading: stationLoading,
-    setActiveStation,
-  } = useHomeStation();
-
   const { favoriteStations, loading: favLoading } = useHomeFavorites(activeStationId);
+
+  const badgeCount = stationData?.problemiAperti.length ?? 0;
 
   // ── Handlers ──────────────────────────────────────────────────────────────
 
   function handleApriStazione() {
-    onNavigate('stazioni');
+    if (activeStationId) {
+      // Naviga a StazioniScreen con la stazione già espansa
+      onOpenStazione(activeStationId);
+    } else {
+      onNavigate('stazioni');
+    }
   }
 
-  function handleNuovoContributo() {
-    onNavigate('contributi');
-  }
+  function handleNuovoContributo() { onNavigate('contributi'); }
+  function handleSegnalaProblema() { onNavigate('salette'); }
+  function handleSelectFavorite(id: string) { onStationSelected(id); }
 
-  function handleSegnalaProblema() {
-    onNavigate('salette');
+  // Chip → StazioniScreen con filtro categoria
+  function handleOpenSalette() { onNavigate('salette'); }
+  function handleOpenAttivita() {
+    if (activeStationId) onOpenStazione(activeStationId, 'attivita');
   }
-
-  function handleSelectFavorite(id: string) {
-    setActiveStation(id);
-    // Notifica App.tsx in modo che possa fare azioni future (es. refresh)
-    onStationSelected(id);
+  function handleOpenHotel() {
+    if (activeStationId) onOpenStazione(activeStationId, 'Hotel');
   }
-
-  const badgeCount = stationData?.problemiAperti.length ?? 0;
+  function handleOpenProblemi() { onNavigate('salette'); }
 
   // ---------------------------------------------------------------------------
   // Render
@@ -112,7 +122,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({
   return (
     <div className="flex flex-col h-full bg-gray-50 overflow-y-auto scrollbar-hide">
 
-      {/* ── HEADER ──────────────────────────────────────────────────────────── */}
+      {/* ── HEADER ────────────────────────────────────────────────────────── */}
       <div className="sticky top-0 z-10 bg-white border-b border-gray-100">
         <div
           className="flex items-center justify-between px-4 py-3"
@@ -156,15 +166,18 @@ const HomeScreen: React.FC<HomeScreenProps> = ({
       {/* ── CONTENUTO SCROLLABILE ───────────────────────────────────────────── */}
       <div
         className="flex flex-col gap-6 py-5"
-        style={{
-          paddingBottom: 'calc(7rem + env(safe-area-inset-bottom, 0px))',
-        }}
+        style={{ paddingBottom: 'calc(7rem + env(safe-area-inset-bottom, 0px))' }}
       >
         <StazioneCard
           data={stationData}
           loading={stationLoading}
           onApri={handleApriStazione}
           onCambia={onOpenSearch}
+          onRimuovi={onStationCleared}
+          onOpenSalette={handleOpenSalette}
+          onOpenAttivita={handleOpenAttivita}
+          onOpenHotel={handleOpenHotel}
+          onOpenProblemi={handleOpenProblemi}
         />
 
         <QuickActions
@@ -181,7 +194,6 @@ const HomeScreen: React.FC<HomeScreenProps> = ({
           onSelect={handleSelectFavorite}
         />
 
-        {/* SearchBar — apre il SearchOverlay fullscreen gestito da App.tsx */}
         <SearchBar onFocus={onOpenSearch} />
 
         <UpdateFeed items={STATIC_FEED_ITEMS} />
