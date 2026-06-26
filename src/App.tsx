@@ -12,6 +12,9 @@ import AdminScreen from './screens/AdminScreen';
 import SegnalazioniScreen from './screens/SegnalazioniScreen';
 import ContributiScreen from './screens/ContributiScreen';
 
+import { SearchOverlay } from './components/home/SearchOverlay';
+import { useHomeStation } from './hooks/useHomeStation';
+
 import { Toaster } from 'react-hot-toast';
 import toast from 'react-hot-toast';
 import { RefreshCw } from 'lucide-react';
@@ -31,18 +34,25 @@ const screenTitles: Record<Tab, string> = {
 };
 
 export default function App() {
-  // Home è ora il tab iniziale
   const [activeTab, setActiveTab] = useState<Tab>('home');
+
+  // =========================
+  // SEARCH OVERLAY GLOBALE
+  // Elevato qui così TabBar può essere nascosta quando è aperto
+  // =========================
+
+  const [searchOpen, setSearchOpen] = useState(false);
+
+  // Hook stazione attiva — condiviso tra HomeScreen e SearchOverlay
+  const { activeStationId, setActiveStation } = useHomeStation();
 
   // =========================
   // META TAGS PWA
   // =========================
 
   useEffect(() => {
-    // TITLE
     document.title = 'Supremi Advisor';
 
-    // FAVICON
     const favicon =
       (document.querySelector("link[rel='icon']") as HTMLLinkElement) ||
       (() => {
@@ -54,7 +64,6 @@ export default function App() {
     favicon.type = 'image/svg+xml';
     favicon.href = '/favicon.svg';
 
-    // APPLE TOUCH ICON
     const apple =
       (document.querySelector("link[rel='apple-touch-icon']") as HTMLLinkElement) ||
       (() => {
@@ -65,7 +74,6 @@ export default function App() {
       })();
     apple.href = '/apple-touch-icon.png';
 
-    // THEME COLOR
     const themeColor =
       (document.querySelector("meta[name='theme-color']") as HTMLMetaElement) ||
       (() => {
@@ -110,7 +118,6 @@ export default function App() {
     function handleTouchStart(e: TouchEvent) {
       if (window.scrollY > 0) return;
       if (modalOpenCount.current > 0) return;
-
       touchStartY.current = e.touches[0].clientY;
       touchStartX.current = e.touches[0].clientX;
       touchEndY.current = e.touches[0].clientY;
@@ -120,7 +127,6 @@ export default function App() {
 
     function handleTouchMove(e: TouchEvent) {
       if (!pulling.current) return;
-
       const currentY = e.touches[0].clientY;
       const currentX = e.touches[0].clientX;
       const deltaY = currentY - touchStartY.current;
@@ -130,17 +136,8 @@ export default function App() {
         const movedEnough =
           Math.abs(deltaY) > DIRECTION_LOCK_PX || Math.abs(deltaX) > DIRECTION_LOCK_PX;
         if (!movedEnough) return;
-
-        if (Math.abs(deltaX) > Math.abs(deltaY)) {
-          pulling.current = false;
-          return;
-        }
-
-        if (deltaY < 0) {
-          pulling.current = false;
-          return;
-        }
-
+        if (Math.abs(deltaX) > Math.abs(deltaY)) { pulling.current = false; return; }
+        if (deltaY < 0) { pulling.current = false; return; }
         directionLocked.current = true;
       }
 
@@ -149,15 +146,12 @@ export default function App() {
         directionLocked.current = false;
         return;
       }
-
       touchEndY.current = currentY;
     }
 
     function handleTouchEnd() {
       if (!pulling.current) return;
-
       const distance = touchEndY.current - touchStartY.current;
-
       if (
         distance > PULL_THRESHOLD &&
         directionLocked.current &&
@@ -167,7 +161,6 @@ export default function App() {
       ) {
         refreshApp();
       }
-
       pulling.current = false;
       directionLocked.current = false;
       touchStartY.current = 0;
@@ -178,7 +171,6 @@ export default function App() {
     window.addEventListener('touchstart', handleTouchStart, { passive: true });
     window.addEventListener('touchmove', handleTouchMove, { passive: true });
     window.addEventListener('touchend', handleTouchEnd);
-
     return () => {
       window.removeEventListener('touchstart', handleTouchStart);
       window.removeEventListener('touchmove', handleTouchMove);
@@ -201,10 +193,6 @@ export default function App() {
     }
   }, []);
 
-  // =========================
-  // ADMIN ACCESS
-  // =========================
-
   function handleAdminAccess() {
     if (adminMode) {
       setShowPinModal('logout');
@@ -225,27 +213,19 @@ export default function App() {
     } else {
       localStorage.removeItem('trenord_admin');
       setAdminMode(false);
-      // Al logout admin, ritorna alla Home (non più a 'salette')
       setActiveTab('home');
       toast.success('Modalità admin disattivata');
     }
-
     setShowPinModal(null);
   }
 
   // =========================
-  // NAVIGAZIONE DA HOME
+  // NAVIGAZIONE
   // =========================
 
-  // Handler passato a HomeScreen per navigare verso altre schermate
   function handleHomeNavigate(tab: Tab) {
     setActiveTab(tab);
   }
-
-  // =========================
-  // LAYOUT: Home ha layout proprio (no NavBar/TitleBar/padding)
-  // Le altre schermate mantengono il layout esistente invariato
-  // =========================
 
   const isHomeTab = activeTab === 'home';
 
@@ -264,7 +244,7 @@ export default function App() {
         </div>
       </div>
 
-      {/* NAVBAR — nascosta sulla Home: ha il proprio header integrato */}
+      {/* NAVBAR — nascosta sulla Home */}
       {!isHomeTab && (
         <NavBar
           title={adminMode ? 'Supremi Advisor • ADMIN' : 'Supremi Advisor'}
@@ -303,22 +283,20 @@ export default function App() {
       <main
         className={
           isHomeTab
-            ? // Home: fullscreen, nessun padding top (gestisce il proprio header sticky)
-              'flex-1 overflow-hidden'
-            : // Altre schermate: layout esistente invariato
-              'flex-1 pt-[112px] pb-[72px]'
+            ? 'flex-1 overflow-hidden'
+            : 'flex-1 pt-[112px] pb-[72px]'
         }
       >
-        {/* HOME */}
         {activeTab === 'home' && (
           <HomeScreen
             onNavigate={handleHomeNavigate}
             onAdminAccess={handleAdminAccess}
             adminMode={adminMode}
+            onOpenSearch={() => setSearchOpen(true)}
+            onStationSelected={setActiveStation}
           />
         )}
 
-        {/* Le schermate esistenti rimangono esattamente come prima */}
         {activeTab === 'salette' && (
           <div className="max-w-2xl mx-auto px-4 py-4">
             <SaletteScreen
@@ -356,8 +334,28 @@ export default function App() {
         )}
       </main>
 
-      {/* TABBAR */}
-      <TabBar activeTab={activeTab} onChange={setActiveTab} adminMode={adminMode} />
+      {/* TABBAR — nascosta quando SearchOverlay è aperto */}
+      <TabBar
+        activeTab={activeTab}
+        onChange={setActiveTab}
+        adminMode={adminMode}
+        hidden={searchOpen}
+      />
+
+      {/* SEARCH OVERLAY GLOBALE
+          Posizionato qui (radice del DOM) → z-[60] supera tutto
+          Condivide useHomeStation con HomeScreen tramite il hook
+          (stesso localStorage key → stessa stazione attiva)
+      */}
+      <SearchOverlay
+        isOpen={searchOpen}
+        onClose={() => setSearchOpen(false)}
+        onSelectStation={(id) => {
+          setActiveStation(id);
+          setSearchOpen(false);
+        }}
+        activeStationId={activeStationId}
+      />
 
       {/* ADMIN PIN MODAL */}
       {showPinModal && (
@@ -373,23 +371,9 @@ export default function App() {
         position="top-center"
         toastOptions={{
           duration: 2500,
-          style: {
-            borderRadius: '16px',
-            fontSize: '14px',
-            padding: '12px 16px',
-          },
-          success: {
-            style: {
-              background: '#ECFDF5',
-              color: '#065F46',
-            },
-          },
-          error: {
-            style: {
-              background: '#FEF2F2',
-              color: '#991B1B',
-            },
-          },
+          style: { borderRadius: '16px', fontSize: '14px', padding: '12px 16px' },
+          success: { style: { background: '#ECFDF5', color: '#065F46' } },
+          error:   { style: { background: '#FEF2F2', color: '#991B1B' } },
         }}
       />
     </div>
