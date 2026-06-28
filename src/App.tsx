@@ -95,19 +95,20 @@ export default function App() {
 
   // Deep-link contestuali dalla Home — settano i pending PRIMA di cambiare tab
   function handleOpenStazione(stationId: string, categoriaFilter?: string) {
+    console.log('[NAV] handleOpenStazione — id:', stationId, '| filtro:', categoriaFilter ?? 'nessuno');
     setPendingExpandId(stationId);
     setPendingCategoriaFilter(categoriaFilter ?? null);
     setActiveTab('stazioni');
   }
 
   function handleOpenSegnalazione(stationName: string) {
+    console.log('[NAV] handleOpenSegnalazione — stazione:', stationName);
     setPendingSaletteStationName(stationName);
     setActiveTab('salette');
   }
 
-  // Navigazione manuale via TabBar — P1+P6+P7
-  // Resetta tutti i pending (one-shot) e porta lo scroll a 0
   function handleTabChange(tab: Tab) {
+    console.log('[NAV] handleTabChange — tab:', tab, '| pendingExpand:', pendingExpandId, '| pendingSalette:', pendingSaletteStationName);
     setPendingExpandId(null);
     setPendingCategoriaFilter(null);
     setPendingSaletteStationName(null);
@@ -153,7 +154,7 @@ export default function App() {
 
   useEffect(() => {
     function handleTouchStart(e: TouchEvent) {
-      if (window.scrollY > 0) return;
+      if (window.scrollY > 5) return;  // soglia 5px — iOS Safari nasconde la barra URL causando scrollY 1-2px
       if (modalOpenCount.current > 0) return;
       touchStartY.current = e.touches[0].clientY;
       touchStartX.current = e.touches[0].clientX;
@@ -181,7 +182,7 @@ export default function App() {
     function handleTouchEnd() {
       if (!pulling.current) return;
       const distance = touchEndY.current - touchStartY.current;
-      if (distance > PULL_THRESHOLD && directionLocked.current && window.scrollY <= 0 && !refreshing && modalOpenCount.current === 0) {
+      if (distance > PULL_THRESHOLD && directionLocked.current && window.scrollY <= 5 && !refreshing && modalOpenCount.current === 0) {
         refreshApp();
       }
       pulling.current = false; directionLocked.current = false;
