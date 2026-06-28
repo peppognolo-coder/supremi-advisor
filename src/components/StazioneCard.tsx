@@ -81,6 +81,9 @@ function CountChip({
   label: string;
   onClick?: () => void;
 }) {
+  // [LOG-CHIP] Log al render di ogni chip
+  console.log(`[CHIP] render "${label}" — value:${value} | onClick:${onClick ? 'PRESENTE ✅' : 'ASSENTE ⚠'}`);
+
   const inner = (
     <>
       <p className="text-xl font-bold text-white">{value}</p>
@@ -91,7 +94,10 @@ function CountChip({
   if (onClick) {
     return (
       <button
-        onClick={onClick}
+        onClick={() => {
+          console.log(`[CHIP] ✅ click su "${label}" — chiamo onClick`);
+          onClick();
+        }}
         className="bg-white/10 rounded-xl px-3 py-2.5 text-left active:bg-white/20 transition-colors"
       >
         {inner}
@@ -124,6 +130,9 @@ export const StazioneCard: React.FC<StazioneCardProps> = ({
   if (loading) return <StazioneCardSkeleton />;
   if (!data) return <StazioneCardEmpty onCambia={onCambia} />;
 
+  // [LOG-RIMUOVI] Valori reali al momento del render
+  console.log('[CARD] render principale — loading:', loading, '| data:', data ? `"${data.stazione.nome}"` : 'null', '| onRimuovi:', typeof onRimuovi, '| counts:', JSON.stringify(data?.counts));
+
   const { stazione, counts, problemiAperti } = data;
   const primoProblema = problemiAperti[0] ?? null;
   const altriProblemi = problemiAperti.length - 1;
@@ -146,10 +155,13 @@ export const StazioneCard: React.FC<StazioneCardProps> = ({
           </div>
           <div className="flex items-center gap-3">
             <button
-              onClick={onRimuovi}
-              className="flex items-center gap-1 text-xs font-medium text-white/80 active:text-white transition-colors"
+              onClick={() => {
+                console.log('[RIMUOVI] ✅ click — chiamo onRimuovi');
+                onRimuovi();
+              }}
+              className="flex items-center gap-1.5 text-xs font-semibold text-white bg-white/20 hover:bg-white/30 active:bg-white/40 px-2.5 py-1 rounded-lg transition-colors"
             >
-              <X className="w-3 h-3" />
+              <X className="w-3.5 h-3.5" />
               Rimuovi
             </button>
             <button
