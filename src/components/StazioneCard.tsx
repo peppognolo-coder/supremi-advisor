@@ -1,10 +1,6 @@
 import React from 'react';
-import { MapPin, ChevronRight, AlertCircle, Train, Plus, X } from 'lucide-react';
+import { MapPin, ChevronRight, AlertCircle, Train, Plus, Trash2 } from 'lucide-react';
 import type { HomeStationData } from '../../hooks/useHomeStation';
-
-// ---------------------------------------------------------------------------
-// Props
-// ---------------------------------------------------------------------------
 
 interface StazioneCardProps {
   data: HomeStationData | null;
@@ -12,7 +8,6 @@ interface StazioneCardProps {
   onApri: () => void;
   onCambia: () => void;
   onRimuovi: () => void;
-  /** Chip contatori — navigano verso sezioni specifiche */
   onOpenSalette?: () => void;
   onOpenAttivita?: () => void;
   onOpenHotel?: () => void;
@@ -22,7 +17,6 @@ interface StazioneCardProps {
 // ---------------------------------------------------------------------------
 // Skeleton
 // ---------------------------------------------------------------------------
-
 function StazioneCardSkeleton() {
   return (
     <div className="mx-4 rounded-2xl bg-trenord-green overflow-hidden shadow-lg">
@@ -42,7 +36,6 @@ function StazioneCardSkeleton() {
 // ---------------------------------------------------------------------------
 // Empty state
 // ---------------------------------------------------------------------------
-
 function StazioneCardEmpty({ onCambia }: { onCambia: () => void }) {
   return (
     <div className="mx-4 rounded-2xl bg-trenord-green overflow-hidden shadow-lg">
@@ -69,9 +62,8 @@ function StazioneCardEmpty({ onCambia }: { onCambia: () => void }) {
 }
 
 // ---------------------------------------------------------------------------
-// Chip contatore — diventa button se onClick è fornito
+// CountChip — button se onClick presente, div altrimenti
 // ---------------------------------------------------------------------------
-
 function CountChip({
   value,
   label,
@@ -81,9 +73,6 @@ function CountChip({
   label: string;
   onClick?: () => void;
 }) {
-  // [LOG-CHIP] Log al render di ogni chip
-  console.log(`[CHIP] render "${label}" — value:${value} | onClick:${onClick ? 'PRESENTE ✅' : 'ASSENTE ⚠'}`);
-
   const inner = (
     <>
       <p className="text-xl font-bold text-white">{value}</p>
@@ -94,11 +83,8 @@ function CountChip({
   if (onClick) {
     return (
       <button
-        onClick={() => {
-          console.log(`[CHIP] ✅ click su "${label}" — chiamo onClick`);
-          onClick();
-        }}
-        className="bg-white/10 rounded-xl px-3 py-2.5 text-left active:bg-white/20 transition-colors"
+        onClick={onClick}
+        className="bg-white/10 rounded-xl px-3 py-2.5 text-left active:bg-white/25 transition-colors"
       >
         {inner}
       </button>
@@ -113,9 +99,8 @@ function CountChip({
 }
 
 // ---------------------------------------------------------------------------
-// StazioneCard
+// StazioneCard principale
 // ---------------------------------------------------------------------------
-
 export const StazioneCard: React.FC<StazioneCardProps> = ({
   data,
   loading,
@@ -128,53 +113,37 @@ export const StazioneCard: React.FC<StazioneCardProps> = ({
   onOpenProblemi,
 }) => {
   if (loading) return <StazioneCardSkeleton />;
-  if (!data) return <StazioneCardEmpty onCambia={onCambia} />;
-
-  // [LOG-RIMUOVI] Valori reali al momento del render
-  console.log('[CARD] render principale — loading:', loading, '| data:', data ? `"${data.stazione.nome}"` : 'null', '| onRimuovi:', typeof onRimuovi, '| counts:', JSON.stringify(data?.counts));
+  if (!data)   return <StazioneCardEmpty onCambia={onCambia} />;
 
   const { stazione, counts, problemiAperti } = data;
   const primoProblema = problemiAperti[0] ?? null;
   const altriProblemi = problemiAperti.length - 1;
-
-  // Griglia chip: 2 colonne base, 3 se hotel presente
   const chipCols = counts.hotel > 0 ? 'grid-cols-3' : 'grid-cols-2';
 
   return (
     <div className="mx-4 rounded-2xl bg-trenord-green text-white shadow-lg overflow-hidden">
 
-      {/* ── INTESTAZIONE ──────────────────────────────────────────────────── */}
+      {/* INTESTAZIONE */}
       <div className="px-5 pt-5 pb-4">
-        {/* Label + azioni Cambia / Rimuovi */}
-        <div className="flex items-center justify-between mb-3">
+
+        {/* Riga 1: label + pulsante Cambia */}
+        <div className="flex items-center justify-between mb-2">
           <div className="flex items-center gap-1.5">
             <MapPin className="w-3.5 h-3.5 text-white/70" />
             <span className="text-xs font-medium text-white/70 uppercase tracking-wide">
               La tua stazione
             </span>
           </div>
-          <div className="flex items-center gap-3">
-            <button
-              onClick={() => {
-                console.log('[RIMUOVI] ✅ click — chiamo onRimuovi');
-                onRimuovi();
-              }}
-              className="flex items-center gap-1.5 text-xs font-semibold text-white bg-white/20 hover:bg-white/30 active:bg-white/40 px-2.5 py-1 rounded-lg transition-colors"
-            >
-              <X className="w-3.5 h-3.5" />
-              Rimuovi
-            </button>
-            <button
-              onClick={onCambia}
-              className="text-xs font-semibold text-white/80 active:text-white transition-colors"
-            >
-              Cambia
-            </button>
-          </div>
+          <button
+            onClick={onCambia}
+            className="text-xs font-semibold text-white underline underline-offset-2 active:opacity-60 transition-opacity"
+          >
+            Cambia
+          </button>
         </div>
 
         {/* Nome stazione */}
-        <div className="flex items-start justify-between gap-3">
+        <div className="flex items-start justify-between gap-3 mb-3">
           <div className="flex-1 min-w-0">
             <h2 className="text-2xl font-bold leading-tight text-white truncate">
               {stazione.nome}
@@ -193,9 +162,18 @@ export const StazioneCard: React.FC<StazioneCardProps> = ({
             <Train className="w-6 h-6 text-white/80" />
           </div>
         </div>
+
+        {/* Pulsante Rimuovi — riga dedicata, sempre visibile quando data != null */}
+        <button
+          onClick={onRimuovi}
+          className="flex items-center gap-2 w-full justify-center py-2 rounded-xl border border-white/30 bg-white/10 active:bg-white/20 transition-colors"
+        >
+          <Trash2 className="w-3.5 h-3.5 text-white" />
+          <span className="text-xs font-semibold text-white">Rimuovi stazione</span>
+        </button>
       </div>
 
-      {/* ── BANNER PROBLEMI ───────────────────────────────────────────────── */}
+      {/* BANNER PROBLEMI */}
       {primoProblema && (
         <button
           onClick={onOpenProblemi}
@@ -216,7 +194,7 @@ export const StazioneCard: React.FC<StazioneCardProps> = ({
         </button>
       )}
 
-      {/* ── CHIP CONTATORI ────────────────────────────────────────────────── */}
+      {/* CHIP CONTATORI */}
       {(counts.salette > 0 || counts.attivita > 0 || counts.hotel > 0) ? (
         <div className={`mx-4 mb-4 grid ${chipCols} gap-2`}>
           <CountChip
@@ -243,7 +221,7 @@ export const StazioneCard: React.FC<StazioneCardProps> = ({
         </div>
       )}
 
-      {/* ── CTA PRINCIPALE ────────────────────────────────────────────────── */}
+      {/* CTA APRI STAZIONE */}
       <button
         onClick={onApri}
         className="w-full flex items-center justify-between px-5 py-4 bg-white/10 border-t border-white/10 active:bg-white/20 transition-colors"
