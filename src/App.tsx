@@ -36,12 +36,6 @@ const screenTitles: Record<Tab, string> = {
 export default function App() {
   const [activeTab, setActiveTab] = useState<Tab>('home');
 
-  // =========================
-  // SEARCH OVERLAY
-  // searchIsPersonal=true  → "Cambia": salva come stazione personale
-  // searchIsPersonal=false → SearchBar globale: naviga senza modificare activeStation
-  // =========================
-
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchIsPersonal, setSearchIsPersonal] = useState(false);
 
@@ -55,25 +49,16 @@ export default function App() {
     setSearchOpen(true);
   }
 
-  // =========================
-  // REFRESH KEY + refreshApp
-  // useCallback garantisce referenza stabile → HomeScreen.useEffect([onRefresh])
-  // non si riregistra ad ogni render di App (fix P2 + P8 doppio-tap)
-  // =========================
-
   const [refreshKey, setRefreshKey] = useState(0);
   const [refreshing, setRefreshing] = useState(false);
 
+  // useCallback: referenza stabile — evita re-registrazione continua dei listener touch
   const refreshApp = useCallback(() => {
     setRefreshing(true);
     setRefreshKey((prev) => prev + 1);
     toast.success('Aggiornamento app...');
     setTimeout(() => setRefreshing(false), 1200);
   }, []);
-
-  // =========================
-  // HOME STATION — UNICA ISTANZA
-  // =========================
 
   const {
     activeStationId,
@@ -83,32 +68,22 @@ export default function App() {
     clearActiveStation,
   } = useHomeStation(refreshKey, activeTab === 'home');
 
-  // =========================
-  // NAVIGAZIONE CONTESTUALE (one-shot)
-  // I pending vengono resettati da handleTabChange quando l'utente
-  // naviga manualmente via TabBar — mai da handleOpenStazione/Segnalazione.
-  // =========================
-
   const [pendingExpandId, setPendingExpandId] = useState<string | null>(null);
   const [pendingCategoriaFilter, setPendingCategoriaFilter] = useState<string | null>(null);
   const [pendingSaletteStationName, setPendingSaletteStationName] = useState<string | null>(null);
 
-  // Deep-link contestuali dalla Home — settano i pending PRIMA di cambiare tab
   function handleOpenStazione(stationId: string, categoriaFilter?: string) {
-    console.log('[NAV] handleOpenStazione — id:', stationId, '| filtro:', categoriaFilter ?? 'nessuno');
     setPendingExpandId(stationId);
     setPendingCategoriaFilter(categoriaFilter ?? null);
     setActiveTab('stazioni');
   }
 
   function handleOpenSegnalazione(stationName: string) {
-    console.log('[NAV] handleOpenSegnalazione — stazione:', stationName);
     setPendingSaletteStationName(stationName);
     setActiveTab('salette');
   }
 
   function handleTabChange(tab: Tab) {
-    console.log('[NAV] handleTabChange — tab:', tab, '| pendingExpand:', pendingExpandId, '| pendingSalette:', pendingSaletteStationName);
     setPendingExpandId(null);
     setPendingCategoriaFilter(null);
     setPendingSaletteStationName(null);
@@ -119,21 +94,17 @@ export default function App() {
   // =========================
   // META TAGS PWA
   // =========================
-
   useEffect(() => {
     document.title = 'Supremi Advisor';
-
     const favicon =
       (document.querySelector("link[rel='icon']") as HTMLLinkElement) ||
       (() => { const el = document.createElement('link'); el.rel = 'icon'; document.head.appendChild(el); return el; })();
     favicon.type = 'image/svg+xml';
     favicon.href = '/favicon.svg';
-
     const apple =
       (document.querySelector("link[rel='apple-touch-icon']") as HTMLLinkElement) ||
       (() => { const el = document.createElement('link'); el.rel = 'apple-touch-icon'; document.head.appendChild(el); return el; })();
     apple.href = '/apple-touch-icon.png';
-
     const themeColor =
       (document.querySelector("meta[name='theme-color']") as HTMLMetaElement) ||
       (() => { const el = document.createElement('meta'); el.name = 'theme-color'; document.head.appendChild(el); return el; })();
@@ -141,31 +112,40 @@ export default function App() {
   }, []);
 
   // =========================
-  // PULL TO REFRESH (su window — per schermate body-scroll)
+  // PULL TO REFRESH
+  // Il PTR ascolta su window per le schermate con body-scroll (Salette, Stazioni, ecc).
+  // Per la Home, il PTR è gestito dal container interno in HomeScreen.
+  //
+  // PROBLEMA RISOLTO: il layout min-h-screen + flex-col fa sì che
+  // su schermate normali il body non scrolli se il contenuto è corto.
+  // Per questo aggiungiamo anche il listener sull'elemento scrollabile
+  // quando si è su tab non-Home.
   // =========================
 
-  const touchStartY = useRef(0);
-  const touchStartX = useRef(0);
-  const touchEndY = useRef(0);
-  const pulling = useRef(false);
+  const touchStartY   = useRef(0);
+  const touchStartX   = useRef(0);
+  const touchEndY     = useRef(0);
+  const pulling       = useRef(false);
   const directionLocked = useRef(false);
-  const PULL_THRESHOLD = 180;
+  const PULL_THRESHOLD  = 180;
   const DIRECTION_LOCK_PX = 20;
 
   useEffect(() => {
-
-    function handleTouchStart(e: TouchEvent) {
-      if (window.scrollY > 0) return;
+    function onTouchStart(e: TouchEvent) {
+      // Blocca se modal aperto
       if (modalOpenCount.current > 0) return;
+      // Blocca se la pagina ha già scrollato (non siamo in cima)
+      const scrollY = window.scrollY || document.documentElement.scrollTop;
+      if (scrollY > 0) return;
 
-      touchStartY.current   = e.touches[0].clientY;
-      touchStartX.current   = e.touches[0].clientX;
-      touchEndY.current     = e.touches[0].clientY;
-      pulling.current       = true;
+      touchStartY.current     = e.touches[0].clientY;
+      touchStartX.current     = e.touches[0].clientX;
+      touchEndY.current       = e.touches[0].clientY;
+      pulling.current         = true;
       directionLocked.current = false;
     }
 
-    function handleTouchMove(e: TouchEvent) {
+    function onTouchMove(e: TouchEvent) {
       if (!pulling.current) return;
 
       const currentY = e.touches[0].clientY;
@@ -174,40 +154,29 @@ export default function App() {
       const deltaX   = currentX - touchStartX.current;
 
       if (!directionLocked.current) {
-        const movedEnough = Math.abs(deltaY) > DIRECTION_LOCK_PX || Math.abs(deltaX) > DIRECTION_LOCK_PX;
-        if (!movedEnough) return;
-
-        if (Math.abs(deltaX) > Math.abs(deltaY)) {
-          pulling.current = false;
-          return;
-        }
-
-        if (deltaY < 0) {
-          pulling.current = false;
-          return;
-        }
-
+        const moved = Math.abs(deltaY) > DIRECTION_LOCK_PX || Math.abs(deltaX) > DIRECTION_LOCK_PX;
+        if (!moved) return;
+        if (Math.abs(deltaX) > Math.abs(deltaY)) { pulling.current = false; return; }
+        if (deltaY < 0) { pulling.current = false; return; }
         directionLocked.current = true;
       }
 
-      if (window.scrollY > 5) {
-        pulling.current         = false;
-        directionLocked.current = false;
-        return;
-      }
+      const scrollY = window.scrollY || document.documentElement.scrollTop;
+      if (scrollY > 5) { pulling.current = false; directionLocked.current = false; return; }
 
       touchEndY.current = currentY;
     }
 
-    function handleTouchEnd() {
+    function onTouchEnd() {
       if (!pulling.current) return;
 
       const distance = touchEndY.current - touchStartY.current;
+      const scrollY  = window.scrollY || document.documentElement.scrollTop;
 
       if (
         distance > PULL_THRESHOLD &&
         directionLocked.current &&
-        window.scrollY <= 0 &&
+        scrollY <= 0 &&
         !refreshing &&
         modalOpenCount.current === 0
       ) {
@@ -221,22 +190,21 @@ export default function App() {
       touchEndY.current       = 0;
     }
 
-    window.addEventListener('touchstart', handleTouchStart, { passive: true });
-    window.addEventListener('touchmove',  handleTouchMove,  { passive: true });
-    window.addEventListener('touchend',   handleTouchEnd);
+    // Registra su window per le schermate con body-scroll
+    window.addEventListener('touchstart', onTouchStart, { passive: true });
+    window.addEventListener('touchmove',  onTouchMove,  { passive: true });
+    window.addEventListener('touchend',   onTouchEnd);
 
     return () => {
-      window.removeEventListener('touchstart', handleTouchStart);
-      window.removeEventListener('touchmove',  handleTouchMove);
-      window.removeEventListener('touchend',   handleTouchEnd);
+      window.removeEventListener('touchstart', onTouchStart);
+      window.removeEventListener('touchmove',  onTouchMove);
+      window.removeEventListener('touchend',   onTouchEnd);
     };
-
-  }, [refreshing]);
+  }, [refreshing, refreshApp]);
 
   // =========================
   // ADMIN MODE
   // =========================
-
   const [adminMode, setAdminMode] = useState(false);
   const [showPinModal, setShowPinModal] = useState<'login' | 'logout' | null>(null);
 
@@ -271,8 +239,6 @@ export default function App() {
   }
 
   const isHomeTab = activeTab === 'home';
-
-
 
   return (
     <div className="min-h-screen bg-gray-100 flex flex-col">
@@ -374,7 +340,7 @@ export default function App() {
         )}
       </main>
 
-      {/* TABBAR — onChange usa handleTabChange per reset dei pending */}
+      {/* TABBAR */}
       <TabBar
         activeTab={activeTab}
         onChange={handleTabChange}
@@ -382,10 +348,7 @@ export default function App() {
         hidden={searchOpen}
       />
 
-      {/* SEARCH OVERLAY GLOBALE
-          P3: in modalità navigate (searchIsPersonal=false),
-          passa activeStationId=null → ricerca parte neutra, nessun badge "Attiva"
-      */}
+      {/* SEARCH OVERLAY */}
       <SearchOverlay
         isOpen={searchOpen}
         onClose={() => setSearchOpen(false)}
