@@ -153,51 +153,85 @@ export default function App() {
   const DIRECTION_LOCK_PX = 20;
 
   useEffect(() => {
+
     function handleTouchStart(e: TouchEvent) {
-      if (window.scrollY > 5) return;  // soglia 5px — iOS Safari nasconde la barra URL causando scrollY 1-2px
+      if (window.scrollY > 0) return;
       if (modalOpenCount.current > 0) return;
-      touchStartY.current = e.touches[0].clientY;
-      touchStartX.current = e.touches[0].clientX;
-      touchEndY.current = e.touches[0].clientY;
-      pulling.current = true;
+
+      touchStartY.current   = e.touches[0].clientY;
+      touchStartX.current   = e.touches[0].clientX;
+      touchEndY.current     = e.touches[0].clientY;
+      pulling.current       = true;
       directionLocked.current = false;
     }
 
     function handleTouchMove(e: TouchEvent) {
       if (!pulling.current) return;
+
       const currentY = e.touches[0].clientY;
       const currentX = e.touches[0].clientX;
-      const deltaY = currentY - touchStartY.current;
-      const deltaX = currentX - touchStartX.current;
+      const deltaY   = currentY - touchStartY.current;
+      const deltaX   = currentX - touchStartX.current;
+
       if (!directionLocked.current) {
-        if (Math.abs(deltaY) <= DIRECTION_LOCK_PX && Math.abs(deltaX) <= DIRECTION_LOCK_PX) return;
-        if (Math.abs(deltaX) > Math.abs(deltaY)) { pulling.current = false; return; }
-        if (deltaY < 0) { pulling.current = false; return; }
+        const movedEnough = Math.abs(deltaY) > DIRECTION_LOCK_PX || Math.abs(deltaX) > DIRECTION_LOCK_PX;
+        if (!movedEnough) return;
+
+        if (Math.abs(deltaX) > Math.abs(deltaY)) {
+          pulling.current = false;
+          return;
+        }
+
+        if (deltaY < 0) {
+          pulling.current = false;
+          return;
+        }
+
         directionLocked.current = true;
       }
-      if (window.scrollY > 5) { pulling.current = false; directionLocked.current = false; return; }
+
+      if (window.scrollY > 5) {
+        pulling.current         = false;
+        directionLocked.current = false;
+        return;
+      }
+
       touchEndY.current = currentY;
     }
 
     function handleTouchEnd() {
       if (!pulling.current) return;
+
       const distance = touchEndY.current - touchStartY.current;
-      if (distance > PULL_THRESHOLD && directionLocked.current && window.scrollY <= 5 && !refreshing && modalOpenCount.current === 0) {
+
+      if (
+        distance > PULL_THRESHOLD &&
+        directionLocked.current &&
+        window.scrollY <= 0 &&
+        !refreshing &&
+        modalOpenCount.current === 0
+      ) {
         refreshApp();
       }
-      pulling.current = false; directionLocked.current = false;
-      touchStartY.current = 0; touchStartX.current = 0; touchEndY.current = 0;
+
+      pulling.current         = false;
+      directionLocked.current = false;
+      touchStartY.current     = 0;
+      touchStartX.current     = 0;
+      touchEndY.current       = 0;
     }
 
     window.addEventListener('touchstart', handleTouchStart, { passive: true });
-    window.addEventListener('touchmove', handleTouchMove, { passive: true });
-    window.addEventListener('touchend', handleTouchEnd);
+    window.addEventListener('touchmove',  handleTouchMove,  { passive: true });
+    window.addEventListener('touchend',   handleTouchEnd);
+
     return () => {
       window.removeEventListener('touchstart', handleTouchStart);
-      window.removeEventListener('touchmove', handleTouchMove);
-      window.removeEventListener('touchend', handleTouchEnd);
+      window.removeEventListener('touchmove',  handleTouchMove);
+      window.removeEventListener('touchend',   handleTouchEnd);
     };
-  }, [refreshing, refreshApp]);
+
+  }, [refreshing]);
 
   // =========================
   // ADMIN MODE
@@ -237,6 +271,8 @@ export default function App() {
   }
 
   const isHomeTab = activeTab === 'home';
+
+
 
   return (
     <div className="min-h-screen bg-gray-100 flex flex-col">
