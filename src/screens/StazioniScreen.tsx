@@ -146,10 +146,17 @@ export default function StazioniScreen({
       stazioni.length > 0 &&
       expandedCardRef.current
     ) {
+      // Porta il top della card a inizio viewport, poi sale di 80px
+      // per mostrare il nome della stazione come feedback visivo all'utente
       expandedCardRef.current.scrollIntoView({
         behavior: 'smooth',
-        block: 'center',
+        block: 'start',
       });
+      // Offset: compensa NavBar (56px) + un respiro (24px) → nome visibile
+      const scrollContainer = document.scrollingElement ?? window.document.documentElement;
+      setTimeout(() => {
+        scrollContainer.scrollBy({ top: -80, behavior: 'smooth' });
+      }, 350);
       scrollDone.current = true;
     }
   }, [stazioni, expandedId, initialExpandedId]);
