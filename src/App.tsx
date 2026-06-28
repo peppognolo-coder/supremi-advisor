@@ -54,10 +54,14 @@ export default function App() {
 
   // useCallback: referenza stabile — evita re-registrazione continua dei listener touch
   const refreshApp = useCallback(() => {
+    refreshingRef.current = true;
     setRefreshing(true);
     setRefreshKey((prev) => prev + 1);
     toast.success('Aggiornamento app...');
-    setTimeout(() => setRefreshing(false), 1200);
+    setTimeout(() => {
+      refreshingRef.current = false;
+      setRefreshing(false);
+    }, 1200);
   }, []);
 
   const {
@@ -129,6 +133,9 @@ export default function App() {
   const directionLocked = useRef(false);
   const PULL_THRESHOLD  = 180;
   const DIRECTION_LOCK_PX = 20;
+  // Ref per i listener PTR — evita che il closure catturi un valore stale di refreshing
+  // e permette al useEffect di non dipendere da refreshing (mount-only)
+  const refreshingRef = useRef(false);
 
   useEffect(() => {
     function onTouchStart(e: TouchEvent) {
@@ -177,7 +184,7 @@ export default function App() {
         distance > PULL_THRESHOLD &&
         directionLocked.current &&
         scrollY <= 0 &&
-        !refreshing &&
+        !refreshingRef.current &&
         modalOpenCount.current === 0
       ) {
         refreshApp();
@@ -200,7 +207,8 @@ export default function App() {
       window.removeEventListener('touchmove',  onTouchMove);
       window.removeEventListener('touchend',   onTouchEnd);
     };
-  }, [refreshing, refreshApp]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // =========================
   // ADMIN MODE
