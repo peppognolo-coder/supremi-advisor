@@ -1,22 +1,18 @@
 import React from 'react';
-import { MapPin, ChevronRight, AlertCircle, Train, Plus } from 'lucide-react';
+import { MapPin, ChevronRight, AlertCircle, Train, Plus, Trash2 } from 'lucide-react';
 import type { HomeStationData } from '../../hooks/useHomeStation';
-
-// ---------------------------------------------------------------------------
-// Props
-// ---------------------------------------------------------------------------
 
 interface StazioneCardProps {
   data: HomeStationData | null;
   loading: boolean;
   onApri: () => void;
-  /** Apre il SearchOverlay per scegliere una stazione */
   onCambia: () => void;
+  onRimuovi: () => void;
+  onOpenSalette?: () => void;
+  onOpenAttivita?: () => void;
+  onOpenHotel?: () => void;
+  onOpenProblemi?: () => void;
 }
-
-// ---------------------------------------------------------------------------
-// Skeleton — mentre carica
-// ---------------------------------------------------------------------------
 
 function StazioneCardSkeleton() {
   return (
@@ -33,10 +29,6 @@ function StazioneCardSkeleton() {
     </div>
   );
 }
-
-// ---------------------------------------------------------------------------
-// Empty state — nessuna stazione selezionata
-// ---------------------------------------------------------------------------
 
 function StazioneCardEmpty({ onCambia }: { onCambia: () => void }) {
   return (
@@ -63,15 +55,46 @@ function StazioneCardEmpty({ onCambia }: { onCambia: () => void }) {
   );
 }
 
-// ---------------------------------------------------------------------------
-// StazioneCard principale
-// ---------------------------------------------------------------------------
+// Chip statistiche — button se onClick presente
+function StatChip({
+  value,
+  label,
+  onClick,
+}: {
+  value: number;
+  label: string;
+  onClick?: () => void;
+}) {
+  const inner = (
+    <>
+      <p className="text-xl font-bold text-white">{value}</p>
+      <p className="text-xs text-white/60 mt-0.5">{label}</p>
+    </>
+  );
+
+  if (onClick) {
+    return (
+      <button
+        onClick={onClick}
+        className="bg-white/10 rounded-xl px-3 py-2.5 text-left active:bg-white/20 transition-colors"
+      >
+        {inner}
+      </button>
+    );
+  }
+  return <div className="bg-white/10 rounded-xl px-3 py-2.5">{inner}</div>;
+}
 
 export const StazioneCard: React.FC<StazioneCardProps> = ({
   data,
   loading,
   onApri,
   onCambia,
+  onRimuovi,
+  onOpenSalette,
+  onOpenAttivita,
+  onOpenHotel,
+  onOpenProblemi,
 }) => {
   if (loading) return <StazioneCardSkeleton />;
   if (!data) return <StazioneCardEmpty onCambia={onCambia} />;
@@ -79,15 +102,15 @@ export const StazioneCard: React.FC<StazioneCardProps> = ({
   const { stazione, counts, problemiAperti } = data;
   const primoProblema = problemiAperti[0] ?? null;
   const altriProblemi = problemiAperti.length - 1;
-
-  // Totale attività visibili in card (esclude hotel che ha counter separato)
   const totaleRisorse = counts.salette + counts.attivita + counts.hotel;
 
   return (
     <div className="mx-4 rounded-2xl bg-trenord-green text-white shadow-lg overflow-hidden">
+
       {/* Intestazione */}
       <div className="px-5 pt-5 pb-4">
-        {/* Label + link cambia */}
+
+        {/* Riga 1: label + Cambia */}
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-1.5">
             <MapPin className="w-3.5 h-3.5 text-white/70" />
@@ -104,7 +127,7 @@ export const StazioneCard: React.FC<StazioneCardProps> = ({
         </div>
 
         {/* Nome stazione */}
-        <div className="flex items-start justify-between gap-3">
+        <div className="flex items-start justify-between gap-3 mb-4">
           <div className="flex-1 min-w-0">
             <h2 className="text-2xl font-bold leading-tight text-white truncate">
               {stazione.nome}
@@ -123,11 +146,23 @@ export const StazioneCard: React.FC<StazioneCardProps> = ({
             <Train className="w-6 h-6 text-white/80" />
           </div>
         </div>
+
+        {/* Pulsante Rimuovi — riga dedicata, sempre visibile */}
+        <button
+          onClick={onRimuovi}
+          className="w-full flex items-center justify-center gap-2 py-2 rounded-xl bg-white/15 border border-white/25 active:bg-white/25 transition-colors"
+        >
+          <Trash2 className="w-3.5 h-3.5 text-white" />
+          <span className="text-xs font-semibold text-white">Rimuovi stazione</span>
+        </button>
       </div>
 
-      {/* Banner problema aperto — solo se presente */}
+      {/* Banner problema aperto */}
       {primoProblema && (
-        <div className="mx-4 mb-3 px-3 py-2.5 rounded-xl bg-yellow-400/20 border border-yellow-300/30 flex items-start gap-2">
+        <button
+          onClick={onOpenProblemi}
+          className="mx-4 mb-3 w-[calc(100%-2rem)] px-3 py-2.5 rounded-xl bg-yellow-400/20 border border-yellow-300/30 flex items-start gap-2 text-left active:bg-yellow-400/30 transition-colors"
+        >
           <AlertCircle className="w-4 h-4 text-yellow-200 flex-shrink-0 mt-0.5" />
           <div className="min-w-0 flex-1">
             <p className="text-xs font-semibold text-yellow-100">{primoProblema.tipo}</p>
@@ -140,37 +175,31 @@ export const StazioneCard: React.FC<StazioneCardProps> = ({
               </p>
             )}
           </div>
-        </div>
+        </button>
       )}
 
-      {/* Statistiche */}
+      {/* Chip statistiche cliccabili */}
       {totaleRisorse > 0 ? (
-        <div
-          className={`mx-4 mb-4 grid gap-2 ${
-            counts.hotel > 0 ? 'grid-cols-3' : 'grid-cols-2'
-          }`}
-        >
-          <div className="bg-white/10 rounded-xl px-3 py-2.5">
-            <p className="text-xl font-bold text-white">{counts.salette}</p>
-            <p className="text-xs text-white/60 mt-0.5">
-              {counts.salette === 1 ? 'Saletta' : 'Salette'}
-            </p>
-          </div>
-          <div className="bg-white/10 rounded-xl px-3 py-2.5">
-            <p className="text-xl font-bold text-white">{counts.attivita}</p>
-            <p className="text-xs text-white/60 mt-0.5">Attività</p>
-          </div>
+        <div className={`mx-4 mb-4 grid gap-2 ${counts.hotel > 0 ? 'grid-cols-3' : 'grid-cols-2'}`}>
+          <StatChip
+            value={counts.salette}
+            label={counts.salette === 1 ? 'Saletta' : 'Salette'}
+            onClick={onOpenSalette}
+          />
+          <StatChip
+            value={counts.attivita}
+            label="Attività"
+            onClick={onOpenAttivita}
+          />
           {counts.hotel > 0 && (
-            <div className="bg-white/10 rounded-xl px-3 py-2.5">
-              <p className="text-xl font-bold text-white">{counts.hotel}</p>
-              <p className="text-xs text-white/60 mt-0.5">
-                {counts.hotel === 1 ? 'Hotel' : 'Hotel'}
-              </p>
-            </div>
+            <StatChip
+              value={counts.hotel}
+              label="Hotel"
+              onClick={onOpenHotel}
+            />
           )}
         </div>
       ) : (
-        // Stazione senza risorse ancora caricate
         <div className="mx-4 mb-4 px-3 py-2.5 rounded-xl bg-white/10">
           <p className="text-xs text-white/50 text-center">Nessuna risorsa registrata</p>
         </div>
