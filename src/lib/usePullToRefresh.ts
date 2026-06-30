@@ -124,39 +124,44 @@ export function usePullToRefresh({
     const el = resolveElement(target);
     if (!el) return; // RefObject non ancora montato: niente da fare.
 
-    // ── DIAGNOSTICA TEMPORANEA ────────────────────────────────────────────
-    // Listener scroll: traccia quando scrollTop cambia (incluso momentum
-    // e bounce post-flick), per distinguere Scenario A da Scenario B.
-    // Registrato solo sui RefObject (div interni), non su window, perché
-    // è lì che il momentum/bounce può portare scrollTop a 0 inaspettatamente.
-    let lastLoggedScrollTop = -1;
+    // ── GUARDIA TEMPORALE ─────────────────────────────────────────────────
+    // Il PTR si arma solo se scrollTop === 0 E il contenitore è rimasto
+    // stabile in cima per almeno STABLE_TOP_MS millisecondi senza eventi
+    // scroll nel frattempo. Previene il falso armo durante lo scroll
+    // inerziale (momentum) su div overflow-y: auto (es. Home), dove il
+    // browser porta scrollTop a 0 ancora prima che il dito si fermi.
+    const STABLE_TOP_MS = 120;
+    let lastScrollTime = 0; // timestamp dell'ultimo evento scroll
+
     function onScroll() {
+      lastScrollTime = performance.now();
       const sp = getScrollPosition(target);
-      // Logga solo quando il valore cambia significativamente (evita spam)
-      if (Math.abs(sp - lastLoggedScrollTop) > 2) {
-        console.log('[PTR] scroll', { scrollTop: sp, time: performance.now().toFixed(1) });
-        lastLoggedScrollTop = sp;
-      }
+      console.log('[PTR] scroll', { scrollTop: sp, time: lastScrollTime.toFixed(1) });
     }
-    if (!(target instanceof Window)) {
-      el.addEventListener('scroll', onScroll as EventListener, { passive: true });
-    }
+    el.addEventListener('scroll', onScroll as EventListener, { passive: true });
     // ─────────────────────────────────────────────────────────────────────
 
     function onTouchStart(e: TouchEvent) {
       const sp = getScrollPosition(target);
+      const now = performance.now();
+      const msSinceLastScroll = now - lastScrollTime;
+      const stableAtTop = sp <= 0 && msSinceLastScroll >= STABLE_TOP_MS;
+
       console.log('[PTR] touchstart', {
-        time: performance.now().toFixed(1),
+        time: now.toFixed(1),
         scrollTop: sp,
-        armed: sp <= 0,
+        msSinceLastScroll: Math.round(msSinceLastScroll),
+        armed: stableAtTop,
       });
 
-      // Attiva il possibile pull solo se siamo già in cima allo scroll.
-      if (sp > 0) return;
+      // Attiva il possibile pull solo se siamo in cima E il contenitore
+      // è rimasto fermo lì per almeno STABLE_TOP_MS ms senza scroll.
+      if (!stableAtTop) return;
 
       console.log('[PTR] ARMED', {
-        time: performance.now().toFixed(1),
+        time: now.toFixed(1),
         scrollTop: sp,
+        msSinceLastScroll: Math.round(msSinceLastScroll),
       });
 
       startY.current = e.touches[0].clientY;
@@ -295,9 +300,7 @@ export function usePullToRefresh({
       el.removeEventListener('touchstart', onTouchStart as EventListener);
       el.removeEventListener('touchmove', onTouchMove as EventListener);
       el.removeEventListener('touchend', onTouchEnd as EventListener);
-      if (!(target instanceof Window)) {
-        el.removeEventListener('scroll', onScroll as EventListener);
-      }
+      el.removeEventListener('scroll', onScroll as EventListener);
     };
     // `target` può essere `window` (stabile) o un RefObject (stabile come
     // identità dell'oggetto ref, anche se `.current` cambia). `onRefresh`
