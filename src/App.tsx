@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 
 import type { Tab } from './types';
 
@@ -20,7 +20,6 @@ import toast from 'react-hot-toast';
 import { RefreshCw } from 'lucide-react';
 
 import AdminPinModal from './components/AdminPinModal';
-import { modalOpenCount } from './lib/useScrollLock';
 
 const ADMIN_PIN = '1105';
 
@@ -52,16 +51,15 @@ export default function App() {
   const [refreshKey, setRefreshKey] = useState(0);
   const [refreshing, setRefreshing] = useState(false);
 
-  // useCallback: referenza stabile — evita re-registrazione continua dei listener touch
+  // refreshApp è la callback "onRefresh" condivisa, passata a ogni schermata
+  // che usa usePullToRefresh. Non sa nulla di gesture o listener touch:
+  // si limita ad aggiornare lo stato applicativo (refreshKey, indicatore
+  // globale, toast). useCallback mantiene una referenza stabile.
   const refreshApp = useCallback(() => {
-    refreshingRef.current = true;
     setRefreshing(true);
     setRefreshKey((prev) => prev + 1);
     toast.success('Aggiornamento app...');
-    setTimeout(() => {
-      refreshingRef.current = false;
-      setRefreshing(false);
-    }, 1200);
+    setTimeout(() => setRefreshing(false), 1200);
   }, []);
 
   const {
@@ -75,9 +73,11 @@ export default function App() {
   const [pendingExpandId, setPendingExpandId] = useState<string | null>(null);
   const [pendingCategoriaFilter, setPendingCategoriaFilter] = useState<string | null>(null);
   const [pendingSaletteStationName, setPendingSaletteStationName] = useState<string | null>(null);
+  const [pendingStationName, setPendingStationName] = useState<string | null>(null);
 
-  function handleOpenStazione(stationId: string, categoriaFilter?: string) {
+  function handleOpenStazione(stationId: string, stationName?: string, categoriaFilter?: string) {
     setPendingExpandId(stationId);
+    setPendingStationName(stationName ?? null);
     setPendingCategoriaFilter(categoriaFilter ?? null);
     setActiveTab('stazioni');
   }
@@ -89,6 +89,7 @@ export default function App() {
 
   function handleTabChange(tab: Tab) {
     setPendingExpandId(null);
+    setPendingStationName(null);
     setPendingCategoriaFilter(null);
     setPendingSaletteStationName(null);
     window.scrollTo(0, 0);
@@ -117,98 +118,11 @@ export default function App() {
 
   // =========================
   // PULL TO REFRESH
-  // Il PTR ascolta su window per le schermate con body-scroll (Salette, Stazioni, ecc).
-  // Per la Home, il PTR è gestito dal container interno in HomeScreen.
-  //
-  // PROBLEMA RISOLTO: il layout min-h-screen + flex-col fa sì che
-  // su schermate normali il body non scrolli se il contenuto è corto.
-  // Per questo aggiungiamo anche il listener sull'elemento scrollabile
-  // quando si è su tab non-Home.
+  // Il pull-to-refresh non è più gestito qui: ogni schermata che lo
+  // desidera usa autonomamente l'hook src/lib/usePullToRefresh.ts,
+  // passandogli `refreshApp` come callback. App.tsx si limita a fornire
+  // `refreshApp` e a mostrare l'indicatore globale (vedi JSX più sotto).
   // =========================
-
-  const touchStartY   = useRef(0);
-  const touchStartX   = useRef(0);
-  const touchEndY     = useRef(0);
-  const pulling       = useRef(false);
-  const directionLocked = useRef(false);
-  const PULL_THRESHOLD  = 180;
-  const DIRECTION_LOCK_PX = 20;
-  // Ref per i listener PTR — evita che il closure catturi un valore stale di refreshing
-  // e permette al useEffect di non dipendere da refreshing (mount-only)
-  const refreshingRef = useRef(false);
-
-  useEffect(() => {
-    function onTouchStart(e: TouchEvent) {
-      // Blocca se modal aperto
-      if (modalOpenCount.current > 0) return;
-      // Blocca se la pagina ha già scrollato (non siamo in cima)
-      const scrollY = window.scrollY || document.documentElement.scrollTop;
-      if (scrollY > 0) return;
-
-      touchStartY.current     = e.touches[0].clientY;
-      touchStartX.current     = e.touches[0].clientX;
-      touchEndY.current       = e.touches[0].clientY;
-      pulling.current         = true;
-      directionLocked.current = false;
-    }
-
-    function onTouchMove(e: TouchEvent) {
-      if (!pulling.current) return;
-
-      const currentY = e.touches[0].clientY;
-      const currentX = e.touches[0].clientX;
-      const deltaY   = currentY - touchStartY.current;
-      const deltaX   = currentX - touchStartX.current;
-
-      if (!directionLocked.current) {
-        const moved = Math.abs(deltaY) > DIRECTION_LOCK_PX || Math.abs(deltaX) > DIRECTION_LOCK_PX;
-        if (!moved) return;
-        if (Math.abs(deltaX) > Math.abs(deltaY)) { pulling.current = false; return; }
-        if (deltaY < 0) { pulling.current = false; return; }
-        directionLocked.current = true;
-      }
-
-      const scrollY = window.scrollY || document.documentElement.scrollTop;
-      if (scrollY > 5) { pulling.current = false; directionLocked.current = false; return; }
-
-      touchEndY.current = currentY;
-    }
-
-    function onTouchEnd() {
-      if (!pulling.current) return;
-
-      const distance = touchEndY.current - touchStartY.current;
-      const scrollY  = window.scrollY || document.documentElement.scrollTop;
-
-      if (
-        distance > PULL_THRESHOLD &&
-        directionLocked.current &&
-        scrollY <= 0 &&
-        !refreshingRef.current &&
-        modalOpenCount.current === 0
-      ) {
-        refreshApp();
-      }
-
-      pulling.current         = false;
-      directionLocked.current = false;
-      touchStartY.current     = 0;
-      touchStartX.current     = 0;
-      touchEndY.current       = 0;
-    }
-
-    // Registra su window per le schermate con body-scroll
-    window.addEventListener('touchstart', onTouchStart, { passive: true });
-    window.addEventListener('touchmove',  onTouchMove,  { passive: true });
-    window.addEventListener('touchend',   onTouchEnd);
-
-    return () => {
-      window.removeEventListener('touchstart', onTouchStart);
-      window.removeEventListener('touchmove',  onTouchMove);
-      window.removeEventListener('touchend',   onTouchEnd);
-    };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
 
   // =========================
   // ADMIN MODE
@@ -312,6 +226,7 @@ export default function App() {
           <div className="max-w-2xl mx-auto px-4 py-4">
             <SaletteScreen
               refreshKey={refreshKey}
+              onRefresh={refreshApp}
               onNavigateToContributi={() => handleTabChange('contributi')}
               initialStationName={pendingSaletteStationName}
             />
@@ -322,8 +237,10 @@ export default function App() {
           <div className="max-w-2xl mx-auto px-4 py-4">
             <StazioniScreen
               refreshKey={refreshKey}
+              onRefresh={refreshApp}
               onNavigateToContributi={() => handleTabChange('contributi')}
               initialExpandedId={pendingExpandId}
+              initialStationName={pendingStationName}
               initialCategoriaFilter={pendingCategoriaFilter}
             />
           </div>
@@ -331,19 +248,19 @@ export default function App() {
 
         {activeTab === 'contributi' && (
           <div className="max-w-2xl mx-auto px-4 py-4">
-            <ContributiScreen />
+            <ContributiScreen onRefresh={refreshApp} />
           </div>
         )}
 
         {activeTab === 'segnalazioni' && adminMode && (
           <div className="max-w-2xl mx-auto px-4 py-4">
-            <SegnalazioniScreen refreshKey={refreshKey} />
+            <SegnalazioniScreen refreshKey={refreshKey} onRefresh={refreshApp} />
           </div>
         )}
 
         {activeTab === 'admin' && adminMode && (
           <div className="max-w-2xl mx-auto px-4 py-4">
-            <AdminScreen refreshKey={refreshKey} adminPin={ADMIN_PIN} />
+            <AdminScreen refreshKey={refreshKey} adminPin={ADMIN_PIN} onRefresh={refreshApp} />
           </div>
         )}
       </main>
