@@ -204,7 +204,7 @@ export function usePullToRefresh({
         // (sempre a scrollY/scrollTop 0), come la vista di selezione di
         // ContributiScreen.
         if (atTop && deltaY > 0 && deltaY >= Math.abs(deltaX)) {
-          e.preventDefault();
+          if (e.cancelable) e.preventDefault();
         }
 
         const movedEnough =
@@ -235,7 +235,7 @@ export function usePullToRefresh({
       // Blocca il comportamento nativo del browser (rubber-band /
       // back-navigation gesture) per tutta la durata del pull confermato.
       if (directionLocked.current && deltaY > 0) {
-        e.preventDefault();
+        if (e.cancelable) e.preventDefault();
       }
 
       currentY.current = touchY;
