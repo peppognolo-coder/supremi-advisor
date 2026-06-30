@@ -17,6 +17,9 @@ import {
   calculateDistance,
 } from '../lib/location';
 
+import { usePullToRefresh } from '../lib/usePullToRefresh';
+import PullToRefreshVisualWrapper from '../components/PullToRefreshVisualWrapper';
+
 import type {
   Saletta,
 } from '../lib/database.types';
@@ -39,6 +42,8 @@ interface StazioneCoordinates {
 
 interface Props {
   refreshKey?: number;
+  /** Callback invocata dal pull-to-refresh; tipicamente refreshApp di App.tsx. */
+  onRefresh?: () => void;
   onNavigateToContributi?: () => void;
   /**
    * Se fornito, pre-popola la ricerca con il nome della stazione attiva.
@@ -50,15 +55,26 @@ interface Props {
 
 export default function SaletteScreen({
   refreshKey = 0,
+  onRefresh,
   onNavigateToContributi,
   initialStationName = null,
 }: Props) {
 
+  // SaletteScreen scrolla sul body: il PTR ascolta window.
+  usePullToRefresh({ target: window, onRefresh: onRefresh ?? (() => {}) });
+
+  // Dati grezzi raggruppati, SENZA distanza/ordinamento per posizione:
+  // popolati appena le query rispondono, indipendentemente dal GPS.
+  const [rawGrouped, setRawGrouped] = useState<GroupedSaletta[]>([]);
+  const [stazioniCoordinates, setStazioniCoordinates] = useState<StazioneCoordinates[]>([]);
+
+  // Vista derivata: rawGrouped + distanza/ordinamento applicati quando
+  // disponibili. Quello che la UI consuma effettivamente.
   const [salette, setSalette] = useState<GroupedSaletta[]>([]);
+
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
-  const [locationReady, setLocationReady] = useState(false);
 
   // =========================
   // PRE-POPOLA RICERCA
@@ -74,9 +90,14 @@ export default function SaletteScreen({
 
   // =========================
   // GEOLOCATION
+  // Parte in parallelo al caricamento dati, non lo blocca più.
+  // Quando risolve, aggiorna solo userLocation: il ricalcolo di
+  // distanza/ordinamento avviene nell'effect dedicato più sotto,
+  // senza rifare alcuna query Supabase.
   // =========================
 
   useEffect(() => {
+    console.time('[SaletteScreen] getCurrentLocation (GPS)');
     async function initLocation() {
       try {
         const location = await getCurrentLocation();
@@ -84,7 +105,7 @@ export default function SaletteScreen({
       } catch {
         console.warn('Geolocalizzazione non disponibile');
       } finally {
-        setLocationReady(true);
+        console.timeEnd('[SaletteScreen] getCurrentLocation (GPS)');
       }
     }
     initLocation();
@@ -92,18 +113,21 @@ export default function SaletteScreen({
 
   // =========================
   // LOAD
+  // Parte subito al mount/refreshKey, senza aspettare la geolocation.
+  // Popola i dati grezzi raggruppati; l'ordinamento per distanza viene
+  // applicato a parte quando (e se) userLocation diventa disponibile.
   // =========================
 
   useEffect(() => {
-    if (!locationReady) return;
-
     async function load() {
       setLoading(true);
 
+      console.time('[SaletteScreen] Promise.all salette+stazioni');
       const [{ data, error }, { data: stazioniData }] = await Promise.all([
         supabase.from('salette').select('*'),
         supabase.from('stazioni').select('nome, lat, lng'),
       ]);
+      console.timeEnd('[SaletteScreen] Promise.all salette+stazioni');
 
       if (error) {
         console.error(error);
@@ -112,7 +136,8 @@ export default function SaletteScreen({
         return;
       }
 
-      const stazioniCoordinates: StazioneCoordinates[] =
+      console.time('[SaletteScreen] Mapping + group (senza distanza)');
+      const coordinates: StazioneCoordinates[] =
         (stazioniData ?? []).filter((s) => s.lat && s.lng);
 
       const groupedMap = new Map<string, GroupedSaletta>();
@@ -125,46 +150,66 @@ export default function SaletteScreen({
         groupedMap.get(normalizedKey)?.salette.push(saletta);
       });
 
-      let grouped = Array.from(groupedMap.values());
+      const grouped = Array.from(groupedMap.values());
+      console.timeEnd('[SaletteScreen] Mapping + group (senza distanza)');
 
-      if (userLocation) {
-        grouped = grouped.map((group) => {
-          const first = group.salette[0];
-          let lat = first?.lat;
-          let lng = first?.lng;
-
-          if ((!lat || !lng) && first?.stazione) {
-            const stazioneMatch = stazioniCoordinates.find(
-              (s) => s.nome?.trim().toLowerCase() === first.stazione?.trim().toLowerCase()
-            );
-            if (stazioneMatch) { lat = stazioneMatch.lat; lng = stazioneMatch.lng; }
-          }
-
-          let distanza: number | undefined;
-          if (lat && lng) {
-            distanza = calculateDistance(
-              userLocation.lat, userLocation.lng, Number(lat), Number(lng)
-            );
-          }
-          return { ...group, distanza };
-        });
-
-        grouped.sort((a, b) => {
-          if (a.distanza != null && b.distanza != null) return a.distanza - b.distanza;
-          if (a.distanza == null && b.distanza != null) return 1;
-          if (a.distanza != null && b.distanza == null) return -1;
-          return a.stazione.localeCompare(b.stazione, 'it');
-        });
-      } else {
-        grouped.sort((a, b) => a.stazione.localeCompare(b.stazione, 'it'));
-      }
-
-      setSalette(grouped);
+      console.time('[SaletteScreen] setRawGrouped (render trigger)');
+      setStazioniCoordinates(coordinates);
+      setRawGrouped(grouped);
       setLoading(false);
+      console.timeEnd('[SaletteScreen] setRawGrouped (render trigger)');
     }
 
     load();
-  }, [userLocation, locationReady, refreshKey]);
+  }, [refreshKey]);
+
+  // =========================
+  // RICALCOLO DISTANZA + ORDINAMENTO
+  // Eseguito quando i dati grezzi o la posizione cambiano. Non esegue
+  // alcuna query: lavora solo sui dati già in memoria. Se userLocation
+  // non è ancora disponibile, applica un ordinamento alfabetico.
+  // =========================
+
+  useEffect(() => {
+    console.time('[SaletteScreen] Sort per distanza (derivato)');
+
+    let sorted: GroupedSaletta[];
+
+    if (userLocation) {
+      sorted = rawGrouped.map((group) => {
+        const first = group.salette[0];
+        let lat = first?.lat;
+        let lng = first?.lng;
+
+        if ((!lat || !lng) && first?.stazione) {
+          const stazioneMatch = stazioniCoordinates.find(
+            (s) => s.nome?.trim().toLowerCase() === first.stazione?.trim().toLowerCase()
+          );
+          if (stazioneMatch) { lat = stazioneMatch.lat; lng = stazioneMatch.lng; }
+        }
+
+        let distanza: number | undefined;
+        if (lat && lng) {
+          distanza = calculateDistance(
+            userLocation.lat, userLocation.lng, Number(lat), Number(lng)
+          );
+        }
+        return { ...group, distanza };
+      });
+
+      sorted.sort((a, b) => {
+        if (a.distanza != null && b.distanza != null) return a.distanza - b.distanza;
+        if (a.distanza == null && b.distanza != null) return 1;
+        if (a.distanza != null && b.distanza == null) return -1;
+        return a.stazione.localeCompare(b.stazione, 'it');
+      });
+    } else {
+      sorted = [...rawGrouped].sort((a, b) => a.stazione.localeCompare(b.stazione, 'it'));
+    }
+
+    setSalette(sorted);
+    console.timeEnd('[SaletteScreen] Sort per distanza (derivato)');
+  }, [rawGrouped, stazioniCoordinates, userLocation]);
 
   // =========================
   // SEARCH
@@ -183,7 +228,7 @@ export default function SaletteScreen({
   // LOADING
   // =========================
 
-  if (loading || !locationReady) {
+  if (loading) {
     return <LoadingSpinner />;
   }
 
@@ -192,6 +237,7 @@ export default function SaletteScreen({
   // =========================
 
   return (
+    <PullToRefreshVisualWrapper target={window}>
     <div className="flex flex-col gap-4">
 
       {/* SEARCH */}
@@ -278,5 +324,6 @@ export default function SaletteScreen({
       )}
 
     </div>
+    </PullToRefreshVisualWrapper>
   );
 }
