@@ -18,6 +18,8 @@ import { supabase } from '../lib/supabase';
 import { useSwipeDown } from '../lib/useSwipeDown';
 import HotelSheet from '../components/HotelSheet';
 import { useScrollLock } from '../lib/useScrollLock';
+import { usePullToRefresh } from '../lib/usePullToRefresh';
+import PullToRefreshVisualWrapper from '../components/PullToRefreshVisualWrapper';
 
 import { getDeviceId } from '../lib/device';
 
@@ -58,6 +60,9 @@ interface Props {
 
   refreshKey?: number;
 
+  /** Callback invocata dal pull-to-refresh; tipicamente refreshApp di App.tsx. */
+  onRefresh?: () => void;
+
   onNavigateToContributi?: () => void;
 
   /**
@@ -71,6 +76,7 @@ interface Props {
    * Usato dalla Home → chip Attività / Hotel.
    * Valore speciale 'attivita' = nessun filtro (mostra tutto tranne Hotel).
    */
+  initialStationName?: string | null;
   initialCategoriaFilter?: string | null;
 }
 
@@ -89,12 +95,23 @@ interface Valutazione {
 
 export default function StazioniScreen({
   refreshKey = 0,
+  onRefresh,
   onNavigateToContributi,
   initialExpandedId = null,
+  initialStationName = null,
   initialCategoriaFilter = null,
 }: Props) {
 
+  // StazioniScreen scrolla sul body: il PTR ascolta window.
+  usePullToRefresh({ target: window, onRefresh: onRefresh ?? (() => {}) });
+
   const [stazioni, setStazioni] =
+    useState<StazioneWithSalette[]>([]);
+
+  // Dati grezzi: risultato di query + mapping attività/valutazioni,
+  // SENZA l'ordinamento finale per preferiti/distanza. Cambiano solo
+  // quando le query Supabase vengono rieseguite (mount, refreshKey).
+  const [rawStazioni, setRawStazioni] =
     useState<StazioneWithSalette[]>([]);
 
   const [loading, setLoading] =
@@ -114,17 +131,10 @@ export default function StazioniScreen({
   const [expandedId, setExpandedId] =
     useState<string | null>(null);
 
-  // Ref per lo scroll automatico alla card espansa programmaticamente
-  const expandedCardRef = React.useRef<HTMLDivElement | null>(null);
-  // Garantisce che scrollIntoView venga eseguito una sola volta per ogni target,
-  // anche se stazioni si aggiorna più volte (realtime, refresh, toggle preferiti)
-  const scrollDone = React.useRef(false);
 
-  // Al mount e quando initialExpandedId cambia: imposta espansione e filtro categoria.
-  // Resetta scrollDone così il secondo useEffect eseguirà lo scroll per il nuovo target.
+  // Espande la card target e imposta il filtro categoria al mount.
   useEffect(() => {
     if (!initialExpandedId) return;
-    scrollDone.current = false;
     setExpandedId(initialExpandedId);
 
     if (initialCategoriaFilter && initialCategoriaFilter !== 'attivita') {
@@ -132,34 +142,14 @@ export default function StazioniScreen({
     }
   }, [initialExpandedId]);
 
-  // Esegue scrollIntoView una sola volta, dopo che tutte le condizioni sono vere:
-  // 1. initialExpandedId è presente
-  // 2. expandedId corrisponde a initialExpandedId (espansione avvenuta)
-  // 3. la lista stazioni è stata caricata (stazioni.length > 0)
-  // 4. expandedCardRef.current non è null (card presente nel DOM)
-  // 5. scrollDone.current è false (scroll non ancora eseguito per questo target)
+  // Pattern identico a SaletteScreen: pre-popola search con il nome della stazione.
+  // filtered restituisce una sola card → già in cima → nessuno scroll necessario.
+  // L'utente può cancellare con X per tornare alla lista completa.
   useEffect(() => {
-    if (
-      !scrollDone.current &&
-      initialExpandedId &&
-      expandedId === initialExpandedId &&
-      stazioni.length > 0 &&
-      expandedCardRef.current
-    ) {
-      // Porta il top della card a inizio viewport, poi sale di 80px
-      // per mostrare il nome della stazione come feedback visivo all'utente
-      expandedCardRef.current.scrollIntoView({
-        behavior: 'smooth',
-        block: 'start',
-      });
-      // Offset: compensa NavBar (56px) + un respiro (24px) → nome visibile
-      const scrollContainer = document.scrollingElement ?? window.document.documentElement;
-      setTimeout(() => {
-        scrollContainer.scrollBy({ top: -80, behavior: 'smooth' });
-      }, 350);
-      scrollDone.current = true;
+    if (initialStationName) {
+      setSearch(initialStationName);
     }
-  }, [stazioni, expandedId, initialExpandedId]);
+  }, [initialStationName]);
 
   const [
     addAttivitaStazioneId,
@@ -171,9 +161,6 @@ export default function StazioniScreen({
       lat: number;
       lng: number;
     } | null>(null);
-
-  const [locationReady, setLocationReady] =
-    useState(false);
 
   const [selectedAttivita, setSelectedAttivita] =
     useState<any>(null);
@@ -256,25 +243,32 @@ export default function StazioniScreen({
         setLoading(true);
       }
 
+      console.time('[StazioniScreen] Query stazioni');
       const {
         data: stazioniData,
       } = await supabase
         .from('stazioni')
         .select('*');
+      console.timeEnd('[StazioniScreen] Query stazioni');
 
+      console.time('[StazioniScreen] Query attivita_stazione');
       const {
         data: attivitaData,
       } = await supabase
         .from('attivita_stazione')
         .select('*')
         .eq('is_active', true);
+      console.timeEnd('[StazioniScreen] Query attivita_stazione');
 
+      console.time('[StazioniScreen] Query attivita_valutazioni');
       const {
         data: valutazioniData,
       } = await supabase
         .from('attivita_valutazioni')
         .select('*');
+      console.timeEnd('[StazioniScreen] Query attivita_valutazioni');
 
+      console.time('[StazioniScreen] Mapping stazioni/attivita (senza sort finale)');
       const merged =
         (stazioniData ?? [])
 
@@ -346,53 +340,12 @@ export default function StazioniScreen({
                 attivita_stazione: attivita,
               };
             }
-          )
-
-          .sort(
-            (a: any, b: any) => {
-
-              const aFav =
-                favorites.includes(a.id);
-
-              const bFav =
-                favorites.includes(b.id);
-
-              if (aFav && !bFav) return -1;
-              if (!aFav && bFav) return 1;
-
-              if (
-                userLocation &&
-                a.lat && a.lng &&
-                b.lat && b.lng
-              ) {
-
-                const aDist =
-                  calculateDistance(
-                    userLocation.lat,
-                    userLocation.lng,
-                    Number(a.lat),
-                    Number(a.lng)
-                  );
-
-                const bDist =
-                  calculateDistance(
-                    userLocation.lat,
-                    userLocation.lng,
-                    Number(b.lat),
-                    Number(b.lng)
-                  );
-
-                return aDist - bDist;
-              }
-
-              return a.nome.localeCompare(
-                b.nome,
-                'it'
-              );
-            }
           );
+      console.timeEnd('[StazioniScreen] Mapping stazioni/attivita (senza sort finale)');
 
-      setStazioni(merged);
+      console.time('[StazioniScreen] setRawStazioni (render trigger)');
+      setRawStazioni(merged);
+      console.timeEnd('[StazioniScreen] setRawStazioni (render trigger)');
 
     } catch (err) {
 
@@ -407,6 +360,63 @@ export default function StazioniScreen({
       setLoading(false);
     }
   }
+
+  // =========================
+  // SORT (favoriti + distanza)
+  // Eseguito quando i dati grezzi, i preferiti o la posizione cambiano.
+  // Non esegue alcuna query: lavora solo sui dati già in memoria.
+  // =========================
+
+  useEffect(() => {
+    console.time('[StazioniScreen] Sort favoriti/distanza (derivato)');
+
+    const sorted = [...rawStazioni].sort(
+      (a: any, b: any) => {
+
+        const aFav =
+          favorites.includes(a.id);
+
+        const bFav =
+          favorites.includes(b.id);
+
+        if (aFav && !bFav) return -1;
+        if (!aFav && bFav) return 1;
+
+        if (
+          userLocation &&
+          a.lat && a.lng &&
+          b.lat && b.lng
+        ) {
+
+          const aDist =
+            calculateDistance(
+              userLocation.lat,
+              userLocation.lng,
+              Number(a.lat),
+              Number(a.lng)
+            );
+
+          const bDist =
+            calculateDistance(
+              userLocation.lat,
+              userLocation.lng,
+              Number(b.lat),
+              Number(b.lng)
+            );
+
+          return aDist - bDist;
+        }
+
+        return a.nome.localeCompare(
+          b.nome,
+          'it'
+        );
+      }
+    );
+
+    setStazioni(sorted);
+    console.timeEnd('[StazioniScreen] Sort favoriti/distanza (derivato)');
+  }, [rawStazioni, favorites, userLocation]);
 
   // =========================
   // LOAD RATING
@@ -497,12 +507,15 @@ export default function StazioniScreen({
 
   useEffect(() => {
 
+    console.time('[StazioniScreen] Mount → favorites + geolocation');
+
     const favs = getFavorites();
 
     setFavorites(favs);
 
     async function initLocation() {
 
+      console.time('[StazioniScreen] getCurrentLocation (GPS)');
       try {
 
         const location =
@@ -518,7 +531,8 @@ export default function StazioniScreen({
 
       } finally {
 
-        setLocationReady(true);
+        console.timeEnd('[StazioniScreen] getCurrentLocation (GPS)');
+        console.timeEnd('[StazioniScreen] Mount → favorites + geolocation');
       }
     }
 
@@ -528,20 +542,17 @@ export default function StazioniScreen({
 
   // =========================
   // GLOBAL REFRESH
+  // Carica i dati subito al mount e ad ogni refreshKey, senza
+  // aspettare la geolocalizzazione e senza essere rieseguito per un
+  // semplice cambio di preferiti o posizione (quello è gestito dal
+  // solo sort derivato sopra, senza rifare query).
   // =========================
 
   useEffect(() => {
 
-    if (!locationReady) return;
-
     load();
 
-  }, [
-    favorites,
-    userLocation,
-    locationReady,
-    refreshKey,
-  ]);
+  }, [refreshKey]);
 
   // =========================
   // REALTIME
@@ -651,7 +662,6 @@ export default function StazioniScreen({
 
       <div
         key={stazione.id}
-        ref={stazione.id === initialExpandedId ? expandedCardRef : null}
         className={`bg-white rounded-3xl border shadow-sm overflow-hidden ${
           isNearest
             ? 'border-trenord-green ring-2 ring-trenord-green/20'
@@ -1173,6 +1183,7 @@ export default function StazioniScreen({
   return (
 
     <>
+      <PullToRefreshVisualWrapper target={window}>
       <div className="flex flex-col gap-4">
 
         {/* SEARCH */}
@@ -1205,7 +1216,7 @@ export default function StazioniScreen({
         </div>
 
         {/* LOADING */}
-        {(loading || !locationReady) && (
+        {loading && (
 
           <div className="flex flex-col gap-3">
 
@@ -1324,6 +1335,7 @@ export default function StazioniScreen({
         )}
 
       </div>
+      </PullToRefreshVisualWrapper>
 
       {/* MODAL AGGIUNGI */}
       {addAttivitaStazioneId && (
