@@ -12,13 +12,24 @@ import ContributoAttivitaForm from '../components/forms/ContributoAttivitaForm';
 
 import ContributoStazioneForm from '../components/forms/ContributoStazioneForm';
 
+import { usePullToRefresh } from '../lib/usePullToRefresh';
+import PullToRefreshVisualWrapper from '../components/PullToRefreshVisualWrapper';
+
 type TipoContributo =
   | null
   | 'saletta'
   | 'attivita'
   | 'stazione';
 
-export default function ContributiScreen() {
+interface Props {
+  /** Callback invocata dal pull-to-refresh; tipicamente refreshApp di App.tsx. */
+  onRefresh?: () => void;
+}
+
+export default function ContributiScreen({ onRefresh }: Props) {
+
+  // ContributiScreen scrolla sul body: il PTR ascolta window.
+  usePullToRefresh({ target: window, onRefresh: onRefresh ?? (() => {}) });
 
   const [tipo, setTipo] =
     useState<TipoContributo>(null);
@@ -30,11 +41,13 @@ export default function ContributiScreen() {
   if (tipo === 'saletta') {
 
     return (
-      <ContributoSalettaForm
-        onBack={() =>
-          setTipo(null)
-        }
-      />
+      <PullToRefreshVisualWrapper target={window}>
+        <ContributoSalettaForm
+          onBack={() =>
+            setTipo(null)
+          }
+        />
+      </PullToRefreshVisualWrapper>
     );
   }
 
@@ -45,11 +58,13 @@ export default function ContributiScreen() {
   if (tipo === 'attivita') {
 
     return (
-      <ContributoAttivitaForm
-        onBack={() =>
-          setTipo(null)
-        }
-      />
+      <PullToRefreshVisualWrapper target={window}>
+        <ContributoAttivitaForm
+          onBack={() =>
+            setTipo(null)
+          }
+        />
+      </PullToRefreshVisualWrapper>
     );
   }
 
@@ -60,11 +75,13 @@ export default function ContributiScreen() {
   if (tipo === 'stazione') {
 
     return (
-      <ContributoStazioneForm
-        onBack={() =>
-          setTipo(null)
-        }
-      />
+      <PullToRefreshVisualWrapper target={window}>
+        <ContributoStazioneForm
+          onBack={() =>
+            setTipo(null)
+          }
+        />
+      </PullToRefreshVisualWrapper>
     );
   }
 
@@ -74,6 +91,7 @@ export default function ContributiScreen() {
 
   return (
 
+    <PullToRefreshVisualWrapper target={window}>
     <div className="flex flex-col gap-4">
 
       {/* TITLE */}
@@ -190,5 +208,6 @@ export default function ContributiScreen() {
       </button>
 
     </div>
+    </PullToRefreshVisualWrapper>
   );
 }
