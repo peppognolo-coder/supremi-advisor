@@ -124,9 +124,40 @@ export function usePullToRefresh({
     const el = resolveElement(target);
     if (!el) return; // RefObject non ancora montato: niente da fare.
 
+    // ── DIAGNOSTICA TEMPORANEA ────────────────────────────────────────────
+    // Listener scroll: traccia quando scrollTop cambia (incluso momentum
+    // e bounce post-flick), per distinguere Scenario A da Scenario B.
+    // Registrato solo sui RefObject (div interni), non su window, perché
+    // è lì che il momentum/bounce può portare scrollTop a 0 inaspettatamente.
+    let lastLoggedScrollTop = -1;
+    function onScroll() {
+      const sp = getScrollPosition(target);
+      // Logga solo quando il valore cambia significativamente (evita spam)
+      if (Math.abs(sp - lastLoggedScrollTop) > 2) {
+        console.log('[PTR] scroll', { scrollTop: sp, time: performance.now().toFixed(1) });
+        lastLoggedScrollTop = sp;
+      }
+    }
+    if (!(target instanceof Window)) {
+      el.addEventListener('scroll', onScroll as EventListener, { passive: true });
+    }
+    // ─────────────────────────────────────────────────────────────────────
+
     function onTouchStart(e: TouchEvent) {
+      const sp = getScrollPosition(target);
+      console.log('[PTR] touchstart', {
+        time: performance.now().toFixed(1),
+        scrollTop: sp,
+        armed: sp <= 0,
+      });
+
       // Attiva il possibile pull solo se siamo già in cima allo scroll.
-      if (getScrollPosition(target) > 0) return;
+      if (sp > 0) return;
+
+      console.log('[PTR] ARMED', {
+        time: performance.now().toFixed(1),
+        scrollTop: sp,
+      });
 
       startY.current = e.touches[0].clientY;
       startX.current = e.touches[0].clientX;
@@ -135,6 +166,9 @@ export function usePullToRefresh({
       directionLocked.current = false;
     }
 
+    // Throttle per touchmove: logga solo quando deltaY cambia di ≥5px
+    let lastLoggedDeltaY = 0;
+
     function onTouchMove(e: TouchEvent) {
       if (!pulling.current) return;
 
@@ -142,6 +176,16 @@ export function usePullToRefresh({
       const touchX = e.touches[0].clientX;
       const deltaY = touchY - startY.current;
       const deltaX = touchX - startX.current;
+
+      // Log throttolato: solo variazioni significative, evita spam
+      if (Math.abs(deltaY - lastLoggedDeltaY) >= 5) {
+        console.log('[PTR] touchmove', {
+          deltaY: Math.round(deltaY),
+          scrollTop: getScrollPosition(target),
+          dirLocked: directionLocked.current,
+        });
+        lastLoggedDeltaY = deltaY;
+      }
 
       // Se siamo già scrollati oltre la cima, nessun pull è in corso:
       // lasciamo il gesto al comportamento nativo del browser/scroll.
@@ -198,6 +242,14 @@ export function usePullToRefresh({
     }
 
     function onTouchEnd() {
+      console.log('[PTR] touchend', {
+        time: performance.now().toFixed(1),
+        pulling: pulling.current,
+        distance: Math.round(currentY.current - startY.current),
+        scrollTop: getScrollPosition(target),
+      });
+      lastLoggedDeltaY = 0; // reset throttle per il prossimo gesto
+
       if (!pulling.current) return;
 
       const distance = currentY.current - startY.current;
@@ -208,6 +260,12 @@ export function usePullToRefresh({
         getScrollPosition(target) <= 0 &&
         !isRefreshingRef.current
       ) {
+        console.log('[PTR] THRESHOLD PASSED', {
+          distance: Math.round(distance),
+          threshold,
+          scrollTop: getScrollPosition(target),
+        });
+        console.log('[PTR] → REFRESH TRIGGERED', { distance, threshold });
         isRefreshingRef.current = true;
         setIsRefreshing(true);
 
@@ -237,6 +295,9 @@ export function usePullToRefresh({
       el.removeEventListener('touchstart', onTouchStart as EventListener);
       el.removeEventListener('touchmove', onTouchMove as EventListener);
       el.removeEventListener('touchend', onTouchEnd as EventListener);
+      if (!(target instanceof Window)) {
+        el.removeEventListener('scroll', onScroll as EventListener);
+      }
     };
     // `target` può essere `window` (stabile) o un RefObject (stabile come
     // identità dell'oggetto ref, anche se `.current` cambia). `onRefresh`
