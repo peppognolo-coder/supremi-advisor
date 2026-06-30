@@ -43,7 +43,7 @@ import { useEffect, useRef, useState } from 'react';
 
 // Soglia di attivazione, in pixel. Sotto questa distanza il pull
 // viene considerato uno scroll normale e non un gesto di refresh.
-const DEFAULT_THRESHOLD = 90;
+const DEFAULT_THRESHOLD = 140;
 
 // Distanza minima, in pixel, prima di "bloccare" la direzione del gesto
 // come verticale o orizzontale. Evita falsi positivi su piccoli movimenti.
