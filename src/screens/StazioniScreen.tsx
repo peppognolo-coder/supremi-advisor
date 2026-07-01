@@ -1183,10 +1183,9 @@ export default function StazioniScreen({
   return (
 
     <>
-      <PullToRefreshVisualWrapper target={window}>
       <div className="flex flex-col gap-4">
 
-        {/* SEARCH */}
+        {/* SEARCH — fuori dal wrapper per non essere soggetta al translateY */}
         <div className="relative">
 
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
@@ -1214,6 +1213,9 @@ export default function StazioniScreen({
           )}
 
         </div>
+
+        {/* Il wrapper avvolge solo la lista: il translateY non tocca la search bar */}
+        <PullToRefreshVisualWrapper target={window}>
 
         {/* LOADING */}
         {loading && (
@@ -1334,8 +1336,9 @@ export default function StazioniScreen({
           </div>
         )}
 
+        </PullToRefreshVisualWrapper>
+
       </div>
-      </PullToRefreshVisualWrapper>
 
       {/* MODAL AGGIUNGI */}
       {addAttivitaStazioneId && (
