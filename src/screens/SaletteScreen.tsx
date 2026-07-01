@@ -237,10 +237,9 @@ export default function SaletteScreen({
   // =========================
 
   return (
-    <PullToRefreshVisualWrapper target={window}>
     <div className="flex flex-col gap-4">
 
-      {/* SEARCH */}
+      {/* SEARCH — fuori dal wrapper per non essere soggetta al translateY */}
       <div className="sticky top-[110px] z-20 bg-gray-100 pb-1">
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
@@ -261,6 +260,9 @@ export default function SaletteScreen({
           )}
         </div>
       </div>
+
+      {/* Il wrapper avvolge solo la lista: il translateY non tocca la search bar */}
+      <PullToRefreshVisualWrapper target={window}>
 
       {/* EMPTY */}
       {filtered.length === 0 && (
@@ -323,7 +325,8 @@ export default function SaletteScreen({
         </div>
       )}
 
+      </PullToRefreshVisualWrapper>
+
     </div>
-    </PullToRefreshVisualWrapper>
   );
 }
