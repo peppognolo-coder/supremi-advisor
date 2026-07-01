@@ -147,22 +147,40 @@ export function usePullToRefresh({
       const msSinceLastScroll = now - lastScrollTime;
       const stableAtTop = sp <= 0 && msSinceLastScroll >= STABLE_TOP_MS;
 
+      // ── DIAGNOSTICA: verifica che hook e DOM leggano lo stesso scroll ──
+      const isWindow = target instanceof Window;
+      const realScroll = isWindow
+        ? window.scrollY
+        : (target as React.RefObject<HTMLElement>).current?.scrollTop ?? -1;
+
       console.log('[PTR] touchstart', {
-        time: now.toFixed(1),
-        scrollTop: sp,
+        targetType: isWindow ? 'window' : 'HTMLElement',
+        hookScrollPosition: sp,          // valore usato dall'hook (getScrollPosition)
+        realDOMScroll: realScroll,        // valore letto direttamente dal DOM
+        match: sp === realScroll,         // true = hook e DOM concordano
         msSinceLastScroll: Math.round(msSinceLastScroll),
-        armed: stableAtTop,
+        stableAtTop,
+        pulling: pulling.current,
+        directionLocked: directionLocked.current,
+        distance: Math.round(currentY.current - startY.current),
       });
+      // ───────────────────────────────────────────────────────────────────
 
       // Attiva il possibile pull solo se siamo in cima E il contenitore
       // è rimasto fermo lì per almeno STABLE_TOP_MS ms senza scroll.
       if (!stableAtTop) return;
 
       console.log('[PTR] ARMED', {
-        time: now.toFixed(1),
-        scrollTop: sp,
+        targetType: isWindow ? 'window' : 'HTMLElement',
+        hookScrollPosition: sp,
+        realDOMScroll: realScroll,
+        match: sp === realScroll,
         msSinceLastScroll: Math.round(msSinceLastScroll),
+        pulling: pulling.current,         // ancora false, verrà impostato subito dopo
+        directionLocked: directionLocked.current,
+        distance: Math.round(currentY.current - startY.current),
       });
+      // ───────────────────────────────────────────────────────────────────
 
       startY.current = e.touches[0].clientY;
       startX.current = e.touches[0].clientX;
