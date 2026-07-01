@@ -103,6 +103,11 @@ export function usePullToRefresh({
   const currentY = useRef(0);
   const pulling = useRef(false);
   const directionLocked = useRef(false);
+  // true quando il gesto corrente è stato classificato come "non pull-down"
+  // (scroll verso l'alto, orizzontale, o scrollTop > 0 al primo movimento
+  // significativo). Impedisce di rivalutare lo stesso gesto ad ogni frame.
+  // Resettato solo in onTouchStart.
+  const gestureRejected = useRef(false);
 
   // Mirror ref per "refresh in corso": letto dalla closure dei listener
   // senza dover dipendere da `isRefreshing` (state) nelle dipendenze del
@@ -124,154 +129,90 @@ export function usePullToRefresh({
     const el = resolveElement(target);
     if (!el) return; // RefObject non ancora montato: niente da fare.
 
-    // ── GUARDIA TEMPORALE ─────────────────────────────────────────────────
-    // Il PTR si arma solo se scrollTop === 0 E il contenitore è rimasto
-    // stabile in cima per almeno STABLE_TOP_MS millisecondi senza eventi
-    // scroll nel frattempo. Previene il falso armo durante lo scroll
-    // inerziale (momentum) su div overflow-y: auto (es. Home), dove il
-    // browser porta scrollTop a 0 ancora prima che il dito si fermi.
-    const STABLE_TOP_MS = 120;
-    let lastScrollTime = 0; // timestamp dell'ultimo evento scroll
-
-    function onScroll() {
-      lastScrollTime = performance.now();
-      const sp = getScrollPosition(target);
-      console.log('[PTR] scroll', { scrollTop: sp, time: lastScrollTime.toFixed(1) });
-    }
-    el.addEventListener('scroll', onScroll as EventListener, { passive: true });
-    // ─────────────────────────────────────────────────────────────────────
-
     function onTouchStart(e: TouchEvent) {
-      const sp = getScrollPosition(target);
-      const now = performance.now();
-      const msSinceLastScroll = now - lastScrollTime;
-      const stableAtTop = sp <= 0 && msSinceLastScroll >= STABLE_TOP_MS;
-
-      // ── DIAGNOSTICA: verifica che hook e DOM leggano lo stesso scroll ──
-      const isWindow = target instanceof Window;
-      const realScroll = isWindow
-        ? window.scrollY
-        : (target as React.RefObject<HTMLElement>).current?.scrollTop ?? -1;
-
-      console.log('[PTR] touchstart', {
-        targetType: isWindow ? 'window' : 'HTMLElement',
-        hookScrollPosition: sp,          // valore usato dall'hook (getScrollPosition)
-        realDOMScroll: realScroll,        // valore letto direttamente dal DOM
-        match: sp === realScroll,         // true = hook e DOM concordano
-        msSinceLastScroll: Math.round(msSinceLastScroll),
-        stableAtTop,
-        pulling: pulling.current,
-        directionLocked: directionLocked.current,
-        distance: Math.round(currentY.current - startY.current),
-      });
-      // ───────────────────────────────────────────────────────────────────
-
-      // Attiva il possibile pull solo se siamo in cima E il contenitore
-      // è rimasto fermo lì per almeno STABLE_TOP_MS ms senza scroll.
-      if (!stableAtTop) return;
-
-      console.log('[PTR] ARMED', {
-        targetType: isWindow ? 'window' : 'HTMLElement',
-        hookScrollPosition: sp,
-        realDOMScroll: realScroll,
-        match: sp === realScroll,
-        msSinceLastScroll: Math.round(msSinceLastScroll),
-        pulling: pulling.current,         // ancora false, verrà impostato subito dopo
-        directionLocked: directionLocked.current,
-        distance: Math.round(currentY.current - startY.current),
-      });
-      // ───────────────────────────────────────────────────────────────────
-
+      // onTouchStart NON arma il PTR.
+      // Si limita a salvare la posizione iniziale del dito e azzerare lo
+      // stato: è onTouchMove che decide se il gesto è un pull-down.
       startY.current = e.touches[0].clientY;
       startX.current = e.touches[0].clientX;
       currentY.current = e.touches[0].clientY;
-      pulling.current = true;
+      pulling.current = false;
       directionLocked.current = false;
+      gestureRejected.current = false;
     }
 
-    // Throttle per touchmove: logga solo quando deltaY cambia di ≥5px
-    let lastLoggedDeltaY = 0;
-
     function onTouchMove(e: TouchEvent) {
-      if (!pulling.current) return;
-
       const touchY = e.touches[0].clientY;
       const touchX = e.touches[0].clientX;
       const deltaY = touchY - startY.current;
       const deltaX = touchX - startX.current;
 
-      // Log throttolato: solo variazioni significative, evita spam
-      if (Math.abs(deltaY - lastLoggedDeltaY) >= 5) {
-        console.log('[PTR] touchmove', {
-          deltaY: Math.round(deltaY),
-          scrollTop: getScrollPosition(target),
-          dirLocked: directionLocked.current,
-        });
-        lastLoggedDeltaY = deltaY;
-      }
-
-      // Se siamo già scrollati oltre la cima, nessun pull è in corso:
-      // lasciamo il gesto al comportamento nativo del browser/scroll.
-      const atTop = getScrollPosition(target) <= 0;
-
-      if (!directionLocked.current) {
-        // FIX: durante i primi pixel di movimento (prima che il
-        // direction-lock scatti a DIRECTION_LOCK_PX), il gesto è ancora
-        // ambiguo ma se siamo in cima e il movimento è già chiaramente
-        // più verticale-verso-il-basso che orizzontale, preveniamo subito
-        // il comportamento nativo (rubber-band / back-navigation gesture).
-        // Senza questo, su gesti rapidi il browser decide di intercettare
-        // il touch come "indietro" prima che il lock si stabilizzi,
-        // causando un ritorno alla schermata precedente invece del
-        // refresh — più frequente sulle schermate con contenuto corto
-        // (sempre a scrollY/scrollTop 0), come la vista di selezione di
-        // ContributiScreen.
-        if (atTop && deltaY > 0 && deltaY >= Math.abs(deltaX)) {
-          if (e.cancelable) e.preventDefault();
-        }
+      if (!pulling.current) {
+        // ── Fase di riconoscimento ────────────────────────────────────────
+        // Se il gesto è già stato classificato come "non pull-down",
+        // ignoralo fino al prossimo touchstart. L'intenzione era già
+        // evidente al primo movimento significativo: non la rivalutiamo.
+        if (gestureRejected.current) return;
 
         const movedEnough =
           Math.abs(deltaY) > DIRECTION_LOCK_PX || Math.abs(deltaX) > DIRECTION_LOCK_PX;
-        if (!movedEnough) return;
+        if (!movedEnough) return; // troppo poco movimento, aspetta ancora
 
-        // Gesto orizzontale: non è un pull-to-refresh, abbandona.
-        if (Math.abs(deltaX) > Math.abs(deltaY)) {
-          pulling.current = false;
+        // Da qui in poi il movimento è significativo: classifichiamo il
+        // gesto una volta sola e non cambiamo idea fino al prossimo touch.
+
+        if (getScrollPosition(target) > 0) {
+          // Contenitore non in cima: è uno scroll, non un pull-down.
+          gestureRejected.current = true;
           return;
         }
-        // Gesto verso l'alto: non è un pull-to-refresh, abbandona.
-        if (deltaY < 0) {
-          pulling.current = false;
+        if (deltaY <= 0) {
+          // Gesto verso l'alto: non è un pull-down.
+          gestureRejected.current = true;
           return;
         }
+        if (Math.abs(deltaX) >= deltaY) {
+          // Gesto troppo orizzontale: non è un pull-down.
+          gestureRejected.current = true;
+          return;
+        }
+
+        // Tutte le condizioni soddisfatte: armo e direction-lock insieme.
+        pulling.current = true;
         directionLocked.current = true;
+
+        // Previene il rubber-band/back-navigation nativo ora che il gesto
+        // è confermato come pull-down intenzionale.
+        if (e.cancelable) e.preventDefault();
+
+        currentY.current = touchY;
+        return;
+        // ─────────────────────────────────────────────────────────────────
       }
 
-      // Se nel frattempo il contenitore ha scrollato (es. inerzia),
-      // annulla il pull: non siamo più "in cima".
+      // ── Fase di tracking (pulling=true, directionLocked=true) ──────────
+      // Il pull è già confermato. Aggiorniamo la posizione corrente e
+      // annulliamo solo se il contenitore è tornato a scrollare (inerzia).
+
       if (getScrollPosition(target) > 5) {
+        // Il contenitore ha ripreso a scrollare: non siamo più in cima.
+        // Annulliamo il pull senza triggerare il refresh.
         pulling.current = false;
         directionLocked.current = false;
+        gestureRejected.current = true; // il gesto è compromesso, ignoralo
         return;
       }
 
-      // Blocca il comportamento nativo del browser (rubber-band /
-      // back-navigation gesture) per tutta la durata del pull confermato.
-      if (directionLocked.current && deltaY > 0) {
-        if (e.cancelable) e.preventDefault();
-      }
-
+      if (e.cancelable) e.preventDefault();
       currentY.current = touchY;
     }
 
     function onTouchEnd() {
       console.log('[PTR] touchend', {
-        time: performance.now().toFixed(1),
         pulling: pulling.current,
         distance: Math.round(currentY.current - startY.current),
         scrollTop: getScrollPosition(target),
       });
-      lastLoggedDeltaY = 0; // reset throttle per il prossimo gesto
 
       if (!pulling.current) return;
 
@@ -283,20 +224,12 @@ export function usePullToRefresh({
         getScrollPosition(target) <= 0 &&
         !isRefreshingRef.current
       ) {
-        console.log('[PTR] THRESHOLD PASSED', {
-          distance: Math.round(distance),
-          threshold,
-          scrollTop: getScrollPosition(target),
-        });
-        console.log('[PTR] → REFRESH TRIGGERED', { distance, threshold });
+        console.log('[PTR] REFRESH TRIGGERED', { distance, threshold });
         isRefreshingRef.current = true;
         setIsRefreshing(true);
 
         onRefreshRef.current();
 
-        // L'hook non sa quanto dura il refresh del chiamante (può essere
-        // sincrono o asincrono): usiamo un piccolo timeout per evitare
-        // trigger multipli ravvicinati, coerente con l'UX attuale.
         setTimeout(() => {
           isRefreshingRef.current = false;
           setIsRefreshing(false);
@@ -305,6 +238,7 @@ export function usePullToRefresh({
 
       pulling.current = false;
       directionLocked.current = false;
+      gestureRejected.current = false;
       startY.current = 0;
       startX.current = 0;
       currentY.current = 0;
@@ -318,7 +252,6 @@ export function usePullToRefresh({
       el.removeEventListener('touchstart', onTouchStart as EventListener);
       el.removeEventListener('touchmove', onTouchMove as EventListener);
       el.removeEventListener('touchend', onTouchEnd as EventListener);
-      el.removeEventListener('scroll', onScroll as EventListener);
     };
     // `target` può essere `window` (stabile) o un RefObject (stabile come
     // identità dell'oggetto ref, anche se `.current` cambia). `onRefresh`
