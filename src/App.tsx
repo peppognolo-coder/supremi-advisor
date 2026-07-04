@@ -202,7 +202,7 @@ export default function App() {
       )}
 
       {/* CONTENT */}
-      <main className={isHomeTab ? 'flex-1' : 'flex-1 pt-[112px] pb-[72px]'}>
+      <main className={isHomeTab ? 'flex-1 min-h-0' : 'flex-1 min-h-0 pt-[112px] pb-[72px]'}>
 
         {activeTab === 'home' && (
           <HomeScreen
@@ -218,12 +218,11 @@ export default function App() {
             onStationCleared={clearActiveStation}
             onOpenStazione={handleOpenStazione}
             onOpenSegnalazione={handleOpenSegnalazione}
-            onRefresh={refreshApp}
           />
         )}
 
         {activeTab === 'salette' && (
-          <div className="max-w-2xl mx-auto px-4 py-4">
+          <div className="max-w-2xl mx-auto px-4 py-4 flex flex-col h-full min-h-0">
             <SaletteScreen
               refreshKey={refreshKey}
               onRefresh={refreshApp}
@@ -234,7 +233,7 @@ export default function App() {
         )}
 
         {activeTab === 'stazioni' && (
-          <div className="max-w-2xl mx-auto px-4 py-4">
+          <div className="max-w-2xl mx-auto px-4 py-4 flex flex-col h-full min-h-0">
             <StazioniScreen
               refreshKey={refreshKey}
               onRefresh={refreshApp}
@@ -248,19 +247,19 @@ export default function App() {
 
         {activeTab === 'contributi' && (
           <div className="max-w-2xl mx-auto px-4 py-4">
-            <ContributiScreen onRefresh={refreshApp} />
+            <ContributiScreen />
           </div>
         )}
 
         {activeTab === 'segnalazioni' && adminMode && (
           <div className="max-w-2xl mx-auto px-4 py-4">
-            <SegnalazioniScreen refreshKey={refreshKey} onRefresh={refreshApp} />
+            <SegnalazioniScreen refreshKey={refreshKey} />
           </div>
         )}
 
         {activeTab === 'admin' && adminMode && (
           <div className="max-w-2xl mx-auto px-4 py-4">
-            <AdminScreen refreshKey={refreshKey} adminPin={ADMIN_PIN} onRefresh={refreshApp} />
+            <AdminScreen refreshKey={refreshKey} adminPin={ADMIN_PIN} />
           </div>
         )}
       </main>
