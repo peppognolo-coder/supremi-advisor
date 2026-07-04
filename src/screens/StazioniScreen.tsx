@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 
 import {
   Search,
@@ -19,7 +19,6 @@ import { useSwipeDown } from '../lib/useSwipeDown';
 import HotelSheet from '../components/HotelSheet';
 import { useScrollLock } from '../lib/useScrollLock';
 import { usePullToRefresh } from '../lib/usePullToRefresh';
-import PullToRefreshVisualWrapper from '../components/PullToRefreshVisualWrapper';
 
 import { getDeviceId } from '../lib/device';
 
@@ -102,8 +101,16 @@ export default function StazioniScreen({
   initialCategoriaFilter = null,
 }: Props) {
 
-  // StazioniScreen scrolla sul body: il PTR ascolta window.
-  usePullToRefresh({ target: window, onRefresh: onRefresh ?? (() => {}) });
+  // scrollRef: il contenitore scrollabile reale (overflow-y-auto).
+  // listRef:   la lista che riceve translateY durante il pull.
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const listRef   = useRef<HTMLDivElement>(null);
+
+  usePullToRefresh({
+    scrollRef,
+    listRef,
+    onRefresh: onRefresh ?? (() => {}),
+  });
 
   const [stazioni, setStazioni] =
     useState<StazioneWithSalette[]>([]);
@@ -243,32 +250,25 @@ export default function StazioniScreen({
         setLoading(true);
       }
 
-      console.time('[StazioniScreen] Query stazioni');
       const {
         data: stazioniData,
       } = await supabase
         .from('stazioni')
         .select('*');
-      console.timeEnd('[StazioniScreen] Query stazioni');
 
-      console.time('[StazioniScreen] Query attivita_stazione');
       const {
         data: attivitaData,
       } = await supabase
         .from('attivita_stazione')
         .select('*')
         .eq('is_active', true);
-      console.timeEnd('[StazioniScreen] Query attivita_stazione');
 
-      console.time('[StazioniScreen] Query attivita_valutazioni');
       const {
         data: valutazioniData,
       } = await supabase
         .from('attivita_valutazioni')
         .select('*');
-      console.timeEnd('[StazioniScreen] Query attivita_valutazioni');
 
-      console.time('[StazioniScreen] Mapping stazioni/attivita (senza sort finale)');
       const merged =
         (stazioniData ?? [])
 
@@ -341,11 +341,8 @@ export default function StazioniScreen({
               };
             }
           );
-      console.timeEnd('[StazioniScreen] Mapping stazioni/attivita (senza sort finale)');
 
-      console.time('[StazioniScreen] setRawStazioni (render trigger)');
       setRawStazioni(merged);
-      console.timeEnd('[StazioniScreen] setRawStazioni (render trigger)');
 
     } catch (err) {
 
@@ -368,7 +365,6 @@ export default function StazioniScreen({
   // =========================
 
   useEffect(() => {
-    console.time('[StazioniScreen] Sort favoriti/distanza (derivato)');
 
     const sorted = [...rawStazioni].sort(
       (a: any, b: any) => {
@@ -415,7 +411,6 @@ export default function StazioniScreen({
     );
 
     setStazioni(sorted);
-    console.timeEnd('[StazioniScreen] Sort favoriti/distanza (derivato)');
   }, [rawStazioni, favorites, userLocation]);
 
   // =========================
@@ -507,7 +502,6 @@ export default function StazioniScreen({
 
   useEffect(() => {
 
-    console.time('[StazioniScreen] Mount → favorites + geolocation');
 
     const favs = getFavorites();
 
@@ -515,7 +509,6 @@ export default function StazioniScreen({
 
     async function initLocation() {
 
-      console.time('[StazioniScreen] getCurrentLocation (GPS)');
       try {
 
         const location =
@@ -531,8 +524,6 @@ export default function StazioniScreen({
 
       } finally {
 
-        console.timeEnd('[StazioniScreen] getCurrentLocation (GPS)');
-        console.timeEnd('[StazioniScreen] Mount → favorites + geolocation');
       }
     }
 
@@ -1183,10 +1174,12 @@ export default function StazioniScreen({
   return (
 
     <>
-      <div className="flex flex-col gap-4">
+      <div className="flex flex-col h-full min-h-0">
 
-        {/* SEARCH — fuori dal wrapper per non essere soggetta al translateY */}
-        <div className="relative">
+        {/* SEARCH — flex-shrink-0: rimane sempre visibile, non scorre */}
+        <div className="flex-shrink-0 pb-2">
+
+          <div className="relative">
 
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
 
@@ -1212,10 +1205,15 @@ export default function StazioniScreen({
             </button>
           )}
 
+          </div>
+
         </div>
 
-        {/* Il wrapper avvolge solo la lista: il translateY non tocca la search bar */}
-        <PullToRefreshVisualWrapper target={window}>
+        {/* SCROLLER — occupa tutto lo spazio rimasto */}
+        <div ref={scrollRef} className="flex-1 min-h-0 overflow-y-auto">
+
+        {/* LISTA — riceve translateY durante il pull */}
+        <div ref={listRef} className="flex flex-col gap-4 pb-4">
 
         {/* LOADING */}
         {loading && (
@@ -1336,7 +1334,8 @@ export default function StazioniScreen({
           </div>
         )}
 
-        </PullToRefreshVisualWrapper>
+        </div>{/* fine listRef */}
+        </div>{/* fine scrollRef */}
 
       </div>
 
