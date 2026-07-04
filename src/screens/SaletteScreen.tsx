@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 
 import {
   Search,
@@ -18,7 +18,6 @@ import {
 } from '../lib/location';
 
 import { usePullToRefresh } from '../lib/usePullToRefresh';
-import PullToRefreshVisualWrapper from '../components/PullToRefreshVisualWrapper';
 
 import type {
   Saletta,
@@ -60,8 +59,17 @@ export default function SaletteScreen({
   initialStationName = null,
 }: Props) {
 
-  // SaletteScreen scrolla sul body: il PTR ascolta window.
-  usePullToRefresh({ target: window, onRefresh: onRefresh ?? (() => {}) });
+  // scrollRef: il contenitore scrollabile reale (overflow-y-auto).
+  // listRef:   la lista che riceve translateY durante il pull.
+  // La SearchBar è fuori da entrambi e non si muove mai.
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const listRef   = useRef<HTMLDivElement>(null);
+
+  usePullToRefresh({
+    scrollRef,
+    listRef,
+    onRefresh: onRefresh ?? (() => {}),
+  });
 
   // Dati grezzi raggruppati, SENZA distanza/ordinamento per posizione:
   // popolati appena le query rispondono, indipendentemente dal GPS.
@@ -97,7 +105,6 @@ export default function SaletteScreen({
   // =========================
 
   useEffect(() => {
-    console.time('[SaletteScreen] getCurrentLocation (GPS)');
     async function initLocation() {
       try {
         const location = await getCurrentLocation();
@@ -105,7 +112,6 @@ export default function SaletteScreen({
       } catch {
         console.warn('Geolocalizzazione non disponibile');
       } finally {
-        console.timeEnd('[SaletteScreen] getCurrentLocation (GPS)');
       }
     }
     initLocation();
@@ -122,12 +128,10 @@ export default function SaletteScreen({
     async function load() {
       setLoading(true);
 
-      console.time('[SaletteScreen] Promise.all salette+stazioni');
       const [{ data, error }, { data: stazioniData }] = await Promise.all([
         supabase.from('salette').select('*'),
         supabase.from('stazioni').select('nome, lat, lng'),
       ]);
-      console.timeEnd('[SaletteScreen] Promise.all salette+stazioni');
 
       if (error) {
         console.error(error);
@@ -136,7 +140,6 @@ export default function SaletteScreen({
         return;
       }
 
-      console.time('[SaletteScreen] Mapping + group (senza distanza)');
       const coordinates: StazioneCoordinates[] =
         (stazioniData ?? []).filter((s) => s.lat && s.lng);
 
@@ -151,13 +154,10 @@ export default function SaletteScreen({
       });
 
       const grouped = Array.from(groupedMap.values());
-      console.timeEnd('[SaletteScreen] Mapping + group (senza distanza)');
 
-      console.time('[SaletteScreen] setRawGrouped (render trigger)');
       setStazioniCoordinates(coordinates);
       setRawGrouped(grouped);
       setLoading(false);
-      console.timeEnd('[SaletteScreen] setRawGrouped (render trigger)');
     }
 
     load();
@@ -171,7 +171,6 @@ export default function SaletteScreen({
   // =========================
 
   useEffect(() => {
-    console.time('[SaletteScreen] Sort per distanza (derivato)');
 
     let sorted: GroupedSaletta[];
 
@@ -208,7 +207,6 @@ export default function SaletteScreen({
     }
 
     setSalette(sorted);
-    console.timeEnd('[SaletteScreen] Sort per distanza (derivato)');
   }, [rawGrouped, stazioniCoordinates, userLocation]);
 
   // =========================
@@ -237,10 +235,10 @@ export default function SaletteScreen({
   // =========================
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col h-full min-h-0">
 
-      {/* SEARCH — fuori dal wrapper per non essere soggetta al translateY */}
-      <div className="sticky top-[110px] z-20 bg-gray-100 pb-1">
+      {/* SEARCH — flex-shrink-0: rimane sempre visibile, non scorre */}
+      <div className="flex-shrink-0 pb-2">
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
           <input
@@ -261,43 +259,44 @@ export default function SaletteScreen({
         </div>
       </div>
 
-      {/* Il wrapper avvolge solo la lista: il translateY non tocca la search bar */}
-      <PullToRefreshVisualWrapper target={window}>
+      {/* SCROLLER — occupa tutto lo spazio rimasto */}
+      <div ref={scrollRef} className="flex-1 min-h-0 overflow-y-auto">
 
-      {/* EMPTY */}
-      {filtered.length === 0 && (
-        <div className="flex flex-col items-center justify-center py-16 px-6 gap-4 text-center">
-          <div className="w-14 h-14 rounded-2xl bg-gray-100 flex items-center justify-center">
-            <DoorOpen className="w-7 h-7 text-gray-400" />
-          </div>
-          <div>
-            <p className="font-semibold text-gray-700">Nessuna saletta trovata</p>
-            <p className="text-sm text-gray-400 mt-1 max-w-xs leading-relaxed">
-              Nessun risultato per "{search}". La saletta non è ancora in elenco?
-            </p>
-          </div>
-          <button
-            onClick={() => setSearch('')}
-            className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gray-100 text-gray-700 text-sm font-medium hover:bg-gray-200 transition-colors"
-          >
-            <X className="w-4 h-4" />
-            Cancella ricerca
-          </button>
-          {onNavigateToContributi && (
-            <button
-              onClick={onNavigateToContributi}
-              className="flex items-center gap-2 px-4 py-2 rounded-xl bg-trenord-green text-white text-sm font-medium hover:opacity-90 transition-opacity"
-            >
-              <MessageSquarePlus className="w-4 h-4" />
-              Segnala saletta mancante
-            </button>
+        {/* LISTA — riceve translateY durante il pull */}
+        <div ref={listRef} className="flex flex-col gap-3 pb-4">
+
+          {/* EMPTY */}
+          {filtered.length === 0 && (
+            <div className="flex flex-col items-center justify-center py-16 px-6 gap-4 text-center">
+              <div className="w-14 h-14 rounded-2xl bg-gray-100 flex items-center justify-center">
+                <DoorOpen className="w-7 h-7 text-gray-400" />
+              </div>
+              <div>
+                <p className="font-semibold text-gray-700">Nessuna saletta trovata</p>
+                <p className="text-sm text-gray-400 mt-1 max-w-xs leading-relaxed">
+                  Nessun risultato per "{search}". La saletta non è ancora in elenco?
+                </p>
+              </div>
+              <button
+                onClick={() => setSearch('')}
+                className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gray-100 text-gray-700 text-sm font-medium hover:bg-gray-200 transition-colors"
+              >
+                <X className="w-4 h-4" />
+                Cancella ricerca
+              </button>
+              {onNavigateToContributi && (
+                <button
+                  onClick={onNavigateToContributi}
+                  className="flex items-center gap-2 px-4 py-2 rounded-xl bg-trenord-green text-white text-sm font-medium hover:opacity-90 transition-opacity"
+                >
+                  <MessageSquarePlus className="w-4 h-4" />
+                  Segnala saletta mancante
+                </button>
+              )}
+            </div>
           )}
-        </div>
-      )}
 
-      {/* LISTA */}
-      {filtered.length > 0 && (
-        <div className="flex flex-col gap-3">
+          {/* LISTA SALETTE */}
           {filtered.map((group, index) => (
             <div
               key={group.stazione}
@@ -322,11 +321,9 @@ export default function SaletteScreen({
               />
             </div>
           ))}
+
         </div>
-      )}
-
-      </PullToRefreshVisualWrapper>
-
+      </div>
     </div>
   );
 }
