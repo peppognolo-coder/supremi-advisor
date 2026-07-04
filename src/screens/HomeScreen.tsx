@@ -5,8 +5,6 @@ import type { Tab } from '../types';
 import type { HomeStationData } from '../hooks/useHomeStation';
 
 import { useHomeFavorites } from '../hooks/useHomeFavorites';
-import { usePullToRefresh } from '../lib/usePullToRefresh';
-import PullToRefreshVisualWrapper from '../components/PullToRefreshVisualWrapper';
 
 import {
   StazioneCard,
@@ -72,13 +70,6 @@ interface HomeScreenProps {
   // Deep-link
   onOpenStazione: (stationId: string, stationName?: string, categoriaFilter?: string) => void;
   onOpenSegnalazione: (stationName: string) => void;
-
-  /**
-   * Callback invocata al refresh (pull-to-refresh o altro trigger).
-   * Passata da App.tsx; tipicamente aggiorna refreshKey e mostra
-   * l'indicatore globale.
-   */
-  onRefresh: () => void;
 }
 
 // ---------------------------------------------------------------------------
@@ -98,19 +89,12 @@ const HomeScreen: React.FC<HomeScreenProps> = ({
   onStationCleared,
   onOpenStazione,
   onOpenSegnalazione,
-  onRefresh,
 }) => {
   const { favoriteStations, loading: favLoading } = useHomeFavorites(activeStationId);
 
   const badgeCount = stationData?.problemiAperti.length ?? 0;
 
-  // ── Ref al container scrollabile ─────────────────────────────────────────
   const scrollRef = useRef<HTMLDivElement>(null);
-
-  // ── Pull-to-Refresh ───────────────────────────────────────────────────────
-  // La Home scrolla internamente sul proprio div (overflow-y-auto), quindi
-  // l'hook lavora sul ref di quel container, non su window.
-  usePullToRefresh({ target: scrollRef, onRefresh });
 
   // ── Handlers ──────────────────────────────────────────────────────────────
 
@@ -156,7 +140,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({
   return (
     <div
       ref={scrollRef}
-      className="flex flex-col h-full bg-gray-50 overflow-y-auto scrollbar-hide"
+      className="flex flex-col h-full min-h-0 bg-gray-50 overflow-y-auto scrollbar-hide"
     >
       {/* ── HEADER ────────────────────────────────────────────────────────── */}
       <div className="sticky top-0 z-10 bg-white border-b border-gray-100">
@@ -200,7 +184,6 @@ const HomeScreen: React.FC<HomeScreenProps> = ({
       </div>
 
       {/* ── CONTENUTO SCROLLABILE ─────────────────────────────────────────── */}
-      <PullToRefreshVisualWrapper target={scrollRef}>
       <div
         className="flex flex-col gap-6 py-5"
         style={{ paddingBottom: 'calc(7rem + env(safe-area-inset-bottom, 0px))' }}
@@ -234,7 +217,6 @@ const HomeScreen: React.FC<HomeScreenProps> = ({
 
         <UpdateFeed items={STATIC_FEED_ITEMS} />
       </div>
-      </PullToRefreshVisualWrapper>
     </div>
   );
 };
