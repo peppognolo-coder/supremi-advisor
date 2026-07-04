@@ -27,8 +27,6 @@ import {
 
 import { supabase } from '../lib/supabase';
 
-import { usePullToRefresh } from '../lib/usePullToRefresh';
-import PullToRefreshVisualWrapper from '../components/PullToRefreshVisualWrapper';
 
 import AdminSaletteScreen from './AdminSaletteScreen';
 
@@ -99,14 +97,9 @@ interface ModalQualita {
 
 interface Props {
   adminPin: string;
-  /** Callback invocata dal pull-to-refresh; tipicamente refreshApp di App.tsx. */
-  onRefresh?: () => void;
 }
 
-export default function AdminScreen({ adminPin, onRefresh }: Props) {
-
-  // AdminScreen scrolla sul body: il PTR ascolta window.
-  usePullToRefresh({ target: window, onRefresh: onRefresh ?? (() => {}) });
+export default function AdminScreen({ adminPin }: Props) {
 
   const [loading, setLoading] =
     useState(true);
@@ -1081,7 +1074,7 @@ export default function AdminScreen({ adminPin, onRefresh }: Props) {
   if (showAttivitaManager) {
 
     return (
-      <PullToRefreshVisualWrapper target={window}>
+      <div className="h-full min-h-0 overflow-y-auto">
       <div className="flex flex-col gap-4">
 
         {/* BACK */}
@@ -1107,14 +1100,14 @@ export default function AdminScreen({ adminPin, onRefresh }: Props) {
 />
 
       </div>
-      </PullToRefreshVisualWrapper>
+      </div>
     );
   }
 
   if (showContributiManager) {
 
     return (
-      <PullToRefreshVisualWrapper target={window}>
+      <div className="h-full min-h-0 overflow-y-auto">
       <div className="flex flex-col gap-4">
 
         {/* BACK */}
@@ -1136,14 +1129,14 @@ export default function AdminScreen({ adminPin, onRefresh }: Props) {
         <AdminContributiScreen adminPin={adminPin} />
 
       </div>
-      </PullToRefreshVisualWrapper>
+      </div>
     );
   }
 
   if (showSaletteManager) {
 
     return (
-      <PullToRefreshVisualWrapper target={window}>
+      <div className="h-full min-h-0 overflow-y-auto">
       <div className="flex flex-col gap-4">
 
         {/* BACK */}
@@ -1166,13 +1159,13 @@ export default function AdminScreen({ adminPin, onRefresh }: Props) {
         />
 
       </div>
-      </PullToRefreshVisualWrapper>
+      </div>
     );
   }
 
   if (showProblemiManager) {
     return (
-      <PullToRefreshVisualWrapper target={window}>
+      <div className="h-full min-h-0 overflow-y-auto">
       <div className="flex flex-col gap-4">
         <button
           onClick={() => setShowProblemiManager(false)}
@@ -1183,14 +1176,14 @@ export default function AdminScreen({ adminPin, onRefresh }: Props) {
         </button>
         <AdminProblemiSaletteScreen adminPin={adminPin} />
       </div>
-      </PullToRefreshVisualWrapper>
+      </div>
     );
   }
 
   if (showStazioniManager) {
 
   return (
-    <PullToRefreshVisualWrapper target={window}>
+    <div className="h-full min-h-0 overflow-y-auto">
     <div className="flex flex-col gap-4">
 
       <button
@@ -1212,7 +1205,7 @@ export default function AdminScreen({ adminPin, onRefresh }: Props) {
       />
 
     </div>
-    </PullToRefreshVisualWrapper>
+    </div>
   );
 }
   
@@ -1224,7 +1217,7 @@ export default function AdminScreen({ adminPin, onRefresh }: Props) {
 
     <>
 
-      <PullToRefreshVisualWrapper target={window}>
+      <div className="h-full min-h-0 overflow-y-auto">
       <div className="flex flex-col gap-5">
 
         {/* TITLE */}
@@ -3258,7 +3251,7 @@ export default function AdminScreen({ adminPin, onRefresh }: Props) {
         </div>
 
       </div>
-      </PullToRefreshVisualWrapper>
+      </div>{/* fine overflow-y-auto */}
 
       {/* ========================= */}
       {/* MODAL QUALITÀ DATI        */}
