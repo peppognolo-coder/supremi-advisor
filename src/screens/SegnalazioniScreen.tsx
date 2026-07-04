@@ -18,8 +18,6 @@ import toast from 'react-hot-toast';
 
 import { supabase } from '../lib/supabase';
 
-import { usePullToRefresh } from '../lib/usePullToRefresh';
-import PullToRefreshVisualWrapper from '../components/PullToRefreshVisualWrapper';
 
 interface Contributo {
 
@@ -34,15 +32,7 @@ interface Contributo {
   created_at: string;
 }
 
-interface Props {
-  /** Callback invocata dal pull-to-refresh; tipicamente refreshApp di App.tsx. */
-  onRefresh?: () => void;
-}
-
-export default function SegnalazioniScreen({ onRefresh }: Props = {}) {
-
-  // SegnalazioniScreen scrolla sul body: il PTR ascolta window.
-  usePullToRefresh({ target: window, onRefresh: onRefresh ?? (() => {}) });
+export default function SegnalazioniScreen() {
 
   const [
     contributi,
@@ -230,11 +220,6 @@ export default function SegnalazioniScreen({ onRefresh }: Props = {}) {
 
       const dati =
         contributo.dati;
-
-      console.log(
-        'FINAL DATA',
-        dati
-      );
 
       // =====================
       // STAZIONE
@@ -669,8 +654,7 @@ export default function SegnalazioniScreen({ onRefresh }: Props = {}) {
   }
 
   return (
-
-    <PullToRefreshVisualWrapper target={window}>
+    <div className="h-full min-h-0 overflow-y-auto">
     <div className="flex flex-col gap-4">
 
       <div>
@@ -802,6 +786,6 @@ export default function SegnalazioniScreen({ onRefresh }: Props = {}) {
       </div>
 
     </div>
-    </PullToRefreshVisualWrapper>
+    </div>
   );
 }
