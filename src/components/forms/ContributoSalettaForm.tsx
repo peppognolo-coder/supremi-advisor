@@ -7,7 +7,7 @@ import {
   Droplets,
   Snowflake,
   Users,
-  Toilet,
+  Bath,
   DoorOpen,
   MoreHorizontal,
   Shirt,
@@ -63,7 +63,7 @@ const areeLocalita = [
     id: 'bagni',
     label: 'Bagni',
     description: 'Servizi igienici riservati al personale',
-    icon: Toilet,
+    icon: Bath,
     ordine: 2,
     attiva: true,
     // i bagni non hanno "Guasto" come stato distinto — usano stato generale
