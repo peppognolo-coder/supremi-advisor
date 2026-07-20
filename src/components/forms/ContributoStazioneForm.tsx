@@ -110,11 +110,6 @@ export default function ContributoStazioneForm({
           note.trim(),
       };
 
-      console.log(
-        'PAYLOAD:',
-        payload
-      );
-
       // =====================
       // INSERT
       // =====================
