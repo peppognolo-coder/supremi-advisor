@@ -116,8 +116,6 @@ export default function AdminStazioniScreen({
   stazioniConAttivita,
   stazioniConSalette,
 }: Props) {
-  console.log('ADMIN PIN', adminPin);
-
   const [loading, setLoading]   = useState(true);
   const [stazioni, setStazioni] = useState<StazioneCompleta[]>([]);
   const [search, setSearch]     = useState('');
