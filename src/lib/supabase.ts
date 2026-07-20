@@ -11,5 +11,3 @@ export const supabase =
     supabaseUrl,
     supabaseAnonKey
   );
-
-console.log('SUPABASE URL:', supabaseUrl);
