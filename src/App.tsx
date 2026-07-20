@@ -163,7 +163,7 @@ export default function App() {
   const isHomeTab = activeTab === 'home';
 
   return (
-    <div className="min-h-screen bg-gray-100 flex flex-col">
+    <div className="h-dvh bg-gray-100 flex flex-col">
 
       {/* PULL REFRESH INDICATOR */}
       <div className={`fixed top-[72px] left-1/2 -translate-x-1/2 z-[100] pointer-events-none transition-all duration-300 ${refreshing ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-4'}`}>
