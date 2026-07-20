@@ -226,14 +226,6 @@ export default function SaletteScreen({
   // LOADING
   // =========================
 
-  if (loading) {
-    return <LoadingSpinner />;
-  }
-
-  // =========================
-  // RENDER
-  // =========================
-
   return (
     <div className="flex flex-col h-full min-h-0">
 
@@ -259,14 +251,22 @@ export default function SaletteScreen({
         </div>
       </div>
 
-      {/* SCROLLER — occupa tutto lo spazio rimasto */}
+      {/* SCROLLER — sempre nel DOM: scrollRef viene popolato al primo render
+          e i listener del PTR vengono registrati correttamente. */}
       <div ref={scrollRef} className="flex-1 min-h-0 overflow-y-auto">
 
         {/* LISTA — riceve translateY durante il pull */}
         <div ref={listRef} className="flex flex-col gap-3 pb-4">
 
+          {/* LOADING — mostrato dentro lo scroller, non come early return */}
+          {loading && (
+            <div className="flex items-center justify-center py-20">
+              <LoadingSpinner />
+            </div>
+          )}
+
           {/* EMPTY */}
-          {filtered.length === 0 && (
+          {!loading && filtered.length === 0 && (
             <div className="flex flex-col items-center justify-center py-16 px-6 gap-4 text-center">
               <div className="w-14 h-14 rounded-2xl bg-gray-100 flex items-center justify-center">
                 <DoorOpen className="w-7 h-7 text-gray-400" />
@@ -297,7 +297,7 @@ export default function SaletteScreen({
           )}
 
           {/* LISTA SALETTE */}
-          {filtered.map((group, index) => (
+          {!loading && filtered.map((group, index) => (
             <div
               key={group.stazione}
               className={`rounded-3xl transition-all ${
