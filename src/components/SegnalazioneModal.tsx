@@ -17,6 +17,81 @@ interface Props {
   onClose: () => void;
 }
 
+// =============================================================================
+// TIPI DI SEGNALAZIONE PER SEZIONE
+// Ogni sezione mostra solo le opzioni pertinenti.
+// { value: chiave nel payload, label: testo mostrato all'utente }
+// =============================================================================
+
+const TIPI_PER_SEZIONE: Record<string, { value: string; label: string }[]> = {
+  equipaggi: [
+    { value: 'climatizzata',        label: 'Climatizzazione presente' },
+    { value: 'remove_climatizzata', label: 'Climatizzazione assente' },
+    { value: 'microonde',           label: 'Microonde presente' },
+    { value: 'remove_microonde',    label: 'Microonde assente' },
+    { value: 'fontana_acqua',       label: 'Fontana acqua presente' },
+    { value: 'remove_fontana_acqua',label: 'Fontana acqua assente' },
+    { value: 'distributori',        label: 'Distributori presenti' },
+    { value: 'remove_distributori', label: 'Distributori assenti' },
+    { value: 'codice_accesso',      label: 'Nuovo codice accesso' },
+    { value: 'ubicazione',          label: 'Nuova ubicazione' },
+    { value: 'note',                label: 'Nuove note' },
+  ],
+  bagni: [
+    { value: 'stato_aperti',        label: 'Bagni aperti' },
+    { value: 'stato_chiusi',        label: 'Bagni chiusi' },
+    { value: 'modalita_libero',     label: 'Accesso libero' },
+    { value: 'modalita_chiave',     label: 'Accesso con chiave' },
+    { value: 'modalita_codice',     label: 'Accesso con codice' },
+    { value: 'modalita_badge',      label: 'Accesso con badge' },
+    { value: 'ubicazione',          label: 'Nuova ubicazione' },
+    { value: 'note',                label: 'Nuove note' },
+  ],
+  cancelletto: [
+    { value: 'codice_accesso',      label: 'Nuovo codice accesso' },
+    { value: 'tipologia_badge',     label: 'Accesso con badge' },
+    { value: 'tipologia_tastierino',label: 'Accesso con tastierino' },
+    { value: 'tipologia_citofono',  label: 'Accesso con citofono' },
+    { value: 'tipologia_manuale',   label: 'Apertura manuale' },
+    { value: 'ubicazione',          label: 'Nuova ubicazione' },
+    { value: 'note',                label: 'Nuove note' },
+  ],
+  trenitalia: [
+    { value: 'stato_aperto',        label: 'Locale aperto' },
+    { value: 'stato_chiuso',        label: 'Locale chiuso' },
+    { value: 'codice_accesso',      label: 'Nuovo codice accesso' },
+    { value: 'ubicazione',          label: 'Nuova ubicazione' },
+    { value: 'note',                label: 'Nuove note' },
+  ],
+  spogliatoi: [
+    { value: 'stato_aperti',        label: 'Spogliatoi aperti' },
+    { value: 'stato_chiusi',        label: 'Spogliatoi chiusi' },
+    { value: 'docce_presenti',      label: 'Docce presenti' },
+    { value: 'docce_assenti',       label: 'Docce assenti' },
+    { value: 'armadietti_presenti', label: 'Armadietti presenti' },
+    { value: 'armadietti_assenti',  label: 'Armadietti assenti' },
+    { value: 'ubicazione',          label: 'Nuova ubicazione' },
+    { value: 'note',                label: 'Nuove note' },
+  ],
+  segreteria: [
+    { value: 'stato_aperta',        label: 'Segreteria aperta' },
+    { value: 'stato_chiusa',        label: 'Segreteria chiusa' },
+    { value: 'orari',               label: 'Aggiorna orari' },
+    { value: 'ubicazione',          label: 'Nuova ubicazione' },
+    { value: 'note',                label: 'Nuove note' },
+  ],
+  versamenti: [
+    { value: 'stato_aperto',        label: 'Ufficio aperto' },
+    { value: 'stato_chiuso',        label: 'Ufficio chiuso' },
+    { value: 'orari',               label: 'Aggiorna orari' },
+    { value: 'ubicazione',          label: 'Nuova ubicazione' },
+    { value: 'note',                label: 'Nuove note' },
+  ],
+};
+
+// Campi che richiedono un input testuale aggiuntivo
+const RICHIEDE_VALORE = ['codice_accesso', 'ubicazione', 'note', 'orari'];
+
 export default function SegnalazioneModal({
   salettaId,
   onClose,
@@ -25,8 +100,11 @@ export default function SegnalazioneModal({
   useScrollLock();
 
 
+  const [sezione, setSezione] =
+    useState('equipaggi');
+
   const [tipo, setTipo] =
-    useState('microonde');
+    useState(TIPI_PER_SEZIONE['equipaggi'][0].value);
 
   const [valore, setValore] =
     useState('');
@@ -36,6 +114,15 @@ export default function SegnalazioneModal({
 
   const [loading, setLoading] =
     useState(false);
+
+  // Al cambio sezione: reset del tipo alla prima opzione disponibile
+  function handleSezioneChange(nuovaSezione: string) {
+    setSezione(nuovaSezione);
+    setTipo(TIPI_PER_SEZIONE[nuovaSezione][0].value);
+    setValore('');
+  }
+
+  const tipiDisponibili = TIPI_PER_SEZIONE[sezione] ?? [];
 
   async function submit() {
 
@@ -52,6 +139,7 @@ export default function SegnalazioneModal({
         tipo: 'segnalazione_saletta',
         dati: {
           saletta_id: salettaId,
+          sezione,
           tipo,
           valore: valore.trim() || null,
           nota: nota.trim() || null,
@@ -79,16 +167,7 @@ export default function SegnalazioneModal({
     setLoading(false);
   }
 
-  // =========================
-  // INPUT VISIBILITY
-  // =========================
-
-  const requiresValue =
-    [
-      'codice_accesso',
-      'ubicazione',
-      'note',
-    ].includes(tipo);
+  const requiresValue = RICHIEDE_VALORE.includes(tipo);
 
   return (
 
@@ -141,6 +220,29 @@ export default function SegnalazioneModal({
 
         </div>
 
+        {/* SEZIONE */}
+        <div className="flex flex-col gap-1.5">
+
+          <label className="text-sm font-medium text-gray-700">
+            Sezione della località
+          </label>
+
+          <select
+            value={sezione}
+            onChange={(e) => handleSezioneChange(e.target.value)}
+            className="border border-gray-200 rounded-2xl px-4 py-3 text-base bg-white focus:outline-none focus:ring-2 focus:ring-trenord-green/30 focus:border-trenord-green"
+          >
+            <option value="equipaggi">Saletta equipaggi</option>
+            <option value="bagni">Bagni</option>
+            <option value="cancelletto">Cancelletto</option>
+            <option value="trenitalia">Locali Trenitalia</option>
+            <option value="spogliatoi">Spogliatoi</option>
+            <option value="segreteria">Segreteria</option>
+            <option value="versamenti">Ufficio versamenti</option>
+          </select>
+
+        </div>
+
         {/* TIPO */}
         <div className="flex flex-col gap-1.5">
 
@@ -152,56 +254,14 @@ export default function SegnalazioneModal({
 
           <select
             value={tipo}
-            onChange={(e) =>
-              setTipo(e.target.value)
-            }
+            onChange={(e) => { setTipo(e.target.value); setValore(''); }}
             className="border border-gray-200 rounded-2xl px-4 py-3 text-base bg-white focus:outline-none focus:ring-2 focus:ring-trenord-green/30 focus:border-trenord-green"
           >
-
-            <option value="climatizzata">
-              Climatizzazione presente
-            </option>
-
-            <option value="remove_climatizzata">
-              Climatizzazione assente
-            </option>
-
-            <option value="microonde">
-              Microonde presente
-            </option>
-
-            <option value="remove_microonde">
-              Microonde assente
-            </option>
-
-            <option value="fontana_acqua">
-              Fontana acqua presente
-            </option>
-
-            <option value="remove_fontana_acqua">
-              Fontana acqua assente
-            </option>
-
-            <option value="distributori">
-              Distributori presenti
-            </option>
-
-            <option value="remove_distributori">
-              Distributori assenti
-            </option>
-
-            <option value="codice_accesso">
-              Nuovo codice accesso
-            </option>
-
-            <option value="ubicazione">
-              Nuova ubicazione
-            </option>
-
-            <option value="note">
-              Nuove note
-            </option>
-
+            {tipiDisponibili.map((t) => (
+              <option key={t.value} value={t.value}>
+                {t.label}
+              </option>
+            ))}
           </select>
 
         </div>
