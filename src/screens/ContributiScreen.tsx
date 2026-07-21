@@ -26,7 +26,7 @@ export default function ContributiScreen() {
 
   return (
     <div className="h-full min-h-0 overflow-y-auto">
-      <div className="max-w-2xl mx-auto px-4 py-4">
+      <div className="max-w-2xl mx-auto px-4 py-4 pb-24">
 
       {tipo === 'saletta' && (
         <ContributoSalettaForm onBack={() => setTipo(null)} />
@@ -60,7 +60,7 @@ export default function ContributiScreen() {
 
           </div>
 
-          {/* SALETTA */}
+          {/* LOCALITÀ OPERATIVA */}
           <button
             onClick={() => setTipo('saletta')}
             className="bg-white rounded-2xl border border-gray-100 p-5 shadow-sm flex items-center gap-4 hover:border-trenord-green transition-colors"
@@ -76,13 +76,13 @@ export default function ContributiScreen() {
 
               <h2 className="font-semibold text-gray-900">
 
-                Saletta
+                Località operativa
 
               </h2>
 
               <p className="text-sm text-gray-500 mt-1">
 
-                Codici, servizi, ubicazioni, stato
+                Salette, bagni, cancelli e servizi del personale
 
               </p>
 
