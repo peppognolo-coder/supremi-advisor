@@ -1075,7 +1075,7 @@ export default function AdminScreen({ adminPin }: Props) {
 
     return (
       <div className="h-full min-h-0 overflow-y-auto">
-      <div className="flex flex-col gap-4">
+      <div className="flex flex-col gap-4 pb-24">
 
         {/* BACK */}
         <button
@@ -1108,7 +1108,7 @@ export default function AdminScreen({ adminPin }: Props) {
 
     return (
       <div className="h-full min-h-0 overflow-y-auto">
-      <div className="flex flex-col gap-4">
+      <div className="flex flex-col gap-4 pb-24">
 
         {/* BACK */}
         <button
@@ -1137,7 +1137,7 @@ export default function AdminScreen({ adminPin }: Props) {
 
     return (
       <div className="h-full min-h-0 overflow-y-auto">
-      <div className="flex flex-col gap-4">
+      <div className="flex flex-col gap-4 pb-24">
 
         {/* BACK */}
         <button
@@ -1166,7 +1166,7 @@ export default function AdminScreen({ adminPin }: Props) {
   if (showProblemiManager) {
     return (
       <div className="h-full min-h-0 overflow-y-auto">
-      <div className="flex flex-col gap-4">
+      <div className="flex flex-col gap-4 pb-24">
         <button
           onClick={() => setShowProblemiManager(false)}
           className="self-start flex items-center gap-2 px-3 py-2 rounded-xl bg-white border border-gray-200 text-sm text-gray-700 hover:bg-gray-50"
@@ -1184,7 +1184,7 @@ export default function AdminScreen({ adminPin }: Props) {
 
   return (
     <div className="h-full min-h-0 overflow-y-auto">
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-4 pb-24">
 
       <button
         onClick={() =>
@@ -1218,7 +1218,7 @@ export default function AdminScreen({ adminPin }: Props) {
     <>
 
       <div className="h-full min-h-0 overflow-y-auto">
-      <div className="flex flex-col gap-5">
+      <div className="flex flex-col gap-5 pb-24">
 
         {/* TITLE */}
         <div>
