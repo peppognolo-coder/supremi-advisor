@@ -44,8 +44,59 @@ interface Props {
 // CATEGORIE_ATTIVITA e DISTANZE_ATTIVITA (sorgente di verità unica)
 
 const GIORNI_SETTIMANA = ['Lun', 'Mar', 'Mer', 'Gio', 'Ven', 'Sab', 'Dom'];
-const TIPI_SALETTA    = ['Equipaggi', 'Bagni', 'Cancelletto', 'Trenitalia', 'Sala Relax'];
-const STATI_SALETTA   = ['Aperta', 'Chiusa', 'Pulizie', 'Guasto'];
+
+// =============================================================================
+// CONFIGURAZIONE SEZIONI LOCALITÀ
+// Stessa struttura del form contributi — fonte di verità per il pannello admin.
+// =============================================================================
+
+const SEZIONI_LOCALITA = [
+  {
+    id: 'equipaggi',
+    label: 'Saletta equipaggi',
+    stati: ['Aperta', 'Chiusa', 'In pulizia', 'Guasto'],
+    campi: ['codice', 'ubicazione', 'stato', 'servizi', 'note'],
+  },
+  {
+    id: 'bagni',
+    label: 'Bagni',
+    stati: ['Aperti', 'Chiusi', 'In pulizia'],
+    campi: ['ubicazione', 'stato', 'modalita_accesso', 'note'],
+  },
+  {
+    id: 'cancelletto',
+    label: 'Cancelletto',
+    stati: [],
+    campi: ['codice', 'ubicazione', 'tipologia_accesso', 'note'],
+  },
+  {
+    id: 'trenitalia',
+    label: 'Locali Trenitalia',
+    stati: ['Aperto', 'Chiuso', 'Guasto'],
+    campi: ['codice', 'ubicazione', 'stato', 'note'],
+  },
+  {
+    id: 'spogliatoi',
+    label: 'Spogliatoi',
+    stati: ['Aperti', 'Chiusi', 'In pulizia'],
+    campi: ['ubicazione', 'stato', 'docce', 'armadietti', 'note'],
+  },
+  {
+    id: 'segreteria',
+    label: 'Segreteria',
+    stati: ['Aperta', 'Chiusa'],
+    campi: ['ubicazione', 'stato', 'fasce_orarie', 'note'],
+  },
+  {
+    id: 'versamenti',
+    label: 'Ufficio versamenti',
+    stati: ['Aperto', 'Chiuso'],
+    campi: ['ubicazione', 'stato', 'fasce_orarie', 'note'],
+  },
+] as const;
+
+const MODALITA_ACCESSO  = ['Libero', 'Chiave', 'Codice', 'Badge'];
+const TIPOLOGIA_ACCESSO = ['Badge', 'Tastierino', 'Citofono', 'Apertura manuale'];
 
 // =========================
 // HELPER renderValore
@@ -308,73 +359,217 @@ export default function AdminContributiScreen({ adminPin }: Props) {
               </div>
             )}
 
-            {/* SALETTA */}
-            {editingContributo.tipo === 'saletta' && (
-              <div className="flex flex-col gap-4">
-                <div>
-                  <label className="text-xs font-semibold text-gray-400 uppercase">Stazione</label>
-                  <input value={editingContributo.dati?.stazione || ''} disabled
-                    className="mt-1 border border-gray-200 rounded-xl px-3 py-2 w-full bg-gray-100 text-gray-500 text-base" />
-                </div>
-                <div>
-                  <label className="text-xs font-semibold text-gray-400 uppercase">Tipo</label>
-                  <select value={editingContributo.dati?.tipo || ''}
-                    onChange={(e) => setEditingContributo({ ...editingContributo, dati: { ...editingContributo.dati, tipo: e.target.value } })}
-                    className="mt-1 border border-gray-200 rounded-xl px-3 py-2 w-full text-base">
-                    {TIPI_SALETTA.map((t) => <option key={t} value={t}>{t}</option>)}
-                  </select>
-                </div>
-                <div>
-                  <label className="text-xs font-semibold text-gray-400 uppercase">Codice accesso</label>
-                  <input value={editingContributo.dati?.codice_accesso || ''}
-                    onChange={(e) => setEditingContributo({ ...editingContributo, dati: { ...editingContributo.dati, codice_accesso: e.target.value } })}
-                    placeholder="Es. 14579B" className="mt-1 border border-gray-200 rounded-xl px-3 py-2 w-full text-base" />
-                </div>
-                <div>
-                  <label className="text-xs font-semibold text-gray-400 uppercase">Ubicazione</label>
-                  <input value={editingContributo.dati?.ubicazione || ''}
-                    onChange={(e) => setEditingContributo({ ...editingContributo, dati: { ...editingContributo.dati, ubicazione: e.target.value } })}
-                    placeholder="Es. Binario 1 lato Milano" className="mt-1 border border-gray-200 rounded-xl px-3 py-2 w-full text-base" />
-                </div>
-                <div>
-                  <label className="text-xs font-semibold text-gray-400 uppercase">Stato</label>
-                  <select value={editingContributo.dati?.stato || ''}
-                    onChange={(e) => setEditingContributo({ ...editingContributo, dati: { ...editingContributo.dati, stato: e.target.value } })}
-                    className="mt-1 border border-gray-200 rounded-xl px-3 py-2 w-full text-base">
-                    {STATI_SALETTA.map((s) => <option key={s} value={s}>{s}</option>)}
-                  </select>
-                </div>
+            {/* SALETTA — rendering dinamico per sezione */}
+            {editingContributo.tipo === 'saletta' && (() => {
+              const sezioneId = editingContributo.dati?.tipo ?? 'equipaggi';
+              const sezione   = SEZIONI_LOCALITA.find((s) => s.id === sezioneId)
+                             ?? SEZIONI_LOCALITA[0];
+              const mostra    = (campo: string) =>
+                (sezione.campi as readonly string[]).includes(campo);
+              const upd       = (field: string, val: unknown) =>
+                setEditingContributo({
+                  ...editingContributo,
+                  dati: { ...editingContributo.dati, [field]: val },
+                });
 
-                {/* DOTAZIONI */}
-                <div className="flex flex-col gap-3">
-                  <label className="text-xs font-semibold text-gray-400 uppercase">Servizi</label>
-                  {[
-                    { key: 'microonde',    label: 'Microonde',    icon: <Microwave className="w-5 h-5" /> },
-                    { key: 'distributori', label: 'Distributori', icon: <Coffee className="w-5 h-5" /> },
-                    { key: 'acqua',        label: 'Acqua',        icon: <Droplets className="w-5 h-5" /> },
-                    { key: 'climatizzata', label: 'Climatizzata', icon: <Snowflake className="w-5 h-5" /> },
-                  ].map(({ key, label, icon }) => {
-                    const val = editingContributo.dati?.[key] ?? editingContributo.dati?.servizi?.[key] ?? false;
+              return (
+                <div className="flex flex-col gap-4">
+
+                  {/* INTESTAZIONE SEZIONE */}
+                  <div className="bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 flex items-center gap-2">
+                    <span className="text-xs font-semibold text-gray-400 uppercase">Sezione</span>
+                    <span className="font-semibold text-gray-800">{sezione.label}</span>
+                  </div>
+
+                  {/* STAZIONE — sempre visibile, sola lettura */}
+                  <div>
+                    <label className="text-xs font-semibold text-gray-400 uppercase">Stazione</label>
+                    <input value={editingContributo.dati?.stazione || ''} disabled
+                      className="mt-1 border border-gray-200 rounded-xl px-3 py-2 w-full bg-gray-100 text-gray-500 text-base" />
+                  </div>
+
+                  {/* CODICE */}
+                  {mostra('codice') && (
+                    <div>
+                      <label className="text-xs font-semibold text-gray-400 uppercase">Codice accesso</label>
+                      <input value={editingContributo.dati?.codice_accesso || ''}
+                        onChange={(e) => upd('codice_accesso', e.target.value)}
+                        placeholder="Es. 14579B"
+                        className="mt-1 border border-gray-200 rounded-xl px-3 py-2 w-full text-base" />
+                    </div>
+                  )}
+
+                  {/* UBICAZIONE */}
+                  {mostra('ubicazione') && (
+                    <div>
+                      <label className="text-xs font-semibold text-gray-400 uppercase">Ubicazione</label>
+                      <input value={editingContributo.dati?.ubicazione || ''}
+                        onChange={(e) => upd('ubicazione', e.target.value)}
+                        placeholder="Es. Binario 1 lato Milano"
+                        className="mt-1 border border-gray-200 rounded-xl px-3 py-2 w-full text-base" />
+                    </div>
+                  )}
+
+                  {/* STATO */}
+                  {mostra('stato') && sezione.stati.length > 0 && (
+                    <div>
+                      <label className="text-xs font-semibold text-gray-400 uppercase">Stato</label>
+                      <select value={editingContributo.dati?.stato || sezione.stati[0]}
+                        onChange={(e) => upd('stato', e.target.value)}
+                        className="mt-1 border border-gray-200 rounded-xl px-3 py-2 w-full text-base">
+                        {sezione.stati.map((s) => <option key={s} value={s}>{s}</option>)}
+                      </select>
+                    </div>
+                  )}
+
+                  {/* MODALITÀ ACCESSO — bagni */}
+                  {mostra('modalita_accesso') && (
+                    <div>
+                      <label className="text-xs font-semibold text-gray-400 uppercase">Modalità di accesso</label>
+                      <select value={editingContributo.dati?.modalita_accesso || MODALITA_ACCESSO[0]}
+                        onChange={(e) => upd('modalita_accesso', e.target.value)}
+                        className="mt-1 border border-gray-200 rounded-xl px-3 py-2 w-full text-base">
+                        {MODALITA_ACCESSO.map((v) => <option key={v} value={v}>{v}</option>)}
+                      </select>
+                    </div>
+                  )}
+
+                  {/* TIPOLOGIA ACCESSO — cancelletto */}
+                  {mostra('tipologia_accesso') && (
+                    <div>
+                      <label className="text-xs font-semibold text-gray-400 uppercase">Tipologia di accesso</label>
+                      <select value={editingContributo.dati?.tipologia_accesso || TIPOLOGIA_ACCESSO[0]}
+                        onChange={(e) => upd('tipologia_accesso', e.target.value)}
+                        className="mt-1 border border-gray-200 rounded-xl px-3 py-2 w-full text-base">
+                        {TIPOLOGIA_ACCESSO.map((v) => <option key={v} value={v}>{v}</option>)}
+                      </select>
+                    </div>
+                  )}
+
+                  {/* SERVIZI — equipaggi */}
+                  {mostra('servizi') && (
+                    <div className="flex flex-col gap-3">
+                      <label className="text-xs font-semibold text-gray-400 uppercase">Servizi</label>
+                      {[
+                        { key: 'microonde',    label: 'Microonde',    icon: <Microwave className="w-5 h-5" /> },
+                        { key: 'distributori', label: 'Distributori', icon: <Coffee    className="w-5 h-5" /> },
+                        { key: 'acqua',        label: 'Acqua',        icon: <Droplets  className="w-5 h-5" /> },
+                        { key: 'climatizzata', label: 'Climatizzata', icon: <Snowflake className="w-5 h-5" /> },
+                      ].map(({ key, label, icon }) => {
+                        const val = editingContributo.dati?.servizi?.[key]
+                                 ?? editingContributo.dati?.[key]
+                                 ?? false;
+                        return (
+                          <button key={key} type="button"
+                            onClick={() => {
+                              const servizi = { ...(editingContributo.dati?.servizi ?? {}), [key]: !val };
+                              setEditingContributo({ ...editingContributo, dati: { ...editingContributo.dati, servizi } });
+                            }}
+                            className={`flex items-center justify-between rounded-xl border px-4 py-3 transition-colors ${
+                              val ? 'bg-trenord-green text-white border-trenord-green' : 'bg-white border-gray-200 text-gray-700'}`}>
+                            <div className="flex items-center gap-3">{icon}{label}</div>
+                            <span>{val ? 'SI' : 'NO'}</span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  )}
+
+                  {/* DOCCE — spogliatoi */}
+                  {mostra('docce') && (() => {
+                    const val = editingContributo.dati?.servizi?.docce ?? false;
                     return (
-                      <button key={key} type="button"
-                        onClick={() => setEditingContributo({ ...editingContributo, dati: { ...editingContributo.dati, [key]: !val } })}
-                        className={`flex items-center justify-between rounded-xl border px-4 py-3 transition-colors ${val ? 'bg-trenord-green text-white border-trenord-green' : 'bg-white border-gray-200 text-gray-700'}`}>
-                        <div className="flex items-center gap-3">{icon}{label}</div>
+                      <button type="button"
+                        onClick={() => {
+                          const servizi = { ...(editingContributo.dati?.servizi ?? {}), docce: !val };
+                          setEditingContributo({ ...editingContributo, dati: { ...editingContributo.dati, servizi } });
+                        }}
+                        className={`flex items-center justify-between rounded-xl border px-4 py-3 transition-colors ${
+                          val ? 'bg-trenord-green text-white border-trenord-green' : 'bg-white border-gray-200 text-gray-700'}`}>
+                        <div className="flex items-center gap-3"><Droplets className="w-5 h-5" />Docce disponibili</div>
                         <span>{val ? 'SI' : 'NO'}</span>
                       </button>
                     );
-                  })}
-                </div>
+                  })()}
 
-                <div>
-                  <label className="text-xs font-semibold text-gray-400 uppercase">Note</label>
-                  <textarea value={editingContributo.dati?.note || ''}
-                    onChange={(e) => setEditingContributo({ ...editingContributo, dati: { ...editingContributo.dati, note: e.target.value } })}
-                    placeholder="Inserisci eventuali informazioni aggiuntive..."
-                    className="mt-1 border border-gray-200 rounded-xl px-3 py-2 w-full min-h-[120px] text-base" />
+                  {/* ARMADIETTI — spogliatoi */}
+                  {mostra('armadietti') && (() => {
+                    const val = editingContributo.dati?.servizi?.armadietti ?? false;
+                    return (
+                      <button type="button"
+                        onClick={() => {
+                          const servizi = { ...(editingContributo.dati?.servizi ?? {}), armadietti: !val };
+                          setEditingContributo({ ...editingContributo, dati: { ...editingContributo.dati, servizi } });
+                        }}
+                        className={`flex items-center justify-between rounded-xl border px-4 py-3 transition-colors ${
+                          val ? 'bg-trenord-green text-white border-trenord-green' : 'bg-white border-gray-200 text-gray-700'}`}>
+                        <div className="flex items-center gap-3"><Snowflake className="w-5 h-5" />Armadietti disponibili</div>
+                        <span>{val ? 'SI' : 'NO'}</span>
+                      </button>
+                    );
+                  })()}
+
+                  {/* FASCE ORARIE — segreteria e versamenti */}
+                  {mostra('fasce_orarie') && (
+                    <div className="flex flex-col gap-4">
+                      <div className="flex items-center justify-between">
+                        <label className="text-xs font-semibold text-gray-400 uppercase">Orari di apertura</label>
+                        <button type="button" onClick={addFasciaAdmin}
+                          className="text-sm text-trenord-green font-medium">+ Aggiungi fascia</button>
+                      </div>
+                      {(editingContributo?.dati?.fasce_orarie || []).map((fascia: any, index: number) => {
+                        const giorniAttuali = Array.isArray(fascia.giorni) ? fascia.giorni : [];
+                        return (
+                          <div key={index} className="border rounded-2xl p-4 flex flex-col gap-4">
+                            <div className="flex items-center justify-between">
+                              <span className="font-medium text-sm">Fascia {index + 1}</span>
+                              {(editingContributo?.dati?.fasce_orarie?.length || 0) > 1 && (
+                                <button type="button" onClick={() => removeFasciaAdmin(index)}
+                                  className="text-red-600 text-sm">Elimina</button>
+                              )}
+                            </div>
+                            <div className="grid grid-cols-4 gap-2">
+                              {GIORNI_SETTIMANA.map((giorno) => (
+                                <button key={giorno} type="button" onClick={() => toggleGiornoAdmin(index, giorno)}
+                                  className={`rounded-xl border py-2 text-sm ${giorniAttuali.includes(giorno) ? 'bg-trenord-green text-white' : 'bg-white'}`}>
+                                  {giorno}
+                                </button>
+                              ))}
+                            </div>
+                            <div className="grid grid-cols-2 gap-3">
+                              <div>
+                                <label className="text-xs text-gray-400 mb-1 block">Apertura</label>
+                                <input type="time" value={fascia.apertura || ''}
+                                  onChange={(e) => updateFasciaAdmin(index, 'apertura', e.target.value)}
+                                  className="border rounded-xl px-3 py-2 w-full text-base" />
+                              </div>
+                              <div>
+                                <label className="text-xs text-gray-400 mb-1 block">Chiusura</label>
+                                <input type="time" value={fascia.chiusura || ''}
+                                  onChange={(e) => updateFasciaAdmin(index, 'chiusura', e.target.value)}
+                                  className="border rounded-xl px-3 py-2 w-full text-base" />
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+
+                  {/* NOTE — sempre */}
+                  {mostra('note') && (
+                    <div>
+                      <label className="text-xs font-semibold text-gray-400 uppercase">Note</label>
+                      <textarea value={editingContributo.dati?.note || ''}
+                        onChange={(e) => upd('note', e.target.value)}
+                        placeholder="Eventuali informazioni aggiuntive..."
+                        className="mt-1 border border-gray-200 rounded-xl px-3 py-2 w-full min-h-[100px] text-base" />
+                    </div>
+                  )}
+
                 </div>
-              </div>
-            )}
+              );
+            })()}
 
             {/* ATTIVITA */}
             {editingContributo.tipo === 'attivita' && (
