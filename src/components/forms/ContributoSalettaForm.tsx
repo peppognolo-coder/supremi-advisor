@@ -13,11 +13,14 @@ import {
   Shirt,
   BookOpen,
   Banknote,
+  Plus,
+  Trash2,
 } from 'lucide-react';
 
 import toast from 'react-hot-toast';
 
 import { supabase } from '../../lib/supabase';
+import type { FasciaOraria } from '../../lib/getStatoApertura';
 
 interface Props {
   onBack: () => void;
@@ -27,24 +30,18 @@ interface Props {
 // =============================================================================
 // CONFIGURAZIONE SEZIONI DELLA LOCALITÀ
 //
-// Questa è la fonte di verità del componente.
-// Per aggiungere una nuova sezione basta aggiungere un oggetto qui sotto —
-// il resto del componente non va toccato.
+// Fonte di verità del componente. Per aggiungere una sezione: solo qui.
 //
-// Struttura di ogni sezione:
 //   id          → valore salvato nel database (stabile, non cambia mai)
-//   label       → testo mostrato all'utente (modificabile liberamente)
-//   description → descrizione breve (usata in futuro come tooltip o sottotitolo)
-//   icon        → componente Lucide da mostrare nella card di selezione
-//   ordine      → determina l'ordine di visualizzazione; indipendente dalla
-//                 posizione nell'array, così si può riordinare senza spostare oggetti
-//   attiva      → se false la sezione viene nascosta senza modificare la logica
-//   campi       → campi da mostrare nel form per questa sezione.
-//                 Per ora è solo una dichiarazione di intenzione: nel prossimo
-//                 step, questa proprietà guiderà il rendering dinamico dei campi,
-//                 eliminando qualsiasi blocco if/else nel componente.
+//   label       → testo mostrato all'utente
+//   description → descrizione breve (tooltip futuro)
+//   icon        → icona Lucide nella card di selezione
+//   ordine      → ordine di visualizzazione, indipendente dalla posizione nell'array
+//   attiva      → false = nascosta senza toccare la logica
+//   stati       → opzioni della select Stato per questa sezione ([] = campo assente)
+//   campi       → campi da mostrare, nell'ordine in cui appaiono nel form
 //
-// Convenzione per gli id: minuscolo, italiano, nessuno spazio.
+// Convenzione id: minuscolo, italiano, nessuno spazio.
 // =============================================================================
 
 const areeLocalita = [
@@ -55,7 +52,6 @@ const areeLocalita = [
     icon: Users,
     ordine: 1,
     attiva: true,
-    // stati specifici per la saletta equipaggi
     stati: ['Aperta', 'Chiusa', 'In pulizia', 'Guasto'],
     campi: ['codice', 'ubicazione', 'stato', 'servizi', 'note'],
   },
@@ -66,9 +62,7 @@ const areeLocalita = [
     icon: Bath,
     ordine: 2,
     attiva: true,
-    // i bagni non hanno "Guasto" come stato distinto — usano stato generale
     stati: ['Aperti', 'Chiusi', 'In pulizia'],
-    // modalita_accesso sostituisce accessibilita: l'info utile è come si entra
     campi: ['ubicazione', 'stato', 'modalita_accesso', 'note'],
   },
   {
@@ -78,9 +72,7 @@ const areeLocalita = [
     icon: DoorOpen,
     ordine: 3,
     attiva: true,
-    // il cancelletto non ha uno "stato operativo" rilevante
     stati: [],
-    // tipologia_accesso descrive il meccanismo (badge, tastierino, ecc.)
     campi: ['codice', 'ubicazione', 'tipologia_accesso', 'note'],
   },
   {
@@ -101,7 +93,6 @@ const areeLocalita = [
     ordine: 5,
     attiva: true,
     stati: ['Aperti', 'Chiusi', 'In pulizia'],
-    // docce e armadietti al posto di accessibilita: info concreta e operativa
     campi: ['ubicazione', 'stato', 'docce', 'armadietti', 'note'],
   },
   {
@@ -112,8 +103,9 @@ const areeLocalita = [
     ordine: 6,
     attiva: true,
     stati: ['Aperta', 'Chiusa'],
-    // orari è la vera informazione utile per segreteria e versamenti
-    campi: ['ubicazione', 'stato', 'orari', 'note'],
+    // fasce_orarie sostituisce il campo orari testuale:
+    // stesso sistema delle attività, compatibile con getStatoApertura
+    campi: ['ubicazione', 'stato', 'fasce_orarie', 'note'],
   },
   {
     id: 'versamenti',
@@ -123,24 +115,20 @@ const areeLocalita = [
     ordine: 7,
     attiva: true,
     stati: ['Aperto', 'Chiuso'],
-    campi: ['ubicazione', 'stato', 'orari', 'note'],
+    campi: ['ubicazione', 'stato', 'fasce_orarie', 'note'],
   },
 ] as const;
 
-// Tipo derivato automaticamente dalla configurazione.
-// Quando si aggiunge un'area all'array, il tipo si aggiorna senza intervento.
 type AreaId = typeof areeLocalita[number]['id'];
 
-// =========================
-// STATI SALETTA
-// =========================
+const MODALITA_ACCESSO  = ['Libero', 'Chiave', 'Codice', 'Badge'];
+const TIPOLOGIA_ACCESSO = ['Badge', 'Tastierino', 'Citofono', 'Apertura manuale'];
 
-const stati = [
-  'Aperta',
-  'Chiusa',
-  'Pulizie',
-  'Guasto',
-];
+const GIORNI_SETTIMANA = ['Lun', 'Mar', 'Mer', 'Gio', 'Ven', 'Sab', 'Dom'];
+
+function nuovaFascia(): FasciaOraria {
+  return { giorni: [], apertura: '', chiusura: '' };
+}
 
 export default function ContributoSalettaForm({
   onBack,
@@ -151,51 +139,74 @@ export default function ContributoSalettaForm({
   // FORM STATE
   // =========================
 
-  const [stazione, setStazione] =
-    useState(stazionePredefinita || '');
+  const [stazione, setStazione]         = useState(stazionePredefinita || '');
+  const [areaId, setAreaId]             = useState<AreaId>(areeLocalita[0].id);
+  const [codice, setCodice]             = useState('');
+  const [ubicazione, setUbicazione]     = useState('');
+  const [stato, setStato]               = useState('');
+  const [note, setNote]                 = useState('');
 
-  // areaId contiene l'id dell'area selezionata, che viene salvato nel payload
-  // come campo "tipo". Corrisponde esattamente al vecchio array di stringhe:
-  // 'Equipaggi' → 'equipaggi', 'Bagni' → 'bagni', ecc.
-  const [areaId, setAreaId] =
-    useState<AreaId>(areeLocalita[0].id);
+  // Servizi (equipaggi)
+  const [microonde, setMicroonde]       = useState(false);
+  const [distributori, setDistributori] = useState(false);
+  const [acqua, setAcqua]               = useState(false);
+  const [climatizzata, setClimatizzata] = useState(false);
 
-  const [codice, setCodice] =
-    useState('');
+  // Campi contestuali
+  const [modalitaAccesso, setModalitaAccesso]   = useState(MODALITA_ACCESSO[0]);
+  const [tipologiaAccesso, setTipologiaAccesso] = useState(TIPOLOGIA_ACCESSO[0]);
+  const [docce, setDocce]                       = useState(false);
+  const [armadietti, setArmadietti]             = useState(false);
 
-  const [ubicazione, setUbicazione] =
-    useState('');
+  // Fasce orarie (segreteria e versamenti) — stesso tipo e logica delle attività
+  const [fasceOrarie, setFasceOrarie] = useState<FasciaOraria[]>([nuovaFascia()]);
 
-  const [stato, setStato] =
-    useState(stati[0]);
+  const [loading, setLoading] = useState(false);
 
-  const [note, setNote] =
-    useState('');
+  const sezioneAttiva = areeLocalita.find((s) => s.id === areaId)!;
+  const mostra = (campo: string) =>
+    (sezioneAttiva.campi as readonly string[]).includes(campo);
 
-  const [microonde, setMicroonde] =
-    useState(false);
+  function handleAreaChange(id: AreaId) {
+    setAreaId(id);
+    const sezione = areeLocalita.find((s) => s.id === id)!;
+    setStato(sezione.stati[0] ?? '');
+  }
 
-  const [distributori, setDistributori] =
-    useState(false);
+  // =========================
+  // GESTIONE FASCE ORARIE
+  // Identico a ContributoAttivitaForm
+  // =========================
 
-  const [acqua, setAcqua] =
-    useState(false);
+  function addFascia() {
+    setFasceOrarie([...fasceOrarie, nuovaFascia()]);
+  }
 
-  const [climatizzata, setClimatizzata] =
-    useState(false);
+  function removeFascia(index: number) {
+    setFasceOrarie(fasceOrarie.filter((_, i) => i !== index));
+  }
 
-  const [loading, setLoading] =
-    useState(false);
+  function updateFascia(index: number, field: string, value: any) {
+    const updated = [...fasceOrarie];
+    updated[index] = { ...updated[index], [field]: value };
+    setFasceOrarie(updated);
+  }
+
+  function toggleGiorno(fasciaIndex: number, giorno: string) {
+    const fascia = fasceOrarie[fasciaIndex];
+    const nuoviGiorni = fascia.giorni.includes(giorno)
+      ? fascia.giorni.filter((g) => g !== giorno)
+      : [...fascia.giorni, giorno];
+    updateFascia(fasciaIndex, 'giorni', nuoviGiorni);
+  }
 
   // =========================
   // SUBMIT
-  // Payload identico a prima. Il campo "tipo" dentro dati contiene l'id
-  // dell'area selezionata. Nessuna modifica a Supabase, al database o
-  // alla logica di approvazione in AdminScreen.
+  // Il payload include fasce_orarie nello stesso formato delle attività,
+  // compatibile con getStatoApertura. Nessuna modifica al database.
   // =========================
 
   async function submit() {
-
     if (!stazione.trim()) {
       toast.error('Inserisci una stazione');
       return;
@@ -204,29 +215,29 @@ export default function ContributoSalettaForm({
     setLoading(true);
 
     try {
-
       const payload = {
-        stazione:       stazione.trim(),
-        tipo:           areaId,   // id area — stesso campo di prima
-        codice_accesso: codice.trim(),
-        ubicazione:     ubicazione.trim(),
+        stazione:          stazione.trim(),
+        tipo:              areaId,
+        codice_accesso:    codice.trim(),
+        ubicazione:        ubicazione.trim(),
         stato,
-        note:           note.trim(),
+        modalita_accesso:  modalitaAccesso,
+        tipologia_accesso: tipologiaAccesso,
+        fasce_orarie:      fasceOrarie,
+        note:              note.trim(),
         servizi: {
           microonde,
           distributori,
           acqua,
           climatizzata,
+          docce,
+          armadietti,
         },
       };
 
       const { error } = await supabase
         .from('contributi')
-        .insert({
-          tipo:  'saletta',
-          dati:  payload,
-          stato: 'pending',
-        });
+        .insert({ tipo: 'saletta', dati: payload, stato: 'pending' });
 
       if (error) {
         console.error(error);
@@ -247,7 +258,6 @@ export default function ContributoSalettaForm({
   }
 
   return (
-
     <div className="flex flex-col gap-4">
 
       {/* BACK */}
@@ -271,55 +281,41 @@ export default function ContributoSalettaForm({
         </p>
       </div>
 
-      {/* SEZIONE DELLA LOCALITÀ
-          Card selezionabili touch-friendly, generate dalla configurazione
-          areeLocalita. Per aggiungere una sezione: solo l'array sopra.
-          Nel prossimo step, il cambio di areaId mostrerà i campi definiti
-          in sezione.campi, senza if/else nel JSX. */}
+      {/* SEZIONE DELLA LOCALITÀ */}
       <div>
-
         <label className="text-xs font-semibold text-gray-400 uppercase">
           Sezione della località
         </label>
-
         <div className="mt-2 flex flex-col gap-2">
-
           {[...areeLocalita]
             .filter((s) => s.attiva)
             .sort((a, b) => a.ordine - b.ordine)
             .map((sezione) => {
-
-            const Icon = sezione.icon;
-            const selected = areaId === sezione.id;
-
-            return (
-              <button
-                key={sezione.id}
-                type="button"
-                onClick={() => setAreaId(sezione.id)}
-                className={`flex items-center gap-3 rounded-xl border px-4 py-3 text-left transition-colors ${
-                  selected
-                    ? 'bg-trenord-green text-white border-trenord-green'
-                    : 'bg-white border-gray-200 text-gray-700 hover:border-trenord-green/50'
-                }`}
-              >
-                <Icon className="w-5 h-5 flex-shrink-0" />
-                <span className="font-medium">{sezione.label}</span>
-              </button>
-            );
-          })}
-
+              const Icon = sezione.icon;
+              const selected = areaId === sezione.id;
+              return (
+                <button
+                  key={sezione.id}
+                  type="button"
+                  onClick={() => handleAreaChange(sezione.id)}
+                  className={`flex items-center gap-3 rounded-xl border px-4 py-3 text-left transition-colors ${
+                    selected
+                      ? 'bg-trenord-green text-white border-trenord-green'
+                      : 'bg-white border-gray-200 text-gray-700 hover:border-trenord-green/50'
+                  }`}
+                >
+                  <Icon className="w-5 h-5 flex-shrink-0" />
+                  <span className="font-medium">{sezione.label}</span>
+                </button>
+              );
+            })}
         </div>
-
       </div>
 
-      {/* FORM
-          Per ora i campi sono gli stessi per tutte le sezioni.
-          Nel prossimo step ogni blocco diventerà condizionale su sezione.campi,
-          guidato dalla configurazione invece che da if/else espliciti. */}
+      {/* FORM DINAMICO */}
       <div className="bg-white rounded-2xl border border-gray-100 p-4 flex flex-col gap-4">
 
-        {/* STAZIONE */}
+        {/* STAZIONE — sempre presente */}
         <div>
           <label className="text-xs font-semibold text-gray-400 uppercase">
             Stazione
@@ -333,96 +329,213 @@ export default function ContributoSalettaForm({
         </div>
 
         {/* CODICE */}
-        <div>
-          <label className="text-xs font-semibold text-gray-400 uppercase">
-            Codice accesso
-          </label>
-          <input
-            value={codice}
-            onChange={(e) => setCodice(e.target.value)}
-            placeholder="Es. 14579B"
-            className="mt-1 border border-gray-200 rounded-xl px-3 py-2 w-full text-base"
-          />
-        </div>
+        {mostra('codice') && (
+          <div>
+            <label className="text-xs font-semibold text-gray-400 uppercase">
+              Codice accesso
+            </label>
+            <input
+              value={codice}
+              onChange={(e) => setCodice(e.target.value)}
+              placeholder="Es. 14579B"
+              className="mt-1 border border-gray-200 rounded-xl px-3 py-2 w-full text-base"
+            />
+          </div>
+        )}
 
         {/* UBICAZIONE */}
-        <div>
-          <label className="text-xs font-semibold text-gray-400 uppercase">
-            Ubicazione
-          </label>
-          <input
-            value={ubicazione}
-            onChange={(e) => setUbicazione(e.target.value)}
-            placeholder="Es. Binario 1 lato Milano"
-            className="mt-1 border border-gray-200 rounded-xl px-3 py-2 w-full text-base"
-          />
-        </div>
+        {mostra('ubicazione') && (
+          <div>
+            <label className="text-xs font-semibold text-gray-400 uppercase">
+              Ubicazione
+            </label>
+            <input
+              value={ubicazione}
+              onChange={(e) => setUbicazione(e.target.value)}
+              placeholder="Es. Binario 1 lato Milano"
+              className="mt-1 border border-gray-200 rounded-xl px-3 py-2 w-full text-base"
+            />
+          </div>
+        )}
 
-        {/* STATO */}
-        <div>
-          <label className="text-xs font-semibold text-gray-400 uppercase">
-            Stato
-          </label>
-          <select
-            value={stato}
-            onChange={(e) => setStato(e.target.value)}
-            className="mt-1 border border-gray-200 rounded-xl px-3 py-2 w-full text-base"
-          >
-            {stati.map((s) => (
-              <option key={s}>{s}</option>
+        {/* STATO — opzioni specifiche per sezione */}
+        {mostra('stato') && sezioneAttiva.stati.length > 0 && (
+          <div>
+            <label className="text-xs font-semibold text-gray-400 uppercase">
+              Stato
+            </label>
+            <select
+              value={stato}
+              onChange={(e) => setStato(e.target.value)}
+              className="mt-1 border border-gray-200 rounded-xl px-3 py-2 w-full text-base"
+            >
+              {sezioneAttiva.stati.map((s) => (
+                <option key={s}>{s}</option>
+              ))}
+            </select>
+          </div>
+        )}
+
+        {/* MODALITÀ ACCESSO — bagni */}
+        {mostra('modalita_accesso') && (
+          <div>
+            <label className="text-xs font-semibold text-gray-400 uppercase">
+              Modalità di accesso
+            </label>
+            <select
+              value={modalitaAccesso}
+              onChange={(e) => setModalitaAccesso(e.target.value)}
+              className="mt-1 border border-gray-200 rounded-xl px-3 py-2 w-full text-base"
+            >
+              {MODALITA_ACCESSO.map((v) => (
+                <option key={v}>{v}</option>
+              ))}
+            </select>
+          </div>
+        )}
+
+        {/* TIPOLOGIA ACCESSO — cancelletto */}
+        {mostra('tipologia_accesso') && (
+          <div>
+            <label className="text-xs font-semibold text-gray-400 uppercase">
+              Tipologia di accesso
+            </label>
+            <select
+              value={tipologiaAccesso}
+              onChange={(e) => setTipologiaAccesso(e.target.value)}
+              className="mt-1 border border-gray-200 rounded-xl px-3 py-2 w-full text-base"
+            >
+              {TIPOLOGIA_ACCESSO.map((v) => (
+                <option key={v}>{v}</option>
+              ))}
+            </select>
+          </div>
+        )}
+
+        {/* SERVIZI — equipaggi */}
+        {mostra('servizi') && (
+          <div className="flex flex-col gap-3">
+            <label className="text-xs font-semibold text-gray-400 uppercase">
+              Servizi
+            </label>
+            <ServiceToggle active={microonde}     onClick={() => setMicroonde(!microonde)}         icon={<Microwave className="w-5 h-5" />} label="Microonde" />
+            <ServiceToggle active={distributori}  onClick={() => setDistributori(!distributori)}   icon={<Coffee    className="w-5 h-5" />} label="Distributori" />
+            <ServiceToggle active={acqua}         onClick={() => setAcqua(!acqua)}                 icon={<Droplets  className="w-5 h-5" />} label="Acqua" />
+            <ServiceToggle active={climatizzata}  onClick={() => setClimatizzata(!climatizzata)}   icon={<Snowflake className="w-5 h-5" />} label="Climatizzata" />
+          </div>
+        )}
+
+        {/* DOCCE — spogliatoi */}
+        {mostra('docce') && (
+          <ServiceToggle active={docce} onClick={() => setDocce(!docce)}
+            icon={<Droplets className="w-5 h-5" />} label="Docce disponibili" />
+        )}
+
+        {/* ARMADIETTI — spogliatoi */}
+        {mostra('armadietti') && (
+          <ServiceToggle active={armadietti} onClick={() => setArmadietti(!armadietti)}
+            icon={<Shirt className="w-5 h-5" />} label="Armadietti disponibili" />
+        )}
+
+        {/* FASCE ORARIE — segreteria e versamenti
+            Stesso componente e stessa struttura dati delle attività:
+            compatibile con getStatoApertura out of the box. */}
+        {mostra('fasce_orarie') && (
+          <div className="flex flex-col gap-4">
+
+            <div className="flex items-center justify-between">
+              <label className="text-xs font-semibold text-gray-400 uppercase">
+                Orari di apertura
+              </label>
+              <button
+                type="button"
+                onClick={addFascia}
+                className="flex items-center gap-2 text-sm text-trenord-green font-medium"
+              >
+                <Plus className="w-4 h-4" />
+                Aggiungi fascia
+              </button>
+            </div>
+
+            {fasceOrarie.map((fascia, index) => (
+              <div
+                key={index}
+                className="border border-gray-200 rounded-2xl p-4 flex flex-col gap-4"
+              >
+
+                <div className="flex items-center justify-between">
+                  <span className="font-medium text-gray-800 text-sm">
+                    Fascia {index + 1}
+                  </span>
+                  {fasceOrarie.length > 1 && (
+                    <button type="button" onClick={() => removeFascia(index)}>
+                      <Trash2 className="w-4 h-4 text-red-500" />
+                    </button>
+                  )}
+                </div>
+
+                {/* Giorni */}
+                <div className="grid grid-cols-4 gap-2">
+                  {GIORNI_SETTIMANA.map((giorno) => {
+                    const active = fascia.giorni.includes(giorno);
+                    return (
+                      <button
+                        key={giorno}
+                        type="button"
+                        onClick={() => toggleGiorno(index, giorno)}
+                        className={`rounded-xl border py-2 text-sm font-medium transition-colors ${
+                          active
+                            ? 'bg-trenord-green text-white border-trenord-green'
+                            : 'bg-white border-gray-200 text-gray-700'
+                        }`}
+                      >
+                        {giorno}
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {/* Orari */}
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="text-xs text-gray-400 mb-1 block">Apertura</label>
+                    <input
+                      type="time"
+                      value={fascia.apertura}
+                      onChange={(e) => updateFascia(index, 'apertura', e.target.value)}
+                      className="border border-gray-200 rounded-xl px-3 py-2 w-full text-base"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs text-gray-400 mb-1 block">Chiusura</label>
+                    <input
+                      type="time"
+                      value={fascia.chiusura}
+                      onChange={(e) => updateFascia(index, 'chiusura', e.target.value)}
+                      className="border border-gray-200 rounded-xl px-3 py-2 w-full text-base"
+                    />
+                  </div>
+                </div>
+
+              </div>
             ))}
-          </select>
-        </div>
+          </div>
+        )}
 
-        {/* SERVIZI */}
-        <div className="flex flex-col gap-3">
-
-          <label className="text-xs font-semibold text-gray-400 uppercase">
-            Servizi
-          </label>
-
-          <ServiceToggle
-            active={microonde}
-            onClick={() => setMicroonde(!microonde)}
-            icon={<Microwave className="w-5 h-5" />}
-            label="Microonde"
-          />
-
-          <ServiceToggle
-            active={distributori}
-            onClick={() => setDistributori(!distributori)}
-            icon={<Coffee className="w-5 h-5" />}
-            label="Distributori"
-          />
-
-          <ServiceToggle
-            active={acqua}
-            onClick={() => setAcqua(!acqua)}
-            icon={<Droplets className="w-5 h-5" />}
-            label="Acqua"
-          />
-
-          <ServiceToggle
-            active={climatizzata}
-            onClick={() => setClimatizzata(!climatizzata)}
-            icon={<Snowflake className="w-5 h-5" />}
-            label="Climatizzata"
-          />
-
-        </div>
-
-        {/* NOTE */}
-        <div>
-          <label className="text-xs font-semibold text-gray-400 uppercase">
-            Note
-          </label>
-          <textarea
-            value={note}
-            onChange={(e) => setNote(e.target.value)}
-            placeholder="Inserisci eventuali informazioni aggiuntive..."
-            className="mt-1 border border-gray-200 rounded-xl px-3 py-2 w-full min-h-[120px] text-base"
-          />
-        </div>
+        {/* NOTE — sempre presente */}
+        {mostra('note') && (
+          <div>
+            <label className="text-xs font-semibold text-gray-400 uppercase">
+              Note
+            </label>
+            <textarea
+              value={note}
+              onChange={(e) => setNote(e.target.value)}
+              placeholder="Inserisci eventuali informazioni aggiuntive..."
+              className="mt-1 border border-gray-200 rounded-xl px-3 py-2 w-full min-h-[120px] text-base"
+            />
+          </div>
+        )}
 
         {/* SUBMIT */}
         <button
@@ -448,8 +561,12 @@ function ServiceToggle({
   onClick,
   icon,
   label,
-}: any) {
-
+}: {
+  active: boolean;
+  onClick: () => void;
+  icon: React.ReactNode;
+  label: string;
+}) {
   return (
     <button
       type="button"
