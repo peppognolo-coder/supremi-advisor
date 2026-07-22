@@ -2,15 +2,13 @@
  * verify-totp
  *
  * Verifica un codice TOTP a 6 cifre generato da Google Authenticator.
- * La chiave segreta è in TOTP_SECRET (variabile d'ambiente Netlify).
- * Non raccoglie dati personali — non sa chi ha inserito il codice.
+ * Usa otplib v13 con l'API corretta (named exports, verifySync).
  *
  * POST body: { token: "123456" }
  * Response:  { ok: true } | { ok: false, error: "..." }
  */
 
-import otplib from 'otplib';
-const { authenticator } = otplib;
+import { verifySync } from 'otplib';
 import type { Handler, HandlerEvent } from '@netlify/functions';
 
 function json(statusCode: number, body: object) {
@@ -46,11 +44,10 @@ export const handler: Handler = async (event: HandlerEvent) => {
     return json(400, { ok: false, error: 'Il codice deve essere di 6 cifre.' });
   }
 
-  // otplib verifica il token con finestra di ±1 step (±30 secondi)
-  // per tollerare piccoli disallineamenti di orologio
-  const valid = authenticator.verify({ token, secret });
+  // verifySync restituisce { valid: boolean, ... }
+  const result = verifySync({ type: 'totp', token, secret });
 
-  if (!valid) {
+  if (!result.valid) {
     return json(401, { ok: false, error: 'Codice non valido o scaduto.' });
   }
 
