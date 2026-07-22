@@ -23,6 +23,8 @@ import {
   Copy,
   X,
   Pencil,
+  QrCode,
+  Smartphone,
 } from 'lucide-react';
 
 import { supabase } from '../lib/supabase';
@@ -132,6 +134,36 @@ export default function AdminScreen({ adminPin }: Props) {
     showProblemiManager,
     setShowProblemiManager,
   ] = useState(false);
+
+  // Stato modal TOTP
+  const [showTotpModal, setShowTotpModal]   = useState(false);
+  const [totpQr, setTotpQr]                 = useState<string | null>(null);
+  const [totpSecret, setTotpSecret]         = useState<string | null>(null);
+  const [totpLoading, setTotpLoading]       = useState(false);
+  const [totpError, setTotpError]           = useState('');
+
+  async function caricaQrTotp() {
+    setTotpLoading(true);
+    setTotpError('');
+    try {
+      const res = await fetch('/.netlify/functions/get-totp-qr', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ adminPin }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setTotpError(data.error ?? 'Errore caricamento QR.');
+        return;
+      }
+      setTotpQr(data.qrDataUrl);
+      setTotpSecret(data.secret);
+    } catch {
+      setTotpError('Errore di rete.');
+    } finally {
+      setTotpLoading(false);
+    }
+  }
 
   const [stazioniInitialFiltro, setStazioniInitialFiltro] =
     useState<'tutte' | 'attive' | 'disattivate'>('tutte');
@@ -1075,7 +1107,7 @@ export default function AdminScreen({ adminPin }: Props) {
 
     return (
       <div className="h-full min-h-0 overflow-y-auto">
-      <div className="flex flex-col gap-4 pb-24">
+      <div className="flex flex-col gap-4">
 
         {/* BACK */}
         <button
@@ -1108,7 +1140,7 @@ export default function AdminScreen({ adminPin }: Props) {
 
     return (
       <div className="h-full min-h-0 overflow-y-auto">
-      <div className="flex flex-col gap-4 pb-24">
+      <div className="flex flex-col gap-4">
 
         {/* BACK */}
         <button
@@ -1137,7 +1169,7 @@ export default function AdminScreen({ adminPin }: Props) {
 
     return (
       <div className="h-full min-h-0 overflow-y-auto">
-      <div className="flex flex-col gap-4 pb-24">
+      <div className="flex flex-col gap-4">
 
         {/* BACK */}
         <button
@@ -1166,7 +1198,7 @@ export default function AdminScreen({ adminPin }: Props) {
   if (showProblemiManager) {
     return (
       <div className="h-full min-h-0 overflow-y-auto">
-      <div className="flex flex-col gap-4 pb-24">
+      <div className="flex flex-col gap-4">
         <button
           onClick={() => setShowProblemiManager(false)}
           className="self-start flex items-center gap-2 px-3 py-2 rounded-xl bg-white border border-gray-200 text-sm text-gray-700 hover:bg-gray-50"
@@ -1184,7 +1216,7 @@ export default function AdminScreen({ adminPin }: Props) {
 
   return (
     <div className="h-full min-h-0 overflow-y-auto">
-    <div className="flex flex-col gap-4 pb-24">
+    <div className="flex flex-col gap-4">
 
       <button
         onClick={() =>
@@ -1218,7 +1250,7 @@ export default function AdminScreen({ adminPin }: Props) {
     <>
 
       <div className="h-full min-h-0 overflow-y-auto">
-      <div className="flex flex-col gap-5 pb-24">
+      <div className="flex flex-col gap-5">
 
         {/* TITLE */}
         <div>
@@ -1578,6 +1610,15 @@ export default function AdminScreen({ adminPin }: Props) {
           >
             <AlertTriangle className="w-5 h-5" />
             <span className="font-medium">Problemi salette</span>
+          </button>
+
+          {/* AUTHENTICATOR */}
+          <button
+            onClick={() => { setShowTotpModal(true); caricaQrTotp(); }}
+            className="flex items-center gap-3 p-3 rounded-xl bg-gray-800 text-white hover:opacity-90 transition-opacity"
+          >
+            <Smartphone className="w-5 h-5" />
+            <span className="font-medium">Configura Authenticator</span>
           </button>
 
         </div>
@@ -3492,6 +3533,108 @@ export default function AdminScreen({ adminPin }: Props) {
 
           </div>
 
+        </div>
+      )}
+
+      {/* MODAL TOTP — Configura Authenticator */}
+      {showTotpModal && (
+        <div
+          className="fixed inset-0 bg-black/50 z-50 flex items-end sm:items-center justify-center p-4"
+          onClick={(e) => { if (e.target === e.currentTarget) setShowTotpModal(false); }}
+        >
+          <div className="bg-white rounded-3xl w-full max-w-sm flex flex-col gap-5 p-6">
+
+            {/* HEADER */}
+            <div className="flex items-start justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-2xl bg-gray-900 flex items-center justify-center">
+                  <QrCode className="w-5 h-5 text-white" />
+                </div>
+                <div>
+                  <h2 className="font-bold text-gray-900">Configura Authenticator</h2>
+                  <p className="text-xs text-gray-400 mt-0.5">Google Authenticator o Authy</p>
+                </div>
+              </div>
+              <button onClick={() => setShowTotpModal(false)}>
+                <X className="w-5 h-5 text-gray-400" />
+              </button>
+            </div>
+
+            {totpLoading && (
+              <div className="flex items-center justify-center py-8">
+                <div className="w-8 h-8 border-2 border-gray-900 border-t-transparent rounded-full animate-spin" />
+              </div>
+            )}
+
+            {totpError && (
+              <div className="bg-red-50 border border-red-200 rounded-xl px-4 py-3 text-sm text-red-700">
+                {totpError}
+              </div>
+            )}
+
+            {totpQr && !totpLoading && (
+              <div className="flex flex-col gap-4">
+
+                {/* ISTRUZIONI */}
+                <div className="bg-gray-50 rounded-xl p-4 flex flex-col gap-2 text-sm text-gray-700">
+                  <p className="font-semibold">Come configurare:</p>
+                  <ol className="list-decimal list-inside space-y-1 text-gray-600">
+                    <li>Apri Google Authenticator o Authy</li>
+                    <li>Tocca "+" e scegli "Scansiona QR"</li>
+                    <li>Inquadra il codice qui sotto</li>
+                    <li>Distribuisci questa schermata al personale autorizzato</li>
+                  </ol>
+                </div>
+
+                {/* QR CODE */}
+                <div className="flex flex-col items-center gap-3">
+                  <img
+                    src={totpQr}
+                    alt="QR Code Authenticator"
+                    className="w-52 h-52 rounded-2xl border border-gray-200"
+                  />
+                  <p className="text-xs text-gray-400 text-center">
+                    Ogni codice è valido 30 secondi
+                  </p>
+                </div>
+
+                {/* CHIAVE MANUALE — fallback se fotocamera non funziona */}
+                {totpSecret && (
+                  <div>
+                    <p className="text-xs font-semibold text-gray-400 uppercase mb-1">
+                      Chiave manuale (alternativa al QR)
+                    </p>
+                    <div className="bg-gray-100 rounded-xl px-4 py-3 flex items-center justify-between gap-2">
+                      <span className="font-mono text-sm text-gray-800 break-all">
+                        {totpSecret}
+                      </span>
+                      <button
+                        onClick={() => navigator.clipboard.writeText(totpSecret)}
+                        className="flex-shrink-0"
+                      >
+                        <Copy className="w-4 h-4 text-gray-400" />
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {/* AVVISO */}
+                <div className="bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 text-xs text-amber-800">
+                  ⚠️ Non condividere la chiave manuale. Chiunque la possieda può generare codici validi.
+                  Distribuisci solo lo screenshot del QR.
+                </div>
+
+                <button
+                  onClick={() => setShowTotpModal(false)}
+                  className="bg-gray-900 text-white rounded-xl py-3 font-medium"
+                >
+                  Chiudi
+                </button>
+
+              </div>
+            )}
+
+          </div>
         </div>
       )}
 
