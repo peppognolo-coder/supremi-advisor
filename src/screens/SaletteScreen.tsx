@@ -129,7 +129,15 @@ export default function SaletteScreen({
       setLoading(true);
 
       const [{ data, error }, { data: stazioniData }] = await Promise.all([
-        supabase.from('salette').select('*'),
+        supabase.from('salette').select(
+          // codice_accesso escluso intenzionalmente: non deve mai arrivare
+          // al client. Viene fornito solo dalla Netlify Function
+          // get-codice-saletta dopo verifica del CID.
+          'id, stazione_id, tipo, ubicazione, stato, note, ' +
+          'microonde, distributori, acqua, climatizzata, ' +
+          'operatore, attiva, updated_at, stazione, ' +
+          'has_codice:codice_accesso.not.is(null)'
+        ),
         supabase.from('stazioni').select('nome, lat, lng'),
       ]);
 
