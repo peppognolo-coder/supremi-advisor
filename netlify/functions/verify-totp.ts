@@ -9,7 +9,8 @@
  * Response:  { ok: true } | { ok: false, error: "..." }
  */
 
-import { authenticator } from 'otplib';
+import otplib from 'otplib';
+const { authenticator } = otplib;
 import type { Handler, HandlerEvent } from '@netlify/functions';
 
 function json(statusCode: number, body: object) {
