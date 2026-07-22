@@ -310,10 +310,11 @@ export default function SalettaCard({
       {/* MODAL CODICE DI ACCESSO — verifica TOTP */}
       {codiceModalSalettaId && (
         <div
-          className="fixed inset-0 bg-black/50 z-50 flex items-end sm:items-center justify-center p-4"
+          className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4"
+          style={{ overscrollBehavior: 'contain' }}
           onClick={(e) => { if (e.target === e.currentTarget) chiudiModalCodice(); }}
         >
-          <div className="bg-white rounded-3xl w-full max-w-sm flex flex-col gap-5 p-6">
+          <div className="bg-white rounded-3xl w-full max-w-sm flex flex-col gap-5 p-6 max-h-[80vh] overflow-y-auto">
 
             {/* HEADER */}
             <div className="flex items-start justify-between">
