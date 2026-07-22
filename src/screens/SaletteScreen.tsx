@@ -129,15 +129,7 @@ export default function SaletteScreen({
       setLoading(true);
 
       const [{ data, error }, { data: stazioniData }] = await Promise.all([
-        supabase.from('salette').select(
-          // codice_accesso escluso intenzionalmente: non deve mai arrivare
-          // al client. Viene fornito solo dalla Netlify Function
-          // get-codice-saletta dopo verifica del CID.
-          'id, stazione_id, tipo, ubicazione, stato, note, ' +
-          'microonde, distributori, acqua, climatizzata, ' +
-          'operatore, attiva, updated_at, stazione, ' +
-          'has_codice:codice_accesso.not.is(null)'
-        ),
+        supabase.from('salette_public').select('*'),
         supabase.from('stazioni').select('nome, lat, lng'),
       ]);
 
@@ -154,6 +146,8 @@ export default function SaletteScreen({
       const groupedMap = new Map<string, GroupedSaletta>();
 
       (data ?? []).forEach((saletta) => {
+        // has_codice è già calcolato dalla view salette_public.
+        // codice_accesso non arriva mai nel payload.
         const normalizedKey = saletta.stazione?.trim().toLowerCase();
         if (!groupedMap.has(normalizedKey)) {
           groupedMap.set(normalizedKey, { stazione: saletta.stazione, salette: [] });
