@@ -1,15 +1,15 @@
 /**
  * get-totp-qr
  *
- * Genera il QR code da mostrare nel pannello admin per configurare
- * Google Authenticator. Protetto da PIN admin.
+ * Genera il QR code per configurare Google Authenticator.
+ * Usa otplib v13 con l'API corretta (generateURI).
+ * Protetto da PIN admin.
  *
  * POST body: { adminPin: "..." }
  * Response:  { qrDataUrl: "data:image/png;base64,..." }
  */
 
-import otplib from 'otplib';
-const { authenticator } = otplib;
+import { generateURI } from 'otplib';
 import QRCode from 'qrcode';
 import type { Handler, HandlerEvent } from '@netlify/functions';
 
@@ -27,8 +27,8 @@ export const handler: Handler = async (event: HandlerEvent) => {
     return json(405, { error: 'Method not allowed' });
   }
 
-  const adminPin  = process.env.ADMIN_PIN;
-  const secret    = process.env.TOTP_SECRET;
+  const adminPin = process.env.ADMIN_PIN;
+  const secret   = process.env.TOTP_SECRET;
 
   if (!secret) {
     return json(500, { error: 'TOTP_SECRET non configurato. Aggiungilo alle variabili Netlify.' });
@@ -41,19 +41,19 @@ export const handler: Handler = async (event: HandlerEvent) => {
     return json(400, { error: 'Body non valido.' });
   }
 
-  // Verifica PIN admin
   if (!body.adminPin || body.adminPin !== adminPin) {
     return json(403, { error: 'PIN admin non valido.' });
   }
 
-  // Genera l'URL otpauth:// compatibile con Google Authenticator, Authy, ecc.
-  const otpauthUrl = authenticator.keyuri(
-    'SupremiAdvisor',   // account (mostrato nell'app authenticator)
-    'Trenord',          // issuer (mostrato nell'app authenticator)
-    secret
-  );
+  // Genera URL otpauth:// compatibile con Google Authenticator e Authy
+  const otpauthUrl = generateURI({
+    type:        'totp',
+    label:       'SupremiAdvisor',
+    issuer:      'Trenord',
+    secret,
+  });
 
-  // Converte in QR code come data URL PNG
+  // Converte in QR code PNG come data URL
   const qrDataUrl = await QRCode.toDataURL(otpauthUrl, {
     width: 300,
     margin: 2,
