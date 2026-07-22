@@ -8,7 +8,8 @@
  * Response:  { qrDataUrl: "data:image/png;base64,..." }
  */
 
-import { authenticator } from 'otplib';
+import otplib from 'otplib';
+const { authenticator } = otplib;
 import QRCode from 'qrcode';
 import type { Handler, HandlerEvent } from '@netlify/functions';
 
