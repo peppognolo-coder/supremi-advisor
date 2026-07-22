@@ -25,9 +25,11 @@ import {
   Pencil,
   QrCode,
   Smartphone,
+  Share2,
 } from 'lucide-react';
 
 import { supabase } from '../lib/supabase';
+import { useScrollLock } from '../lib/useScrollLock';
 
 
 import AdminSaletteScreen from './AdminSaletteScreen';
@@ -141,6 +143,9 @@ export default function AdminScreen({ adminPin }: Props) {
   const [totpSecret, setTotpSecret]         = useState<string | null>(null);
   const [totpLoading, setTotpLoading]       = useState(false);
   const [totpError, setTotpError]           = useState('');
+
+  // Blocca scroll della pagina quando il modal TOTP è aperto
+  useScrollLock(showTotpModal);
 
   async function caricaQrTotp() {
     setTotpLoading(true);
@@ -3539,13 +3544,13 @@ export default function AdminScreen({ adminPin }: Props) {
       {/* MODAL TOTP — Configura Authenticator */}
       {showTotpModal && (
         <div
-          className="fixed inset-0 bg-black/50 z-50 flex items-end sm:items-center justify-center p-4"
+          className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4"
           onClick={(e) => { if (e.target === e.currentTarget) setShowTotpModal(false); }}
         >
-          <div className="bg-white rounded-3xl w-full max-w-sm flex flex-col gap-5 p-6">
+          <div className="bg-white rounded-3xl w-full max-w-sm flex flex-col gap-5 p-6 max-h-[80vh] overflow-y-auto">
 
             {/* HEADER */}
-            <div className="flex items-start justify-between">
+            <div className="flex items-start justify-between flex-shrink-0">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-2xl bg-gray-900 flex items-center justify-center">
                   <QrCode className="w-5 h-5 text-white" />
@@ -3598,21 +3603,68 @@ export default function AdminScreen({ adminPin }: Props) {
                   </p>
                 </div>
 
-                {/* CHIAVE MANUALE — fallback se fotocamera non funziona */}
+                {/* BOTTONE CONDIVIDI / COPIA QR */}
+                <button
+                  onClick={async () => {
+                    const testo =
+                      'Per accedere ai codici delle salette su Supremi Advisor:\n\n' +
+                      '1. Scarica Google Authenticator o Authy\n' +
+                      '2. Tocca "+" → "Scansiona QR"\n' +
+                      '3. Inquadra il QR code che ti è stato fornito\n' +
+                      '4. Usa il codice a 6 cifre generato per visualizzare i codici accesso\n\n' +
+                      'Il codice cambia ogni 30 secondi.';
+                    if (navigator.share) {
+                      try {
+                        // Converte data URL in Blob per condividere l'immagine
+                        const res = await fetch(totpQr);
+                        const blob = await res.blob();
+                        const file = new File([blob], 'qr-supremi-advisor.png', { type: 'image/png' });
+                        await navigator.share({ title: 'Supremi Advisor — Authenticator', text: testo, files: [file] });
+                      } catch {
+                        // Fallback: copia solo il testo
+                        await navigator.clipboard.writeText(testo);
+                        alert('Testo copiato negli appunti.');
+                      }
+                    } else {
+                      await navigator.clipboard.writeText(testo);
+                      alert('Testo copiato negli appunti. Invia il QR come immagine separata.');
+                    }
+                  }}
+                  className="flex items-center justify-center gap-2 bg-trenord-green text-white rounded-xl py-3 font-medium hover:opacity-90 transition-opacity"
+                >
+                  <Share2 className="w-4 h-4" />
+                  Condividi istruzioni e QR
+                </button>
+
+                {/* CHIAVE MANUALE */}
                 {totpSecret && (
                   <div>
                     <p className="text-xs font-semibold text-gray-400 uppercase mb-1">
                       Chiave manuale (alternativa al QR)
                     </p>
                     <div className="bg-gray-100 rounded-xl px-4 py-3 flex items-center justify-between gap-2">
-                      <span className="font-mono text-sm text-gray-800 break-all">
+                      <span className="font-mono text-sm text-gray-800 break-all select-all">
                         {totpSecret}
                       </span>
                       <button
-                        onClick={() => navigator.clipboard.writeText(totpSecret)}
-                        className="flex-shrink-0"
+                        onClick={() => {
+                          navigator.clipboard.writeText(totpSecret!).then(() => {
+                            alert('Chiave copiata!');
+                          }).catch(() => {
+                            // Su Safari la clipboard API richiede interazione utente diretta
+                            // — fallback: seleziona il testo manualmente
+                            const el = document.querySelector('.totp-secret-text') as HTMLElement;
+                            if (el) {
+                              const range = document.createRange();
+                              range.selectNodeContents(el);
+                              window.getSelection()?.removeAllRanges();
+                              window.getSelection()?.addRange(range);
+                            }
+                          });
+                        }}
+                        className="flex-shrink-0 p-1"
                       >
-                        <Copy className="w-4 h-4 text-gray-400" />
+                        <Copy className="w-4 h-4 text-gray-500" />
                       </button>
                     </div>
                   </div>
