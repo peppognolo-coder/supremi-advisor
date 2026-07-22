@@ -9,7 +9,6 @@
  * Response:  { qrDataUrl: "data:image/png;base64,..." }
  */
 
-import { generateURI } from 'otplib';
 import QRCode from 'qrcode';
 import type { Handler, HandlerEvent } from '@netlify/functions';
 
@@ -19,6 +18,26 @@ function json(statusCode: number, body: object) {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(body),
   };
+}
+
+/**
+ * Costruisce l'URL otpauth:// secondo RFC 6238.
+ * Formato: otpauth://totp/ISSUER:ACCOUNT?secret=S&issuer=I&algorithm=SHA1&digits=6&period=30
+ * Compatibile con Google Authenticator, Authy e tutte le app TOTP standard.
+ * Non usa generateURI di otplib per evitare problemi di encoding.
+ */
+function buildOtpauthUrl(secret: string): string {
+  const issuer  = 'Trenord';
+  const account = 'Supremi Advisor';
+  const label   = encodeURIComponent(`${issuer}:${account}`);
+  return (
+    `otpauth://totp/${label}` +
+    `?secret=${secret}` +
+    `&issuer=${encodeURIComponent(issuer)}` +
+    `&algorithm=SHA1` +
+    `&digits=6` +
+    `&period=30`
+  );
 }
 
 export const handler: Handler = async (event: HandlerEvent) => {
@@ -46,12 +65,7 @@ export const handler: Handler = async (event: HandlerEvent) => {
   }
 
   // Genera URL otpauth:// compatibile con Google Authenticator e Authy
-  const otpauthUrl = generateURI({
-    type:        'totp',
-    label:       'SupremiAdvisor',
-    issuer:      'Trenord',
-    secret,
-  });
+  const otpauthUrl = buildOtpauthUrl(secret);
 
   // Converte in QR code PNG come data URL
   const qrDataUrl = await QRCode.toDataURL(otpauthUrl, {
