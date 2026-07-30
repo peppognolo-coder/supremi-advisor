@@ -64,6 +64,8 @@ export interface AttivitaRow {
   note: string | null;
   fasce_orarie: FasciaOraria[] | null;
   dati_extra: HotelDatiExtra | null;
+  qr_checkin_url: string | null;
+  qr_scadenza: string | null;
   created_at?: string;
 }
 
@@ -356,4 +358,33 @@ export async function aggiornaStatoProblema(
   stato: SalettaProblema['stato']
 ): Promise<AdminApiResult<SalettaProblema>> {
   return call<SalettaProblema>('aggiornaStatoProblema', adminPin, { id, stato });
+}
+
+// =========================
+// QR CHECK-IN HOTEL
+// =========================
+
+/**
+ * Carica un nuovo QR di check-in per un hotel.
+ * Chiama la Netlify Function upload-hotel-qr con PIN admin.
+ */
+export async function uploadQrHotel(
+  adminPin: string,
+  attivitaId: string,
+  imageBase64: string,
+  mimeType: string,
+  scadenza?: string
+): Promise<AdminApiResult<{ qr_checkin_url: string }>> {
+  try {
+    const res = await fetch('/.netlify/functions/upload-hotel-qr', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ adminPin, attivitaId, imageBase64, mimeType, scadenza }),
+    });
+    const data = await res.json();
+    if (!res.ok) return { ok: false, error: data.error ?? 'Errore upload' };
+    return { ok: true, data };
+  } catch {
+    return { ok: false, error: 'Errore di rete' };
+  }
 }
