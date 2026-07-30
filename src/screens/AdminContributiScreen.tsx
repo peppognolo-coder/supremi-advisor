@@ -26,6 +26,7 @@ import {
   rejectContributo,
   CATEGORIE_ATTIVITA,   // FIX P2: import da adminApi invece di array locale
   DISTANZE_ATTIVITA,    // FIX P2: import da adminApi invece di array locale
+  uploadQrHotel,
 } from '../lib/adminApi';
 
 // =========================
@@ -221,6 +222,30 @@ export default function AdminContributiScreen({ adminPin }: Props) {
 
   async function handleApprove(c: Contributo) {
     setProcessingId(c.id);
+
+    // Gestione speciale per QR hotel: upload immagine su Storage
+    if (c.tipo === 'hotel_qr') {
+      const { attivita_id, imageBase64, mimeType, scadenza } = c.dati ?? {};
+      if (!attivita_id || !imageBase64) {
+        toast.error('Dati QR mancanti nel contributo');
+        setProcessingId(null);
+        return;
+      }
+      const uploadRes = await uploadQrHotel(adminPin, attivita_id, imageBase64, mimeType ?? 'image/jpeg', scadenza);
+      if (!uploadRes.ok) {
+        toast.error(uploadRes.error ?? 'Errore upload QR');
+        setProcessingId(null);
+        return;
+      }
+      // Segna il contributo come approvato
+      const res = await approveContributo(adminPin, c);
+      setProcessingId(null);
+      if (!res.ok) { toast.error(res.error?.message ?? 'Errore approvazione'); return; }
+      toast.success('QR hotel caricato e approvato');
+      await load();
+      return;
+    }
+
     const res = await approveContributo(adminPin, c);
     setProcessingId(null);
     if (!res.ok) { toast.error(res.error?.message ?? 'Errore approvazione'); return; }
@@ -330,6 +355,60 @@ export default function AdminContributiScreen({ adminPin }: Props) {
               <h2 className="text-xl font-bold">Modifica contributo</h2>
               <button onClick={() => setEditingContributo(null)}><X className="w-5 h-5" /></button>
             </div>
+
+            {/* QR HOTEL */}
+            {editingContributo.tipo === 'hotel_qr' && (
+              <div className="flex flex-col gap-4">
+                <div className="bg-blue-50 border border-blue-200 rounded-xl p-3">
+                  <p className="text-xs font-semibold text-blue-700 uppercase tracking-wide mb-2">
+                    QR Check-in Hotel
+                  </p>
+                  <p className="text-sm text-blue-800 font-medium">
+                    {editingContributo.dati?.hotel_nome ?? '—'}
+                  </p>
+                  {editingContributo.dati?.scadenza && (
+                    <p className="text-xs text-blue-600 mt-1">
+                      Scadenza: {new Date(editingContributo.dati.scadenza).toLocaleDateString('it-IT')}
+                    </p>
+                  )}
+                </div>
+
+                {/* Anteprima immagine QR */}
+                {editingContributo.dati?.imageBase64 && (
+                  <div className="flex flex-col items-center gap-2">
+                    <p className="text-xs font-semibold text-gray-400 uppercase self-start">
+                      Anteprima QR
+                    </p>
+                    <img
+                      src={editingContributo.dati.imageBase64}
+                      alt="QR check-in"
+                      className="w-52 h-52 object-contain rounded-2xl border border-gray-200"
+                    />
+                  </div>
+                )}
+
+                {/* Modifica scadenza */}
+                <div>
+                  <label className="text-xs font-semibold text-gray-400 uppercase">
+                    Data di scadenza
+                  </label>
+                  <input
+                    type="date"
+                    value={editingContributo.dati?.scadenza ?? ''}
+                    onChange={(e) => setEditingContributo({
+                      ...editingContributo,
+                      dati: { ...editingContributo.dati, scadenza: e.target.value }
+                    })}
+                    className="mt-1 border border-gray-200 rounded-xl px-3 py-2 w-full text-base"
+                  />
+                </div>
+
+                <p className="text-xs text-gray-400 text-center">
+                  Approvando questo contributo il QR verrà caricato su Storage
+                  e reso visibile nella scheda dell'hotel dopo verifica Authenticator.
+                </p>
+              </div>
+            )}
 
             {/* SEGNALAZIONE SALETTA */}
             {editingContributo.tipo === 'segnalazione_saletta' && (
