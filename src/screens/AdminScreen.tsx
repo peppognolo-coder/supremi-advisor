@@ -3603,6 +3603,39 @@ export default function AdminScreen({ adminPin }: Props) {
                   </p>
                 </div>
 
+                {/* DOWNLOAD APP */}
+                <div className="bg-blue-50 border border-blue-100 rounded-xl px-4 py-3 flex flex-col gap-2">
+                  <p className="text-xs font-semibold text-gray-600">
+                    Non hai ancora un'app di autenticazione? Scaricane una gratuita:
+                  </p>
+                  <div className="flex flex-col gap-1.5">
+                    <a
+                      href="https://apps.apple.com/it/app/google-authenticator/id388497605"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-2 text-sm text-blue-700 font-medium hover:underline"
+                    >
+                      🍎 Google Authenticator — App Store (iOS)
+                    </a>
+                    <a
+                      href="https://play.google.com/store/apps/details?id=com.google.android.apps.authenticator2"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-2 text-sm text-blue-700 font-medium hover:underline"
+                    >
+                      🤖 Google Authenticator — Play Store (Android)
+                    </a>
+                    <a
+                      href="https://authy.com/download/"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-2 text-sm text-blue-700 font-medium hover:underline"
+                    >
+                      🔐 Authy — iOS e Android
+                    </a>
+                  </div>
+                </div>
+
                 {/* BOTTONE CONDIVIDI / COPIA QR */}
                 <button
                   onClick={async () => {
