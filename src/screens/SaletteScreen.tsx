@@ -138,7 +138,7 @@ export default function SaletteScreen({
           'operatore, attiva, updated_at, stazione, ' +
           'has_codice:codice_accesso.not.is(null)'
         ),
-        supabase.from('stazioni').select('nome, lat, lng').eq('attiva', true),
+        supabase.from('stazioni').select('id, nome, lat, lng').eq('attiva', true),
       ]);
 
       if (error) {
@@ -151,14 +151,17 @@ export default function SaletteScreen({
       const coordinates: StazioneCoordinates[] =
         (stazioniData ?? []).filter((s) => s.lat && s.lng);
 
-      // NOTA: le salette hanno un campo "stazione" testo libero, non un
-      // legame affidabile a stazioni.nome (stazione_id non viene mai
-      // valorizzato da addSaletta/updateSaletta). Filtrare le salette in
-      // base al nome della stazione è quindi troppo fragile — qualunque
-      // discrepanza di spelling le farebbe sparire in blocco (bug
-      // riscontrato). L'unica fonte di verità affidabile per nascondere
-      // una saletta lato utente è il suo campo "attiva" (toggle admin).
-      const salettePresenti = (data ?? []).filter((saletta) => saletta.attiva ?? true);
+      // Nasconde le salette la cui stazione è stata disattivata, usando
+      // stazione_id (collegamento affidabile, valorizzato dal backfill
+      // migration 014 e da qui in avanti sempre da addSaletta/updateSaletta/
+      // approvazione contributi). Fail-open: una saletta senza stazione_id
+      // resta visibile invece di sparire, per non ripetere il bug precedente.
+      const idStazioniAttive = new Set((stazioniData ?? []).map((s) => s.id));
+
+      const salettePresenti = (data ?? []).filter((saletta) =>
+        (saletta.attiva ?? true) &&
+        (!saletta.stazione_id || idStazioniAttive.has(saletta.stazione_id))
+      );
 
       const groupedMap = new Map<string, GroupedSaletta>();
 
