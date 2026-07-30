@@ -1255,7 +1255,7 @@ export default function AdminScreen({ adminPin }: Props) {
     <>
 
       <div className="h-full min-h-0 overflow-y-auto">
-      <div className="flex flex-col gap-5">
+      <div className="flex flex-col gap-5 pb-24">
 
         {/* TITLE */}
         <div>
