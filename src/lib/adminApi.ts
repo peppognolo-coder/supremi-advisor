@@ -238,8 +238,8 @@ export async function updateContributoDati(
 export async function approveContributo(
   adminPin: string,
   contributo: Contributo
-): Promise<AdminApiResult<Contributo>> {
-  return call<Contributo>('approveContributo', adminPin, { contributo: contributo as unknown as Record<string, unknown> });
+): Promise<AdminApiResult<Contributo & { attivita_id?: string }>> {
+  return call<Contributo & { attivita_id?: string }>('approveContributo', adminPin, { contributo: contributo as unknown as Record<string, unknown> });
 }
 
 export async function rejectContributo(
