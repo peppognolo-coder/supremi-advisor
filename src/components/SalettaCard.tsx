@@ -373,9 +373,28 @@ export default function SalettaCard({
 
                 <div className="bg-blue-50 border border-blue-100 rounded-xl px-4 py-3 flex items-start gap-3">
                   <Smartphone className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
-                  <p className="text-sm text-blue-800">
-                    Apri <strong>Google Authenticator</strong> o <strong>Authy</strong> e inserisci il codice a 6 cifre di Supremi Advisor.
-                  </p>
+                  <div className="flex flex-col gap-1">
+                    <p className="text-sm text-blue-800">
+                      Apri la tua <strong>app di autenticazione</strong> e inserisci il codice a 6 cifre di Supremi Advisor.
+                    </p>
+                    <p className="text-xs text-blue-600 mt-1">Non hai un'app? Scarica gratuitamente:</p>
+                    <a
+                      href="https://apps.apple.com/it/app/google-authenticator/id388497605"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-xs text-blue-700 font-medium underline"
+                    >
+                      🍎 App Store (iOS)
+                    </a>
+                    <a
+                      href="https://play.google.com/store/apps/details?id=com.google.android.apps.authenticator2"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-xs text-blue-700 font-medium underline"
+                    >
+                      🤖 Play Store (Android)
+                    </a>
+                  </div>
                 </div>
 
                 <div>
