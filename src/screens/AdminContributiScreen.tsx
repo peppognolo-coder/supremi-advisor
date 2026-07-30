@@ -313,6 +313,11 @@ export default function AdminContributiScreen({ adminPin }: Props) {
                   <div className="flex items-center gap-2">
                     <FileJson className="w-5 h-5 text-trenord-green" />
                     <h2 className="font-bold text-gray-900 capitalize">{c.tipo}</h2>
+                    {c.tipo === 'saletta' && !c.dati?.stazione_id && (
+                      <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-amber-100 text-amber-700">
+                        ⚠️ Stazione da verificare
+                      </span>
+                    )}
                   </div>
                   <p className="text-xs text-gray-400 mt-1">ID: {c.id}</p>
                 </div>
@@ -480,11 +485,34 @@ export default function AdminContributiScreen({ adminPin }: Props) {
                     <span className="font-semibold text-gray-800">{sezione.label}</span>
                   </div>
 
-                  {/* STAZIONE — sempre visibile, sola lettura */}
+                  {/* STAZIONE — editabile: l'admin può collegare/correggere
+                      la stazione, specialmente se il contributo arriva da
+                      "La mia stazione non è in elenco" (stazione_id assente). */}
                   <div>
                     <label className="text-xs font-semibold text-gray-400 uppercase">Stazione</label>
-                    <input value={editingContributo.dati?.stazione || ''} disabled
-                      className="mt-1 border border-gray-200 rounded-xl px-3 py-2 w-full bg-gray-100 text-gray-500 text-base" />
+                    {!editingContributo.dati?.stazione_id && (
+                      <div className="mt-1 mb-1.5 flex items-center gap-1.5 text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-2 py-1.5">
+                        ⚠️ Segnalata come "{editingContributo.dati?.stazione}" — non collegata a nessuna stazione esistente. Selezionala qui sotto, oppure crea prima la stazione da "Nuova stazione".
+                      </div>
+                    )}
+                    <select
+                      value={editingContributo.dati?.stazione_id || ''}
+                      onChange={(e) => {
+                        const st = stazioni.find((s) => s.id === e.target.value);
+                        setEditingContributo({
+                          ...editingContributo,
+                          dati: { ...editingContributo.dati, stazione_id: e.target.value || null, stazione: st?.nome ?? editingContributo.dati?.stazione },
+                        });
+                      }}
+                      className="mt-1 border border-gray-200 rounded-xl px-3 py-2 w-full text-base"
+                    >
+                      <option value="">
+                        {editingContributo.dati?.stazione_id ? 'Seleziona stazione' : `Non collegata (testo: "${editingContributo.dati?.stazione || ''}")`}
+                      </option>
+                      {stazioni.map((s) => (
+                        <option key={s.id} value={s.id}>{s.nome}</option>
+                      ))}
+                    </select>
                   </div>
 
                   {/* CODICE */}
