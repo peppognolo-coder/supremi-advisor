@@ -14,6 +14,7 @@ type Action =
   | 'toggleAttivaSaletta'
   // ATTIVITA_STAZIONE
   | 'getAttivita'
+  | 'addAttivita'
   | 'softDeleteAttivita'
   | 'ripristinaAttivita'
   | 'updateAttivita'
@@ -24,6 +25,7 @@ type Action =
   | 'rejectContributo'
   // STAZIONI
   | 'getStazioni'
+  | 'addStazione'
   | 'updateStazione'
   | 'toggleAttivaStazione'
   // SALETTA_PROBLEMI
@@ -235,6 +237,36 @@ export const handler: Handler = async (event: HandlerEvent) => {
       if (errSta) return dbErr(errSta.message);
 
       return ok({ attivita: attivita ?? [], stazioni: stazioni ?? [] });
+    }
+
+    if (action === 'addAttivita') {
+      const p = (payload ?? {}) as any;
+      if (!p.stazione_id) return err({ ...ERRORS.MISSING_PAYLOAD, message: 'Campo obbligatorio: stazione_id' });
+      if (!p.nome?.trim()) return err({ ...ERRORS.MISSING_PAYLOAD, message: 'Campo obbligatorio: nome' });
+      if (!p.categoria)    return err({ ...ERRORS.MISSING_PAYLOAD, message: 'Campo obbligatorio: categoria' });
+
+      const fasceSalvate = Array.isArray(p.fasce_orarie) ? ordinaFasce(p.fasce_orarie) : [];
+
+      const { data, error } = await supabase
+        .from('attivita_stazione')
+        .insert({
+          stazione_id:    p.stazione_id,
+          nome:           p.nome.trim(),
+          categoria:      p.categoria,
+          indirizzo:      p.indirizzo ?? null,
+          maps_query:     p.maps_query ?? null,
+          distanza_piedi: p.distanza_piedi ?? null,
+          ubicazione:     p.ubicazione ?? null,
+          note:           p.note ?? null,
+          convenzionato:  p.convenzionato ?? false,
+          fasce_orarie:   fasceSalvate,
+          is_active:      true,
+          deleted_at:     null,
+          dati_extra:     p.dati_extra ?? null,
+        })
+        .select().single();
+      if (error) return dbErr(error.message);
+      return ok(data);
     }
 
     if (action === 'softDeleteAttivita') {
@@ -471,6 +503,30 @@ export const handler: Handler = async (event: HandlerEvent) => {
         .order('nome', { ascending: true });
       if (error) return dbErr(error.message);
       return ok(data ?? []);
+    }
+
+    if (action === 'addStazione') {
+      const p = (payload ?? {}) as any;
+      if (!p.nome?.trim()) return err({ ...ERRORS.MISSING_PAYLOAD, message: 'Campo obbligatorio: nome' });
+
+      const { data, error } = await supabase
+        .from('stazioni')
+        .insert({
+          nome:       p.nome.trim(),
+          codice:     p.codice || null,
+          regione:    p.regione || null,
+          provincia:  p.provincia || null,
+          indirizzo:  p.indirizzo || null,
+          maps_query: p.maps_query || null,
+          plus_code:  p.plus_code || null,
+          lat:        p.lat ?? null,
+          lng:        p.lng ?? null,
+          note:       p.note || null,
+          attiva:     true,
+        })
+        .select().single();
+      if (error) return dbErr(error.message);
+      return ok(data);
     }
 
     if (action === 'updateStazione') {
