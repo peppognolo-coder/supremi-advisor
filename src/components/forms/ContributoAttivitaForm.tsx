@@ -11,6 +11,7 @@ import {
 import toast from 'react-hot-toast';
 
 import { supabase } from '../../lib/supabase';
+import { DISTANZE_ATTIVITA } from '../../lib/adminApi';
 
 interface Props {
   onBack: () => void;
@@ -475,35 +476,11 @@ export default function ContributoAttivitaForm({
 
           </option>
 
-          <option value="In stazione">
-
-            In stazione
-
-          </option>
-
-          <option value="Entro 2 minuti">
-
-            Entro 2 minuti
-
-          </option>
-
-          <option value="Entro 5 minuti">
-
-            Entro 5 minuti
-
-          </option>
-
-          <option value="Entro 10 minuti">
-
-            Entro 10 minuti
-
-          </option>
-
-          <option value="Oltre 10 minuti">
-
-            Oltre 10 minuti
-
-          </option>
+          {DISTANZE_ATTIVITA.map((d) => (
+            <option key={d} value={d}>
+              {d}
+            </option>
+          ))}
 
         </select>
 
