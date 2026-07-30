@@ -20,7 +20,9 @@ import { formatTitle } from '../lib/format';
 
 import {
   type Saletta,
+  type StazioneCompleta,
   getSalette,
+  getStazioni,
   addSaletta,
   updateSaletta,
   deleteSaletta,
@@ -78,25 +80,27 @@ function ServiceToggle({
 
 function AddSalettaModal({
   adminPin,
+  stazioni,
   onClose,
   onAdded,
 }: {
   adminPin: string;
+  stazioni: StazioneCompleta[];
   onClose: () => void;
   onAdded: (s: Saletta) => void;
 }) {
-  const [stazione, setStazione] = useState('');
+  const [stazioneId, setStazioneId] = useState(stazioni[0]?.id ?? '');
   const [tipo, setTipo] = useState('Equipaggi');
   const [loading, setLoading] = useState(false);
 
   async function submit() {
-    if (!stazione.trim()) {
-      toast.error('Inserisci il nome della stazione');
+    if (!stazioneId) {
+      toast.error('Seleziona la stazione');
       return;
     }
 
     setLoading(true);
-    const res = await addSaletta(adminPin, { stazione: stazione.trim(), tipo });
+    const res = await addSaletta(adminPin, { stazione_id: stazioneId, tipo });
     setLoading(false);
 
     if (!res.ok || !res.data) {
@@ -127,13 +131,17 @@ function AddSalettaModal({
           <label className="text-xs font-semibold text-gray-400 uppercase">
             Stazione *
           </label>
-          <input
-            value={stazione}
-            onChange={(e) => setStazione(e.target.value)}
-            placeholder="es. Milano Centrale"
+          <select
+            value={stazioneId}
+            onChange={(e) => setStazioneId(e.target.value)}
             className="border border-gray-200 rounded-xl px-3 py-2 text-base"
             autoFocus
-          />
+          >
+            {stazioni.length === 0 && <option value="">Nessuna stazione disponibile</option>}
+            {stazioni.map((s) => (
+              <option key={s.id} value={s.id}>{s.nome}</option>
+            ))}
+          </select>
         </div>
 
         <div className="flex flex-col gap-1">
@@ -231,6 +239,7 @@ export default function AdminSaletteScreen({
 
   const [loading, setLoading]   = useState(true);
   const [salette, setSalette]   = useState<Saletta[]>([]);
+  const [stazioni, setStazioni] = useState<StazioneCompleta[]>([]);
   const [search, setSearch]     = useState('');
   const [showAdd, setShowAdd]   = useState(false);
   const [savingId, setSavingId] = useState<string | null>(null);
@@ -254,15 +263,23 @@ export default function AdminSaletteScreen({
 
   async function load() {
     setLoading(true);
-    const res = await getSalette(adminPin);
+    const [resSalette, resStazioni] = await Promise.all([
+      getSalette(adminPin),
+      getStazioni(adminPin),
+    ]);
 
-    if (!res.ok) {
-      toast.error(res.error?.message ?? 'Errore caricamento salette');
+    if (!resSalette.ok) {
+      toast.error(resSalette.error?.message ?? 'Errore caricamento salette');
       setLoading(false);
       return;
     }
 
-    setSalette(res.data ?? []);
+    setSalette(resSalette.data ?? []);
+    setStazioni(
+      resStazioni.ok
+        ? [...(resStazioni.data ?? [])].sort((a, b) => a.nome.localeCompare(b.nome, 'it'))
+        : []
+    );
     setLoading(false);
   }
 
@@ -305,7 +322,7 @@ export default function AdminSaletteScreen({
 
     const res = await updateSaletta(adminPin, {
       id:             saletta.id,
-      stazione:       saletta.stazione,
+      stazione_id:    saletta.stazione_id ?? '',
       tipo:           saletta.tipo,
       codice_accesso: saletta.codice_accesso,
       ubicazione:     saletta.ubicazione,
@@ -478,13 +495,20 @@ export default function AdminSaletteScreen({
               >
 
                 <div className="flex items-center justify-between">
-                  <div>
+                  <div className="w-full">
                     <label className="text-xs font-semibold text-gray-400 uppercase">Stazione</label>
-                    <input
-                      value={s.stazione ?? ''}
-                      onChange={(e) => updateField(s.id, 'stazione', e.target.value)}
+                    <select
+                      value={s.stazione_id ?? ''}
+                      onChange={(e) => updateField(s.id, 'stazione_id', e.target.value)}
                       className="mt-1 w-full border border-gray-200 rounded-xl px-3 py-2 text-base"
-                    />
+                    >
+                      {!s.stazione_id && (
+                        <option value="">{s.stazione || 'Seleziona stazione'}</option>
+                      )}
+                      {stazioni.map((st) => (
+                        <option key={st.id} value={st.id}>{st.nome}</option>
+                      ))}
+                    </select>
                   </div>
                 </div>
 
@@ -583,6 +607,7 @@ export default function AdminSaletteScreen({
       {showAdd && (
         <AddSalettaModal
           adminPin={adminPin}
+          stazioni={stazioni}
           onClose={() => setShowAdd(false)}
           onAdded={(s) => setSalette((prev) => [s, ...prev])}
         />
