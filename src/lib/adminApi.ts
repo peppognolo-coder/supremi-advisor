@@ -79,7 +79,7 @@ export const DISTANZE_ATTIVITA = [
   'Entro 2 minuti a piedi',
   'Entro 5 minuti a piedi',
   'Entro 10 minuti a piedi',
-  'Oltre 10 minuti',
+  'Oltre 10 minuti a piedi',
 ] as const;
 
 export const TIPI_PROBLEMA_HOTEL = [
