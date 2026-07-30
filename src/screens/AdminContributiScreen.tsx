@@ -249,6 +249,26 @@ export default function AdminContributiScreen({ adminPin }: Props) {
     const res = await approveContributo(adminPin, c);
     setProcessingId(null);
     if (!res.ok) { toast.error(res.error?.message ?? 'Errore approvazione'); return; }
+
+    // QR check-in allegato a una nuova attività Hotel: facoltativo e non bloccante.
+    // L'hotel è già stato creato/approvato sopra — se l'upload del QR fallisce,
+    // l'admin può comunque ricaricarlo in seguito da AdminAttivitaScreen.
+    const qrAllegato = c.tipo === 'attivita' ? (c.dati as any)?.qr_checkin_new : null;
+    if (qrAllegato?.imageBase64 && res.data?.attivita_id) {
+      const uploadRes = await uploadQrHotel(
+        adminPin,
+        res.data.attivita_id,
+        qrAllegato.imageBase64,
+        qrAllegato.mimeType ?? 'image/jpeg',
+        qrAllegato.scadenza ?? undefined
+      );
+      if (!uploadRes.ok) {
+        toast.error('Hotel approvato, ma il QR non è stato caricato. Puoi ricaricarlo da Attività.');
+        await load();
+        return;
+      }
+    }
+
     toast.success('Contributo approvato');
     await load();
   }
@@ -761,6 +781,37 @@ export default function AdminContributiScreen({ adminPin }: Props) {
                         className="border rounded-xl px-3 py-2 text-base"
                       />
                     </div>
+
+                    {/* QR CHECK-IN — facoltativo, presente solo se caricato dall'utente in Contributi */}
+                    {editingContributo.dati?.qr_checkin_new?.imageBase64 && (
+                      <div className="bg-white border border-blue-200 rounded-xl p-3 flex flex-col items-center gap-2">
+                        <p className="text-xs font-semibold text-gray-400 uppercase self-start">
+                          QR check-in allegato
+                        </p>
+                        <img
+                          src={editingContributo.dati.qr_checkin_new.imageBase64}
+                          alt="QR check-in"
+                          className="w-40 h-40 object-contain rounded-lg border border-gray-200"
+                        />
+                        <div className="w-full">
+                          <label className="text-xs font-semibold text-gray-400 uppercase">
+                            Data di scadenza
+                          </label>
+                          <input
+                            type="date"
+                            value={editingContributo.dati?.qr_checkin_new?.scadenza ?? ''}
+                            onChange={(e) => setEditingContributo({
+                              ...editingContributo,
+                              dati: {
+                                ...editingContributo.dati,
+                                qr_checkin_new: { ...editingContributo.dati.qr_checkin_new, scadenza: e.target.value },
+                              },
+                            })}
+                            className="mt-1 border border-gray-200 rounded-xl px-3 py-2 w-full text-base"
+                          />
+                        </div>
+                      </div>
+                    )}
 
                     {[
                       { key: 'reception_h24', label: 'Reception H24' },
