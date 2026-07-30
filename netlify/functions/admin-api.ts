@@ -287,6 +287,15 @@ export const handler: Handler = async (event: HandlerEvent) => {
       const tipo = contributo.tipo;
       const dati = contributo.dati;
 
+      // ------ HOTEL QR ------
+      // L'upload dell'immagine su Storage avviene via Netlify Function upload-hotel-qr
+      // al momento dell'approvazione in AdminContributiScreen.
+      // Qui ci limitiamo ad accettare il contributo senza modificare attivita_stazione
+      // (lo ha già fatto upload-hotel-qr).
+      if (tipo === 'hotel_qr') {
+        // Nessuna operazione DB aggiuntiva — upload già eseguito lato client admin
+      }
+
       // ------ SEGNALAZIONE SALETTA ------
       if (tipo === 'segnalazione_saletta') {
         const updatePayload: any = {};
