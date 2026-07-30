@@ -71,16 +71,16 @@ function distanzaRank(
     case 'In stazione':
       return 0;
 
-    case 'Entro 2 minuti':
+    case 'Entro 2 minuti a piedi':
       return 1;
 
-    case 'Entro 5 minuti':
+    case 'Entro 5 minuti a piedi':
       return 2;
 
-    case 'Entro 10 minuti':
+    case 'Entro 10 minuti a piedi':
       return 3;
 
-    case 'Oltre 10 minuti':
+    case 'Oltre 10 minuti a piedi':
       return 4;
 
     default:
