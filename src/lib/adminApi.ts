@@ -31,6 +31,7 @@ export interface Saletta {
   distributori: boolean;
   acqua: boolean;
   climatizzata: boolean;
+  attiva: boolean;
 }
 
 export interface FasciaOraria {
@@ -168,6 +169,14 @@ export async function deleteSaletta(
   id: string
 ): Promise<AdminApiResult<{ deleted: string }>> {
   return call<{ deleted: string }>('deleteSaletta', adminPin, { id });
+}
+
+export async function toggleAttivaSaletta(
+  adminPin: string,
+  id: string,
+  attiva: boolean
+): Promise<AdminApiResult<Saletta>> {
+  return call<Saletta>('toggleAttivaSaletta', adminPin, { id, attiva });
 }
 
 // =============================================================
