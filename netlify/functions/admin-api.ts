@@ -11,6 +11,7 @@ type Action =
   | 'addSaletta'
   | 'updateSaletta'
   | 'deleteSaletta'
+  | 'toggleAttivaSaletta'
   // ATTIVITA_STAZIONE
   | 'getAttivita'
   | 'softDeleteAttivita'
@@ -188,6 +189,19 @@ export const handler: Handler = async (event: HandlerEvent) => {
       const { error } = await supabase.from('salette').delete().eq('id', id);
       if (error) return dbErr(error.message);
       return ok({ deleted: id });
+    }
+
+    if (action === 'toggleAttivaSaletta') {
+      const { id, attiva } = (payload ?? {}) as { id?: string; attiva?: boolean };
+      if (!id) return err({ ...ERRORS.MISSING_PAYLOAD, message: 'Campo obbligatorio: id' });
+      const { data, error } = await supabase
+        .from('salette')
+        .update({ attiva: attiva ?? true })
+        .eq('id', id)
+        .select()
+        .single();
+      if (error) return dbErr(error.message);
+      return ok(data);
     }
 
     // ============================================================
