@@ -342,6 +342,10 @@ export const handler: Handler = async (event: HandlerEvent) => {
       }
 
       // ------ ATTIVITA ------
+      // attivitaId viene catturato per essere ritornato al client: serve quando
+      // il contributo include un QR check-in (dati.qr_checkin_new) da caricare
+      // subito dopo su Storage, tramite upload-hotel-qr, ora che l'attivita ha un id.
+      let attivitaId: string | null = null;
       if (tipo === 'attivita') {
         const fasceSalvate = Array.isArray(dati.fasce_orarie) ? ordinaFasce(dati.fasce_orarie) : [];
         const { data: existing } = await supabase
@@ -365,9 +369,10 @@ export const handler: Handler = async (event: HandlerEvent) => {
     .eq('id', existing.id);
 
   if (error) return dbErr(error.message);
+  attivitaId = existing.id;
 
 } else {
-  const { error } = await supabase
+  const { data: inserted, error } = await supabase
     .from('attivita_stazione')
     .insert({
       stazione_id: dati.stazione_id,
@@ -383,9 +388,12 @@ export const handler: Handler = async (event: HandlerEvent) => {
       is_active: true,
       deleted_at: null,
       dati_extra: dati.dati_extra ?? null
-    });
+    })
+    .select('id')
+    .single();
 
   if (error) return dbErr(error.message);
+  attivitaId = inserted?.id ?? null;
 }
       }
 
@@ -403,7 +411,7 @@ export const handler: Handler = async (event: HandlerEvent) => {
       const { data, error: statoError } = await supabase
         .from('contributi').update({ stato: 'approved' }).eq('id', contributo.id).select().single();
       if (statoError) return dbErr(statoError.message);
-      return ok(data);
+      return ok(attivitaId ? { ...data, attivita_id: attivitaId } : data);
     }
 
     if (action === 'rejectContributo') {
