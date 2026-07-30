@@ -9,6 +9,7 @@ import {
   Store,
   Pencil,
   X,
+  Plus,
 } from 'lucide-react';
 
 import toast from 'react-hot-toast';
@@ -24,6 +25,8 @@ import {
   CATEGORIE_ATTIVITA,
   DISTANZE_ATTIVITA,
 } from '../lib/adminApi';
+
+import AddAttivitaModal from '../components/AddAttivitaModal';
 
 // =========================
 // PROPS
@@ -87,6 +90,52 @@ function ConfirmModal({
   );
 }
 
+function PickStazioneModal({
+  stazioni,
+  onCancel,
+  onPick,
+}: {
+  stazioni: StazioneRow[];
+  onCancel: () => void;
+  onPick: (stazioneId: string) => void;
+}) {
+  const [stazioneId, setStazioneId] = useState(stazioni[0]?.id ?? '');
+  return (
+    <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
+      <div className="bg-white rounded-2xl w-full max-w-sm p-6 flex flex-col gap-4">
+        <h2 className="text-lg font-bold text-gray-900">Aggiungi attività</h2>
+        <div className="flex flex-col gap-1">
+          <label className="text-xs font-semibold text-gray-400 uppercase">Stazione *</label>
+          <select
+            value={stazioneId}
+            onChange={(e) => setStazioneId(e.target.value)}
+            className="border border-gray-200 rounded-xl px-3 py-2 text-base"
+            autoFocus
+          >
+            {stazioni.length === 0 && <option value="">Nessuna stazione disponibile</option>}
+            {stazioni.map((s) => (
+              <option key={s.id} value={s.id}>{s.nome}</option>
+            ))}
+          </select>
+        </div>
+        <div className="flex gap-2">
+          <button onClick={onCancel}
+            className="flex-1 px-4 py-2 rounded-xl border border-gray-200 text-sm text-gray-600 hover:bg-gray-50">
+            Annulla
+          </button>
+          <button
+            onClick={() => stazioneId && onPick(stazioneId)}
+            disabled={!stazioneId}
+            className="flex-1 px-4 py-2 rounded-xl bg-trenord-green text-white text-sm font-medium hover:opacity-90 disabled:opacity-50"
+          >
+            Continua
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // =========================
 // COMPONENTE PRINCIPALE
 // =========================
@@ -100,6 +149,8 @@ export default function AdminAttivitaScreen({ adminPin, initialEditId }: Props) 
   const [processingId, setProcessingId] = useState<string | null>(null);
   const [editingAttivita, setEditingAttivita] = useState<AttivitaRow | null>(null);
   const [saving, setSaving]         = useState(false);
+  const [showPickStazione, setShowPickStazione] = useState(false);
+  const [addStazioneId, setAddStazioneId] = useState<string | null>(null);
 
   // Confirm modal
   const [confirm, setConfirm] = useState<{
@@ -310,9 +361,18 @@ export default function AdminAttivitaScreen({ adminPin, initialEditId }: Props) 
       <div className="flex flex-col gap-4">
 
         {/* TITLE */}
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">Gestione Attività</h1>
-          <p className="text-sm text-gray-500 mt-1">Visualizza e gestisci le attività delle stazioni</p>
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">Gestione Attività</h1>
+            <p className="text-sm text-gray-500 mt-1">Visualizza e gestisci le attività delle stazioni</p>
+          </div>
+          <button
+            onClick={() => setShowPickStazione(true)}
+            className="flex items-center gap-2 px-4 py-2 rounded-xl bg-trenord-green text-white text-sm font-medium hover:opacity-90"
+          >
+            <Plus className="w-4 h-4" />
+            Aggiungi
+          </button>
         </div>
 
         {loading && <div className="text-sm text-gray-500">Caricamento...</div>}
@@ -777,6 +837,29 @@ export default function AdminAttivitaScreen({ adminPin, initialEditId }: Props) 
           onConfirm={confirm.onConfirm}
           onCancel={() => setConfirm(null)}
           loading={confirm.loading}
+        />
+      )}
+
+      {/* PICK STAZIONE — passo 1 di "Aggiungi attività" */}
+      {showPickStazione && (
+        <PickStazioneModal
+          stazioni={stazioni}
+          onCancel={() => setShowPickStazione(false)}
+          onPick={(id) => {
+            setShowPickStazione(false);
+            setAddStazioneId(id);
+          }}
+        />
+      )}
+
+      {/* ADD ATTIVITA — passo 2, insert diretto */}
+      {addStazioneId && (
+        <AddAttivitaModal
+          stazioneId={addStazioneId}
+          direct
+          adminPin={adminPin}
+          onClose={() => setAddStazioneId(null)}
+          onSuccess={() => load()}
         />
       )}
     </>
