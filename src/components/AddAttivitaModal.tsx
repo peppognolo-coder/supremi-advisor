@@ -4,13 +4,17 @@ import { X, Store, Hotel, Clock3, Plus, Trash2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { supabase } from '../lib/supabase';
 import { useSwipeDown } from '../lib/useSwipeDown';
-import { CATEGORIE_ATTIVITA, DISTANZE_ATTIVITA } from '../lib/adminApi';
+import { CATEGORIE_ATTIVITA, DISTANZE_ATTIVITA, addAttivita } from '../lib/adminApi';
 import type { HotelDatiExtra } from '../lib/adminApi';
 
 interface Props {
   stazioneId: string;
   onClose: () => void;
   onSuccess?: () => void;
+  /** true quando aperto dal pannello admin: insert diretto, nessuna coda contributi. */
+  direct?: boolean;
+  /** obbligatorio quando direct=true. */
+  adminPin?: string;
 }
 
 interface FasciaOraria {
@@ -33,7 +37,7 @@ function Switch({ label, value, onChange }: { label: string; value: boolean; onC
   );
 }
 
-export default function AddAttivitaModal({ stazioneId, onClose, onSuccess }: Props) {
+export default function AddAttivitaModal({ stazioneId, onClose, onSuccess, direct = false, adminPin }: Props) {
   const { panelRef, dragStyle, handleDragStart } = useSwipeDown({ onClose });
   useScrollLock();
 
@@ -106,15 +110,26 @@ export default function AddAttivitaModal({ stazioneId, onClose, onSuccess }: Pro
       } : null,
     };
 
-    const { error } = await supabase.from('contributi').insert({
-      tipo:  'attivita',
-      dati:  payload,
-      stato: 'pending',
-    });
+    let ok = true;
+    let errorMsg: string | null = null;
+
+    if (direct && adminPin) {
+      const res = await addAttivita(adminPin, payload);
+      ok = res.ok;
+      errorMsg = res.error?.message ?? null;
+    } else {
+      const { error } = await supabase.from('contributi').insert({
+        tipo:  'attivita',
+        dati:  payload,
+        stato: 'pending',
+      });
+      ok = !error;
+      errorMsg = error?.message ?? null;
+    }
 
     setLoading(false);
-    if (error) { toast.error('Errore durante l\'invio'); return; }
-    toast.success('Proposta inviata! Verrà revisionata dall\'admin.');
+    if (!ok) { toast.error(errorMsg ?? 'Errore durante l\'invio'); return; }
+    toast.success(direct ? 'Attività aggiunta' : 'Proposta inviata! Verrà revisionata dall\'admin.');
     onSuccess?.();
     onClose();
   }
@@ -153,7 +168,9 @@ export default function AddAttivitaModal({ stazioneId, onClose, onSuccess }: Pro
               </div>
               <div>
                 <h2 className="font-bold text-gray-900">Aggiungi attività</h2>
-                <p className="text-xs text-gray-400">La proposta verrà revisionata dall'admin</p>
+                <p className="text-xs text-gray-400">
+                  {direct ? 'Verrà pubblicata subito' : "La proposta verrà revisionata dall'admin"}
+                </p>
               </div>
             </div>
             <button onClick={onClose}
@@ -335,7 +352,7 @@ export default function AddAttivitaModal({ stazioneId, onClose, onSuccess }: Pro
           <button type="button" onClick={submit} disabled={loading || !nome.trim() || !categoria}
             className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl bg-trenord-green text-white font-medium text-base hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed transition-opacity">
             {loading && <span className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />}
-            {loading ? 'Invio...' : 'Invia proposta'}
+            {loading ? 'Invio...' : direct ? 'Aggiungi attività' : 'Invia proposta'}
           </button>
         </div>
 
