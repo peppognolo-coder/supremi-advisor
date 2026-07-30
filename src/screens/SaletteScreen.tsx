@@ -133,10 +133,13 @@ export default function SaletteScreen({
           // codice_accesso escluso intenzionalmente: non deve mai arrivare
           // al client. Viene fornito solo dalla Netlify Function
           // get-codice-saletta dopo verifica del CID.
+          // has_codice è una colonna generata dal database (migration 015):
+          // prima veniva calcolata con un trucco di select
+          // (has_codice:codice_accesso.not.is(null)) che un aggiornamento
+          // di PostgREST ha reso invalido, causando 400 su tutta la query.
           'id, stazione_id, tipo, ubicazione, stato, note, ' +
           'microonde, distributori, acqua, climatizzata, ' +
-          'operatore, attiva, updated_at, stazione, ' +
-          'has_codice:codice_accesso.not.is(null)'
+          'operatore, attiva, updated_at, stazione, has_codice'
         ),
         supabase.from('stazioni').select('id, nome, lat, lng').eq('attiva', true),
       ]);
