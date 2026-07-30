@@ -4,6 +4,8 @@ import {
   ArrowLeft,
   Plus,
   Trash2,
+  Upload,
+  QrCode,
 } from 'lucide-react';
 
 import toast from 'react-hot-toast';
@@ -79,6 +81,16 @@ export default function ContributoAttivitaForm({
   ] = useState(false);
 
   const [note, setNote] =
+    useState('');
+
+  // QR check-in — facoltativo, mostrato solo per categoria Hotel
+  const [qrFile, setQrFile] =
+    useState<File | null>(null);
+
+  const [qrPreview, setQrPreview] =
+    useState<string | null>(null);
+
+  const [qrScadenza, setQrScadenza] =
     useState('');
 
   const [loading, setLoading] =
@@ -197,6 +209,33 @@ export default function ContributoAttivitaForm({
   }
 
   // =========================
+  // QR CHECK-IN (facoltativo, solo Hotel)
+  // Stessa validazione di HotelSheet.tsx
+  // =========================
+
+  function handleQrFileChange(
+    e: React.ChangeEvent<HTMLInputElement>
+  ) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const allowed = ['image/jpeg', 'image/png', 'image/webp'];
+    if (!allowed.includes(file.type)) {
+      toast.error('Formato non supportato. Usa JPG, PNG o WebP.');
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('Immagine troppo grande. Massimo 5MB.');
+      return;
+    }
+
+    setQrFile(file);
+    const reader = new FileReader();
+    reader.onload = (ev) => setQrPreview(ev.target?.result as string);
+    reader.readAsDataURL(file);
+  }
+
+  // =========================
   // SUBMIT
   // =========================
 
@@ -250,6 +289,18 @@ export default function ContributoAttivitaForm({
 
         fasce_orarie:
           fasceOrarie,
+
+        // QR check-in facoltativo — solo se l'utente ha caricato un'immagine.
+        // Se assente, l'hotel viene creato senza QR (si può caricare dopo).
+        ...(qrPreview && qrFile
+          ? {
+              qr_checkin_new: {
+                imageBase64: qrPreview,
+                mimeType: qrFile.type,
+                scadenza: qrScadenza || null,
+              },
+            }
+          : {}),
       };
 
       const { error } =
@@ -616,6 +667,53 @@ export default function ContributoAttivitaForm({
           )}
 
         </div>
+
+        {/* QR CHECK-IN — facoltativo, solo Hotel */}
+        {categoria === 'Hotel' && (
+          <div className="border border-gray-200 rounded-2xl p-4 flex flex-col gap-3">
+            <div className="flex items-center gap-2">
+              <QrCode className="w-4 h-4 text-gray-500" />
+              <h3 className="font-semibold text-gray-900 text-sm">
+                QR check-in (facoltativo)
+              </h3>
+            </div>
+            <p className="text-xs text-gray-400 -mt-2">
+              Puoi caricarlo ora oppure aggiungerlo in seguito.
+            </p>
+
+            <label className="flex flex-col items-center justify-center gap-2 border-2 border-dashed border-gray-300 rounded-xl p-4 cursor-pointer hover:border-trenord-green transition-colors">
+              {qrPreview ? (
+                <img src={qrPreview} alt="Preview QR" className="w-40 rounded-lg" />
+              ) : (
+                <>
+                  <Upload className="w-8 h-8 text-gray-300" />
+                  <span className="text-sm text-gray-500">Tocca per selezionare l'immagine</span>
+                  <span className="text-xs text-gray-400">JPG, PNG, WebP — max 5MB</span>
+                </>
+              )}
+              <input
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                className="hidden"
+                onChange={handleQrFileChange}
+              />
+            </label>
+
+            {qrPreview && (
+              <div>
+                <label className="text-xs font-semibold text-gray-400 uppercase">
+                  Data di scadenza (opzionale)
+                </label>
+                <input
+                  type="date"
+                  value={qrScadenza}
+                  onChange={(e) => setQrScadenza(e.target.value)}
+                  className="mt-1 border border-gray-200 rounded-xl px-3 py-2 w-full text-base"
+                />
+              </div>
+            )}
+          </div>
+        )}
 
         {/* NOTE */}
         <textarea
