@@ -35,18 +35,6 @@ export default function ContributoStazioneForm({
   const [indirizzo, setIndirizzo] =
     useState('');
 
-  const [mapsQuery, setMapsQuery] =
-    useState('');
-
-  const [lat, setLat] =
-    useState('');
-
-  const [lng, setLng] =
-    useState('');
-
-  const [plusCode, setPlusCode] =
-    useState('');
-
   const [note, setNote] =
     useState('');
 
@@ -93,18 +81,6 @@ export default function ContributoStazioneForm({
 
         indirizzo:
           indirizzo.trim(),
-
-        maps_query:
-          mapsQuery.trim(),
-
-        lat:
-          lat.trim(),
-
-        lng:
-          lng.trim(),
-
-        plus_code:
-          plusCode.trim(),
 
         note:
           note.trim(),
@@ -306,94 +282,6 @@ export default function ContributoStazioneForm({
             />
 
           </div>
-
-        </div>
-
-        {/* MAPS QUERY */}
-        <div>
-
-          <label className="text-xs font-semibold text-gray-400 uppercase">
-
-            Maps Query
-
-          </label>
-
-          <input
-            value={mapsQuery}
-            onChange={(e) =>
-              setMapsQuery(
-                e.target.value
-              )
-            }
-            placeholder="Es. Milano Centrale stazione ferroviaria"
-            className="mt-1 border border-gray-200 rounded-xl px-3 py-2 w-full"
-          />
-
-        </div>
-
-        {/* LAT */}
-        <div>
-
-          <label className="text-xs font-semibold text-gray-400 uppercase">
-
-            Latitudine
-
-          </label>
-
-          <input
-            value={lat}
-            onChange={(e) =>
-              setLat(
-                e.target.value
-              )
-            }
-            placeholder="45.484"
-            className="mt-1 border border-gray-200 rounded-xl px-3 py-2 w-full"
-          />
-
-        </div>
-
-        {/* LNG */}
-        <div>
-
-          <label className="text-xs font-semibold text-gray-400 uppercase">
-
-            Longitudine
-
-          </label>
-
-          <input
-            value={lng}
-            onChange={(e) =>
-              setLng(
-                e.target.value
-              )
-            }
-            placeholder="9.204"
-            className="mt-1 border border-gray-200 rounded-xl px-3 py-2 w-full"
-          />
-
-        </div>
-
-        {/* PLUS CODE */}
-        <div>
-
-          <label className="text-xs font-semibold text-gray-400 uppercase">
-
-            Plus Code
-
-          </label>
-
-          <input
-            value={plusCode}
-            onChange={(e) =>
-              setPlusCode(
-                e.target.value
-              )
-            }
-            placeholder="F4Q5+XX Milano"
-            className="mt-1 border border-gray-200 rounded-xl px-3 py-2 w-full"
-          />
 
         </div>
 
