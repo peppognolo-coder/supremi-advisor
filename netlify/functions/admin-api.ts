@@ -159,23 +159,37 @@ export const handler: Handler = async (event: HandlerEvent) => {
     }
 
     if (action === 'addSaletta') {
-      const { stazione, tipo } = (payload ?? {}) as { stazione?: string; tipo?: string };
-      if (!stazione?.trim()) return err({ ...ERRORS.MISSING_PAYLOAD, message: 'Campo obbligatorio: stazione' });
+      const { stazione_id, tipo } = (payload ?? {}) as { stazione_id?: string; tipo?: string };
+      if (!stazione_id) return err({ ...ERRORS.MISSING_PAYLOAD, message: 'Campo obbligatorio: stazione_id' });
+
+      // Il nome testuale viene sempre derivato dalla stazione selezionata,
+      // mai digitato a mano: garantisce che stazione_id e stazione (testo,
+      // ancora usato per la visualizzazione) restino coerenti.
+      const { data: staz, error: stazErr } = await supabase
+        .from('stazioni').select('nome').eq('id', stazione_id).single();
+      if (stazErr || !staz) return err({ ...ERRORS.MISSING_PAYLOAD, message: 'Stazione non trovata' });
+
       const { data, error } = await supabase
         .from('salette')
-        .insert({ stazione: stazione.trim(), nome: stazione.trim(), tipo: tipo?.trim() || 'Equipaggi', stato: 'aperta' })
+        .insert({ stazione_id, stazione: staz.nome, nome: staz.nome, tipo: tipo?.trim() || 'Equipaggi', stato: 'aperta' })
         .select().single();
       if (error) return dbErr(error.message);
       return ok(data);
     }
 
     if (action === 'updateSaletta') {
-      const { id, stazione, tipo, codice_accesso, ubicazione, note, microonde, distributori, acqua, climatizzata } =
+      const { id, stazione_id, tipo, codice_accesso, ubicazione, note, microonde, distributori, acqua, climatizzata } =
         (payload ?? {}) as any;
       if (!id) return err({ ...ERRORS.MISSING_PAYLOAD, message: 'Campo obbligatorio: id' });
+      if (!stazione_id) return err({ ...ERRORS.MISSING_PAYLOAD, message: 'Campo obbligatorio: stazione_id' });
+
+      const { data: staz, error: stazErr } = await supabase
+        .from('stazioni').select('nome').eq('id', stazione_id).single();
+      if (stazErr || !staz) return err({ ...ERRORS.MISSING_PAYLOAD, message: 'Stazione non trovata' });
+
       const { data, error } = await supabase
         .from('salette')
-        .update({ stazione, tipo, codice_accesso: codice_accesso ?? null, ubicazione: ubicazione ?? null,
+        .update({ stazione_id, stazione: staz.nome, tipo, codice_accesso: codice_accesso ?? null, ubicazione: ubicazione ?? null,
                   note: note ?? null, microonde: microonde ?? false, distributori: distributori ?? false,
                   acqua: acqua ?? false, climatizzata: climatizzata ?? false })
         .eq('id', id).select().single();
@@ -332,6 +346,12 @@ export const handler: Handler = async (event: HandlerEvent) => {
       }
 
       // ------ SALETTA ------
+      // dati.stazione_id è valorizzato quando l'utente ha scelto la stazione
+      // dall'elenco (caso comune). È assente/null quando ha usato "La mia
+      // stazione non è in elenco" (testo libero) — in quel caso l'admin deve
+      // averlo collegato manualmente in fase di revisione prima di approvare;
+      // se arriva comunque null si ricade sul vecchio raggruppamento testuale
+      // per non perdere il contributo.
       if (tipo === 'saletta') {
         const groupId = normalizeGroupId(dati.stazione);
         const { data: existing } = await supabase
@@ -340,14 +360,16 @@ export const handler: Handler = async (event: HandlerEvent) => {
 
         if (existing) {
           const { error } = await supabase.from('salette')
-            .update({ codice_accesso: dati.codice_accesso, ubicazione: dati.ubicazione, stato: dati.stato,
+            .update({ stazione_id: dati.stazione_id ?? existing.stazione_id ?? null,
+                      codice_accesso: dati.codice_accesso, ubicazione: dati.ubicazione, stato: dati.stato,
                       note: dati.note, microonde: dati.microonde, distributori: dati.distributori,
                       acqua: dati.acqua, climatizzata: dati.climatizzata })
             .eq('id', existing.id);
           if (error) return dbErr(error.message);
         } else {
           const { error } = await supabase.from('salette')
-            .insert({ saletta_group_id: groupId, stazione: dati.stazione, nome: dati.stazione,
+            .insert({ saletta_group_id: groupId, stazione_id: dati.stazione_id ?? null,
+                      stazione: dati.stazione, nome: dati.stazione,
                       tipo: dati.tipo, codice_accesso: dati.codice_accesso, ubicazione: dati.ubicazione,
                       stato: dati.stato, note: dati.note, microonde: dati.microonde,
                       distributori: dati.distributori, acqua: dati.acqua, climatizzata: dati.climatizzata });
