@@ -190,6 +190,18 @@ export async function getAttivita(
   return call<{ attivita: AttivitaRow[]; stazioni: StazioneRow[] }>('getAttivita', adminPin);
 }
 
+export async function addAttivita(
+  adminPin: string,
+  payload: {
+    stazione_id: string; nome: string; categoria: string;
+    indirizzo?: string | null; maps_query?: string | null; distanza_piedi?: string | null;
+    ubicazione?: string | null; note?: string | null; convenzionato?: boolean;
+    fasce_orarie?: FasciaOraria[]; dati_extra?: HotelDatiExtra | null;
+  }
+): Promise<AdminApiResult<AttivitaRow>> {
+  return call<AttivitaRow>('addAttivita', adminPin, payload as unknown as Record<string, unknown>);
+}
+
 export async function softDeleteAttivita(
   adminPin: string,
   id: string
@@ -283,6 +295,17 @@ export async function getStazioni(
   adminPin: string
 ): Promise<AdminApiResult<StazioneCompleta[]>> {
   return call<StazioneCompleta[]>('getStazioni', adminPin);
+}
+
+export async function addStazione(
+  adminPin: string,
+  payload: {
+    nome: string; codice?: string | null; regione?: string | null; provincia?: string | null;
+    indirizzo?: string | null; maps_query?: string | null; plus_code?: string | null;
+    lat?: number | null; lng?: number | null; note?: string | null;
+  }
+): Promise<AdminApiResult<StazioneCompleta>> {
+  return call<StazioneCompleta>('addStazione', adminPin, payload as unknown as Record<string, unknown>);
 }
 
 export async function updateStazione(
