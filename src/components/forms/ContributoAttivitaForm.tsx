@@ -122,6 +122,7 @@ export default function ContributoAttivitaForm({
       } = await supabase
         .from('stazioni')
         .select('*')
+        .eq('attiva', true)
         .order('nome', {
           ascending: true,
         });
