@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 import {
   ArrowLeft,
@@ -139,7 +139,52 @@ export default function ContributoSalettaForm({
   // FORM STATE
   // =========================
 
-  const [stazione, setStazione]         = useState(stazionePredefinita || '');
+  const [stazioni, setStazioni] = useState<{ id: string; nome: string }[]>([]);
+  const [loadingStazioni, setLoadingStazioni] = useState(true);
+  const [stazioneId, setStazioneId] = useState('');
+  const [stazioneTestoLibero, setStazioneTestoLibero] = useState(stazionePredefinita || '');
+  const [usaTestoLibero, setUsaTestoLibero] = useState(false);
+
+  // Carica le stazioni attive e prova a pre-selezionare quella eventualmente
+  // passata da chi ha aperto il form (es. da "Segnala problema" su una
+  // saletta di ricerca già filtrata per stazione).
+  useEffect(() => {
+    let cancelled = false;
+
+    async function load() {
+      setLoadingStazioni(true);
+      try {
+        const { data, error } = await supabase
+          .from('stazioni')
+          .select('id, nome')
+          .eq('attiva', true)
+          .order('nome', { ascending: true });
+
+        if (error) throw error;
+        if (cancelled) return;
+
+        const lista = data ?? [];
+        setStazioni(lista);
+
+        if (stazionePredefinita) {
+          const norm = (s: string) => s.trim().toLowerCase();
+          const match = lista.find((s) => norm(s.nome) === norm(stazionePredefinita));
+          if (match) setStazioneId(match.id);
+          else setUsaTestoLibero(true);
+        } else if (lista.length > 0) {
+          setStazioneId(lista[0].id);
+        }
+      } catch (err) {
+        console.error('[ContributoSalettaForm] Errore caricamento stazioni:', err);
+      } finally {
+        if (!cancelled) setLoadingStazioni(false);
+      }
+    }
+
+    load();
+    return () => { cancelled = true; };
+  }, [stazionePredefinita]);
+
   const [areaId, setAreaId]             = useState<AreaId>(areeLocalita[0].id);
   const [codice, setCodice]             = useState('');
   const [ubicazione, setUbicazione]     = useState('');
@@ -207,8 +252,11 @@ export default function ContributoSalettaForm({
   // =========================
 
   async function submit() {
-    if (!stazione.trim()) {
-      toast.error('Inserisci una stazione');
+    const nomeStazioneSelezionata = stazioni.find((s) => s.id === stazioneId)?.nome ?? '';
+    const nomeStazioneFinale = usaTestoLibero ? stazioneTestoLibero.trim() : nomeStazioneSelezionata;
+
+    if (!nomeStazioneFinale) {
+      toast.error(usaTestoLibero ? 'Inserisci il nome della stazione' : 'Seleziona una stazione');
       return;
     }
 
@@ -216,7 +264,10 @@ export default function ContributoSalettaForm({
 
     try {
       const payload = {
-        stazione:          stazione.trim(),
+        stazione:          nomeStazioneFinale,
+        // null quando l'utente ha usato "La mia stazione non è in elenco":
+        // il contributo va in revisione admin per essere collegato a mano.
+        stazione_id:       usaTestoLibero ? null : stazioneId,
         tipo:              areaId,
         codice_accesso:    codice.trim(),
         ubicazione:        ubicazione.trim(),
@@ -320,12 +371,48 @@ export default function ContributoSalettaForm({
           <label className="text-xs font-semibold text-gray-400 uppercase">
             Stazione
           </label>
-          <input
-            value={stazione}
-            onChange={(e) => setStazione(e.target.value)}
-            placeholder="Es. Milano Centrale"
-            className="mt-1 border border-gray-200 rounded-xl px-3 py-2 w-full text-base"
-          />
+
+          {!usaTestoLibero ? (
+            <>
+              <select
+                value={stazioneId}
+                onChange={(e) => setStazioneId(e.target.value)}
+                disabled={loadingStazioni}
+                className="mt-1 border border-gray-200 rounded-xl px-3 py-2 w-full text-base disabled:opacity-50"
+              >
+                {loadingStazioni && <option>Caricamento stazioni...</option>}
+                {!loadingStazioni && stazioni.map((s) => (
+                  <option key={s.id} value={s.id}>{s.nome}</option>
+                ))}
+              </select>
+              <button
+                type="button"
+                onClick={() => setUsaTestoLibero(true)}
+                className="mt-1.5 text-xs text-trenord-green underline"
+              >
+                La mia stazione non è in elenco
+              </button>
+            </>
+          ) : (
+            <>
+              <input
+                value={stazioneTestoLibero}
+                onChange={(e) => setStazioneTestoLibero(e.target.value)}
+                placeholder="Es. Milano Centrale"
+                className="mt-1 border border-gray-200 rounded-xl px-3 py-2 w-full text-base"
+              />
+              <p className="mt-1.5 text-xs text-gray-400">
+                Verrà verificata da un admin prima di essere pubblicata.
+              </p>
+              <button
+                type="button"
+                onClick={() => setUsaTestoLibero(false)}
+                className="mt-1 text-xs text-trenord-green underline"
+              >
+                Seleziona dall'elenco
+              </button>
+            </>
+          )}
         </div>
 
         {/* CODICE */}
