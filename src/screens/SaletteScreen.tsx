@@ -161,6 +161,7 @@ export default function SaletteScreen({
       );
 
       const salettePresenti = (data ?? []).filter((saletta) =>
+        (saletta.attiva ?? true) &&
         nomiStazioniAttive.has(saletta.stazione?.trim().toLowerCase())
       );
 
