@@ -151,19 +151,14 @@ export default function SaletteScreen({
       const coordinates: StazioneCoordinates[] =
         (stazioniData ?? []).filter((s) => s.lat && s.lng);
 
-      // Nomi delle sole stazioni attive (normalizzati), per escludere le
-      // salette collegate a una stazione disattivata dal pannello admin.
-      // Le salette non hanno un flag "attiva" collegato alla propria
-      // stazione: l'unico modo per saperlo è confrontare stazioniData,
-      // già filtrato sopra con .eq('attiva', true).
-      const nomiStazioniAttive = new Set(
-        (stazioniData ?? []).map((s) => s.nome?.trim().toLowerCase())
-      );
-
-      const salettePresenti = (data ?? []).filter((saletta) =>
-        (saletta.attiva ?? true) &&
-        nomiStazioniAttive.has(saletta.stazione?.trim().toLowerCase())
-      );
+      // NOTA: le salette hanno un campo "stazione" testo libero, non un
+      // legame affidabile a stazioni.nome (stazione_id non viene mai
+      // valorizzato da addSaletta/updateSaletta). Filtrare le salette in
+      // base al nome della stazione è quindi troppo fragile — qualunque
+      // discrepanza di spelling le farebbe sparire in blocco (bug
+      // riscontrato). L'unica fonte di verità affidabile per nascondere
+      // una saletta lato utente è il suo campo "attiva" (toggle admin).
+      const salettePresenti = (data ?? []).filter((saletta) => saletta.attiva ?? true);
 
       const groupedMap = new Map<string, GroupedSaletta>();
 
