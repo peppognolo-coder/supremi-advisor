@@ -10,6 +10,8 @@ import {
   Coffee,
   Droplets,
   Snowflake,
+  Power,
+  PowerOff,
 } from 'lucide-react';
 
 import toast from 'react-hot-toast';
@@ -22,6 +24,7 @@ import {
   addSaletta,
   updateSaletta,
   deleteSaletta,
+  toggleAttivaSaletta,
 } from '../lib/adminApi';
 
 // =========================
@@ -175,11 +178,17 @@ function ConfirmModal({
   onConfirm,
   onCancel,
   loading,
+  confirmLabel = 'Elimina',
+  loadingLabel = 'Eliminazione...',
+  variant = 'danger',
 }: {
   message: string;
   onConfirm: () => void;
   onCancel: () => void;
   loading: boolean;
+  confirmLabel?: string;
+  loadingLabel?: string;
+  variant?: 'danger' | 'primary';
 }) {
   return (
     <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
@@ -196,12 +205,14 @@ function ConfirmModal({
           <button
             onClick={onConfirm}
             disabled={loading}
-            className="flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-red-600 text-white text-sm font-medium hover:opacity-90 disabled:opacity-50"
+            className={`flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-xl text-white text-sm font-medium hover:opacity-90 disabled:opacity-50 ${
+              variant === 'danger' ? 'bg-red-600' : 'bg-trenord-green'
+            }`}
           >
             {loading && (
               <span className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />
             )}
-            {loading ? 'Eliminazione...' : 'Elimina'}
+            {loading ? loadingLabel : confirmLabel}
           </button>
         </div>
       </div>
@@ -227,6 +238,13 @@ export default function AdminSaletteScreen({
   const [confirmDelete, setConfirmDelete] = useState<{
     id: string;
     nome: string;
+    loading: boolean;
+  } | null>(null);
+
+  const [confirmToggle, setConfirmToggle] = useState<{
+    id: string;
+    nome: string;
+    nuovoStato: boolean;
     loading: boolean;
   } | null>(null);
 
@@ -334,6 +352,39 @@ export default function AdminSaletteScreen({
   }
 
   // =========================
+  // TOGGLE ATTIVA
+  // =========================
+
+  function richiediToggle(s: Saletta) {
+    const nuovoStato = !(s.attiva ?? true);
+    setConfirmToggle({
+      id: s.id,
+      nome: `${s.stazione} — ${s.tipo}`,
+      nuovoStato,
+      loading: false,
+    });
+  }
+
+  async function confermaToggle() {
+    if (!confirmToggle) return;
+    setConfirmToggle((prev) => prev ? { ...prev, loading: true } : null);
+
+    const res = await toggleAttivaSaletta(adminPin, confirmToggle.id, confirmToggle.nuovoStato);
+
+    if (!res.ok) {
+      toast.error(res.error?.message ?? 'Errore aggiornamento');
+      setConfirmToggle((prev) => prev ? { ...prev, loading: false } : null);
+      return;
+    }
+
+    toast.success(confirmToggle.nuovoStato ? 'Saletta attivata' : 'Saletta disattivata');
+    setSalette((prev) =>
+      prev.map((s) => (s.id === confirmToggle.id ? { ...s, attiva: confirmToggle.nuovoStato } : s))
+    );
+    setConfirmToggle(null);
+  }
+
+  // =========================
   // UI
   // =========================
 
@@ -421,17 +472,29 @@ export default function AdminSaletteScreen({
             return (
               <div
                 key={s.id}
-                className="bg-white rounded-2xl border border-gray-100 p-4 shadow-sm flex flex-col gap-4"
+                className={`bg-white rounded-2xl border p-4 shadow-sm flex flex-col gap-4 ${
+                  (s.attiva ?? true) ? 'border-gray-100' : 'border-gray-200 opacity-60'
+                }`}
               >
 
-                <div>
-                  <label className="text-xs font-semibold text-gray-400 uppercase">Stazione</label>
-                  <input
-                    value={s.stazione ?? ''}
-                    onChange={(e) => updateField(s.id, 'stazione', e.target.value)}
-                    className="mt-1 w-full border border-gray-200 rounded-xl px-3 py-2 text-base"
-                  />
+                <div className="flex items-center justify-between">
+                  <div>
+                    <label className="text-xs font-semibold text-gray-400 uppercase">Stazione</label>
+                    <input
+                      value={s.stazione ?? ''}
+                      onChange={(e) => updateField(s.id, 'stazione', e.target.value)}
+                      className="mt-1 w-full border border-gray-200 rounded-xl px-3 py-2 text-base"
+                    />
+                  </div>
                 </div>
+
+                <span
+                  className={`self-start text-xs font-medium px-2 py-1 rounded-full ${
+                    (s.attiva ?? true) ? 'bg-emerald-100 text-emerald-700' : 'bg-gray-100 text-gray-500'
+                  }`}
+                >
+                  {(s.attiva ?? true) ? '🟢 Attiva' : '⚫ Disattivata'}
+                </span>
 
                 <div>
                   <label className="text-xs font-semibold text-gray-400 uppercase">Tipo</label>
@@ -490,6 +553,17 @@ export default function AdminSaletteScreen({
                   </button>
 
                   <button
+                    onClick={() => richiediToggle(s)}
+                    disabled={isSaving}
+                    className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium hover:opacity-90 disabled:opacity-50 ${
+                      (s.attiva ?? true) ? 'bg-gray-700 text-white' : 'bg-trenord-green text-white'
+                    }`}
+                  >
+                    {(s.attiva ?? true) ? <PowerOff className="w-4 h-4" /> : <Power className="w-4 h-4" />}
+                    {(s.attiva ?? true) ? 'Disattiva' : 'Attiva'}
+                  </button>
+
+                  <button
                     onClick={() => richiediElimina(s)}
                     disabled={isSaving}
                     className="flex items-center gap-2 px-4 py-2 rounded-xl bg-red-600 text-white text-sm font-medium hover:opacity-90 disabled:opacity-50"
@@ -520,6 +594,22 @@ export default function AdminSaletteScreen({
           onConfirm={confermaElimina}
           onCancel={() => setConfirmDelete(null)}
           loading={confirmDelete.loading}
+        />
+      )}
+
+      {confirmToggle && (
+        <ConfirmModal
+          message={
+            confirmToggle.nuovoStato
+              ? `Attivare la saletta "${confirmToggle.nome}"? Tornerà visibile agli utenti.`
+              : `Disattivare la saletta "${confirmToggle.nome}"? Non sarà più visibile agli utenti né nelle ricerche.`
+          }
+          onConfirm={confermaToggle}
+          onCancel={() => setConfirmToggle(null)}
+          loading={confirmToggle.loading}
+          confirmLabel={confirmToggle.nuovoStato ? 'Attiva' : 'Disattiva'}
+          loadingLabel={confirmToggle.nuovoStato ? 'Attivazione...' : 'Disattivazione...'}
+          variant={confirmToggle.nuovoStato ? 'primary' : 'danger'}
         />
       )}
     </>
