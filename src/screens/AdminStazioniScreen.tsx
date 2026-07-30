@@ -14,6 +14,7 @@ import {
   Building2,
   ToggleLeft,
   ToggleRight,
+  Plus,
 } from 'lucide-react';
 
 import toast from 'react-hot-toast';
@@ -24,6 +25,8 @@ import {
   updateStazione,
   toggleAttivaStazione,
 } from '../lib/adminApi';
+
+import AddStazioneModal from '../components/AddStazioneModal';
 
 // =========================
 // PROPS
@@ -118,6 +121,7 @@ export default function AdminStazioniScreen({
 }: Props) {
   const [loading, setLoading]   = useState(true);
   const [stazioni, setStazioni] = useState<StazioneCompleta[]>([]);
+  const [showAdd, setShowAdd]   = useState(false);
   const [search, setSearch]     = useState('');
   const [filtro, setFiltro]         = useState<FiltroMode>(initialFiltro);
   const [filtroQualita, setFiltroQualita] = useState<string>(initialSearchQualita);
@@ -287,11 +291,20 @@ export default function AdminStazioniScreen({
       <div className="flex flex-col gap-4">
 
         {/* TITOLO */}
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">Gestione Stazioni</h1>
-          <p className="text-sm text-gray-500 mt-1">
-            Visualizza e modifica le stazioni nel database
-          </p>
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">Gestione Stazioni</h1>
+            <p className="text-sm text-gray-500 mt-1">
+              Visualizza e modifica le stazioni nel database
+            </p>
+          </div>
+          <button
+            onClick={() => setShowAdd(true)}
+            className="flex items-center gap-2 px-4 py-2 rounded-xl bg-trenord-green text-white text-sm font-medium hover:opacity-90"
+          >
+            <Plus className="w-4 h-4" />
+            Aggiungi
+          </button>
         </div>
 
         {/* STATISTICHE */}
@@ -735,6 +748,14 @@ export default function AdminStazioniScreen({
           onConfirm={confirm.onConfirm}
           onCancel={() => setConfirm(null)}
           loading={confirm.loading}
+        />
+      )}
+
+      {showAdd && (
+        <AddStazioneModal
+          adminPin={adminPin}
+          onClose={() => setShowAdd(false)}
+          onAdded={(s) => setStazioni((prev) => [s, ...prev])}
         />
       )}
     </>
