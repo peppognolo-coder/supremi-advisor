@@ -254,7 +254,8 @@ export default function StazioniScreen({
         data: stazioniData,
       } = await supabase
         .from('stazioni')
-        .select('*');
+        .select('*')
+        .eq('attiva', true);
 
       const {
         data: attivitaData,
