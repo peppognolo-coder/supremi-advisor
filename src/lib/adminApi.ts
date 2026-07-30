@@ -23,6 +23,7 @@ export interface AdminApiResult<T = unknown> {
 export interface Saletta {
   id: string;
   stazione: string;
+  stazione_id: string | null;
   tipo: string;
   codice_accesso: string | null;
   ubicazione: string | null;
@@ -148,7 +149,7 @@ export async function getSalette(adminPin: string): Promise<AdminApiResult<Salet
 
 export async function addSaletta(
   adminPin: string,
-  payload: { stazione: string; tipo?: string }
+  payload: { stazione_id: string; tipo?: string }
 ): Promise<AdminApiResult<Saletta>> {
   return call<Saletta>('addSaletta', adminPin, payload);
 }
@@ -156,7 +157,7 @@ export async function addSaletta(
 export async function updateSaletta(
   adminPin: string,
   payload: {
-    id: string; stazione: string; tipo: string;
+    id: string; stazione_id: string; tipo: string;
     codice_accesso: string | null; ubicazione: string | null; note: string | null;
     microonde: boolean; distributori: boolean; acqua: boolean; climatizzata: boolean;
   }
