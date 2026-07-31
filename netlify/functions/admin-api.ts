@@ -465,6 +465,31 @@ export const handler: Handler = async (event: HandlerEvent) => {
 }
       }
 
+      // ------ MODIFICA ATTIVITA ------
+      // Proposta di modifica a un'attività esistente (vedi conversazione:
+      // ProponiModificaAttivitaModal.tsx). dati.modifiche contiene solo i
+      // campi realmente cambiati, ciascuno come { prima, dopo }: qui si
+      // applica solo il "dopo" ai campi coinvolti, il resto dell'attività
+      // resta intoccato.
+      // Se l'attività è stata eliminata nel frattempo, l'update non trova
+      // righe da aggiornare: non è un errore bloccante, il contributo viene
+      // comunque marcato come approvato (nessuna modifica applicabile).
+      if (tipo === 'modifica_attivita') {
+        const modifiche = (dati.modifiche ?? {}) as Record<string, { prima: unknown; dopo: unknown }>;
+        const updatePayload: Record<string, unknown> = {};
+        for (const [campo, { dopo }] of Object.entries(modifiche)) {
+          updatePayload[campo] = dopo;
+        }
+
+        if (Object.keys(updatePayload).length > 0 && dati.attivita_id) {
+          const { error } = await supabase
+            .from('attivita_stazione')
+            .update(updatePayload)
+            .eq('id', dati.attivita_id);
+          if (error) return dbErr(error.message);
+        }
+      }
+
       // ------ STAZIONE ------
       if (tipo === 'stazione') {
         const { error } = await supabase.from('stazioni')
