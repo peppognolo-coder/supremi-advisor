@@ -17,6 +17,8 @@ import { supabase } from '../lib/supabase';
 
 import { useSwipeDown } from '../lib/useSwipeDown';
 import HotelSheet from '../components/HotelSheet';
+import { OPZIONI_ALIMENTARI } from '../lib/adminApi';
+import { Leaf, Sprout, WheatOff } from 'lucide-react';
 import { useScrollLock } from '../lib/useScrollLock';
 import { usePullToRefresh } from '../lib/usePullToRefresh';
 
@@ -992,6 +994,21 @@ export default function StazioniScreen({
                               </div>
                             )}
 
+                            {/* ICONE RAPIDE OPZIONI ALIMENTARI */}
+                            {attivita.dati_extra?.opzioni_alimentari?.length > 0 && (
+                              <div className="flex items-center gap-2 mt-1.5">
+                                {attivita.dati_extra.opzioni_alimentari.includes('vegetariano') && (
+                                  <Leaf className="w-3.5 h-3.5 text-green-600" />
+                                )}
+                                {attivita.dati_extra.opzioni_alimentari.includes('vegano') && (
+                                  <Sprout className="w-3.5 h-3.5 text-green-600" />
+                                )}
+                                {attivita.dati_extra.opzioni_alimentari.includes('senza_glutine') && (
+                                  <WheatOff className="w-3.5 h-3.5 text-amber-600" />
+                                )}
+                              </div>
+                            )}
+
                             {/* STATO APERTURA */}
                             <div className="flex items-center gap-1.5 mt-2">
 
@@ -1520,6 +1537,42 @@ export default function StazioniScreen({
                 "
               >
                 Convenzionato Trenord
+              </div>
+            )}
+
+            {/* OPZIONI ALIMENTARI */}
+            {selectedAttivita.dati_extra?.opzioni_alimentari?.length > 0 && (
+
+              <div className="mb-4">
+
+                <h3 className="font-semibold mb-2">Opzioni alimentari</h3>
+
+                <div className="flex flex-wrap gap-2">
+                  {OPZIONI_ALIMENTARI.filter(
+                    (o) => selectedAttivita.dati_extra.opzioni_alimentari.includes(o.id)
+                  ).map((o) => (
+                    <span
+                      key={o.id}
+                      className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-green-50 text-green-700 text-sm"
+                    >
+                      {o.id === 'vegetariano' && <Leaf className="w-3.5 h-3.5" />}
+                      {o.id === 'vegano' && <Sprout className="w-3.5 h-3.5" />}
+                      {o.id === 'senza_glutine' && <WheatOff className="w-3.5 h-3.5" />}
+                      {o.label}
+                    </span>
+                  ))}
+                </div>
+
+                <p className="text-xs text-gray-400 mt-2">
+                  Informazione segnalata dalla community, non certificata dal locale. Verifica sempre di persona.
+                </p>
+
+                {selectedAttivita.dati_extra.opzioni_alimentari.includes('senza_glutine') && (
+                  <p className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-2 py-1.5 mt-2">
+                    ⚠️ Per la celiachia, chiedi sempre al locale come gestisce la contaminazione crociata in cucina.
+                  </p>
+                )}
+
               </div>
             )}
 
