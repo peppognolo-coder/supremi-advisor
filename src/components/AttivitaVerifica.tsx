@@ -7,6 +7,7 @@ import {
   CheckCircle,
   AlertTriangle,
   Clock,
+  Pencil,
 } from 'lucide-react';
 
 import toast from 'react-hot-toast';
@@ -15,7 +16,10 @@ import { supabase } from '../lib/supabase';
 
 import { getDeviceId } from '../lib/device';
 
+import { type AttivitaRow } from '../lib/adminApi';
+
 import SegnalaProblemaAttivitaModal from './SegnalaProblemaAttivitaModal';
+import ProponiModificaAttivitaModal from './ProponiModificaAttivitaModal';
 
 // =========================
 // COSTANTI
@@ -112,10 +116,14 @@ interface VerificaStats {
 interface Props {
 
   attivitaId: string;
+
+  /** Oggetto completo, serve per precompilare "Proponi modifica". */
+  attivita: AttivitaRow;
 }
 
 export default function AttivitaVerifica({
   attivitaId,
+  attivita,
 }: Props) {
 
   const [stats, setStats] =
@@ -128,6 +136,9 @@ export default function AttivitaVerifica({
     useState(false);
 
   const [showModal, setShowModal] =
+    useState(false);
+
+  const [showProponiModifica, setShowProponiModifica] =
     useState(false);
 
   const deviceId = getDeviceId();
@@ -415,6 +426,24 @@ export default function AttivitaVerifica({
 
           </button>
 
+          {/* PROPONI MODIFICA */}
+          <button
+            type="button"
+            onClick={() => setShowProponiModifica(true)}
+            disabled={submitting}
+            className="flex items-center justify-center gap-1.5 px-2 py-2 rounded-xl text-xs font-medium bg-blue-50 text-blue-700 border border-blue-200 hover:bg-blue-100 transition-colors disabled:opacity-50"
+          >
+
+            <Pencil className="w-3.5 h-3.5 flex-shrink-0" />
+
+            <span className="whitespace-nowrap">
+
+              Proponi modifica
+
+            </span>
+
+          </button>
+
         </div>
 
       </div>
@@ -426,6 +455,14 @@ export default function AttivitaVerifica({
           attivitaId={attivitaId}
           onClose={() => setShowModal(false)}
           onSuccess={loadVerifiche}
+        />
+      )}
+
+      {showProponiModifica && (
+
+        <ProponiModificaAttivitaModal
+          attivita={attivita}
+          onClose={() => setShowProponiModifica(false)}
         />
       )}
 
