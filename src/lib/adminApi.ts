@@ -41,6 +41,11 @@ export interface FasciaOraria {
   chiusura: string;
 }
 
+// NOTA: nonostante il nome, questo tipo descrive il contenuto generico
+// della colonna jsonb dati_extra su attivita_stazione — condivisa tra
+// categorie diverse. Per gli hotel contiene i campi hotel, per le
+// categorie alimentari contiene opzioni_alimentari. Non l'ho rinominato
+// per non generare un diff enorme su tutti i file che lo importano.
 export interface HotelDatiExtra {
   telefono?: string | null;
   reception_h24?: boolean;
@@ -49,7 +54,19 @@ export interface HotelDatiExtra {
   navetta?: boolean;
   ristorante?: boolean;
   note_equipaggi?: string | null;
+  opzioni_alimentari?: string[];
 }
+
+export const OPZIONI_ALIMENTARI = [
+  { id: 'vegetariano',    label: 'Opzione vegetariana' },
+  { id: 'vegano',         label: 'Opzione vegana' },
+  { id: 'senza_glutine',  label: 'Senza glutine' },
+] as const;
+
+export type OpzioneAlimentareId = typeof OPZIONI_ALIMENTARI[number]['id'];
+
+// Categorie per cui ha senso mostrare la sezione opzioni alimentari.
+export const CATEGORIE_ALIMENTARI = ['Bar', 'Ristorante', 'Pizzeria', 'Market', 'Fast Food'];
 
 export interface AttivitaRow {
   id: string;
@@ -72,7 +89,7 @@ export interface AttivitaRow {
 }
 
 export const CATEGORIE_ATTIVITA = [
-  'Bar', 'Fast Food', 'Market', 'Ristorante',
+  'Bar', 'Fast Food', 'Market', 'Ristorante', 'Pizzeria',
   'Farmacia', 'Tabacchi', 'Hotel', 'Altro',
 ] as const;
 
