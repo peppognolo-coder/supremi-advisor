@@ -4,10 +4,11 @@ import { X, Store, Plus, Trash2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { supabase } from '../lib/supabase';
 import { useSwipeDown } from '../lib/useSwipeDown';
-import { CATEGORIE_ATTIVITA, DISTANZE_ATTIVITA, addAttivita, uploadQrHotel } from '../lib/adminApi';
+import { CATEGORIE_ATTIVITA, DISTANZE_ATTIVITA, CATEGORIE_ALIMENTARI, addAttivita, uploadQrHotel } from '../lib/adminApi';
 import type { HotelDatiExtra } from '../lib/adminApi';
 import HotelFieldsSection from './forms/HotelFieldsSection';
 import QrCheckinUpload, { type QrCheckinData } from './forms/QrCheckinUpload';
+import OpzioniAlimentariSection from './forms/OpzioniAlimentariSection';
 
 interface Props {
   stazioneId: string;
@@ -66,7 +67,9 @@ export default function AddAttivitaModal({ stazioneId, onClose, onSuccess, direc
   });
 
   const isHotel = categoria === 'Hotel';
+  const isAlimentare = CATEGORIE_ALIMENTARI.includes(categoria);
   const [qrData, setQrData] = useState<QrCheckinData | null>(null);
+  const [opzioniAlimentari, setOpzioniAlimentari] = useState<string[]>([]);
 
   // ── Fasce orarie ─────────────────────────────────────────────────────────
   function addFascia() {
@@ -110,6 +113,8 @@ export default function AddAttivitaModal({ stazioneId, onClose, onSuccess, direc
         ...hotelDati,
         telefono:        hotelDati.telefono?.trim() || null,
         note_equipaggi:  hotelDati.note_equipaggi?.trim() || null,
+      } : isAlimentare && opzioniAlimentari.length > 0 ? {
+        opzioni_alimentari: opzioniAlimentari,
       } : null,
       // QR check-in facoltativo — solo se l'utente ha caricato un'immagine.
       // In modalità contributo finisce in coda con l'attività; in modalità
@@ -227,6 +232,11 @@ export default function AddAttivitaModal({ stazioneId, onClose, onSuccess, direc
               <Switch label="Convenzionato Trenord" value={convenzionato} onChange={setConvenzionato} />
               <QrCheckinUpload onChange={setQrData} />
             </>
+          )}
+
+          {/* OPZIONI ALIMENTARI (solo per categorie alimentari) */}
+          {isAlimentare && (
+            <OpzioniAlimentariSection value={opzioniAlimentari} onChange={setOpzioniAlimentari} />
           )}
 
           {/* CONVENZIONATO (solo per non-hotel) */}
