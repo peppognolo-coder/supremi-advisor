@@ -9,9 +9,10 @@ import {
 import toast from 'react-hot-toast';
 
 import { supabase } from '../../lib/supabase';
-import { DISTANZE_ATTIVITA, type HotelDatiExtra } from '../../lib/adminApi';
+import { DISTANZE_ATTIVITA, CATEGORIE_ATTIVITA, CATEGORIE_ALIMENTARI, type HotelDatiExtra } from '../../lib/adminApi';
 import HotelFieldsSection from './HotelFieldsSection';
 import QrCheckinUpload, { type QrCheckinData } from './QrCheckinUpload';
+import OpzioniAlimentariSection from './OpzioniAlimentariSection';
 
 interface Props {
   onBack: () => void;
@@ -23,18 +24,6 @@ interface FasciaOraria {
   apertura: string;
   chiusura: string;
 }
-
-const categorie = [
-  'Bar',
-  'Ristorante',
-  'Pizzeria',
-  'Market',
-  'Hotel',
-  'Tabacchi',
-  'Fast Food',
-  'Farmacia',
-  'Altro',
-];
 
 const giorniSettimana = [
   'Lun',
@@ -63,7 +52,7 @@ export default function ContributoAttivitaForm({
     useState('');
 
   const [categoria, setCategoria] =
-    useState(categorie[0]);
+    useState<string>(CATEGORIE_ATTIVITA[0]);
 
   const [indirizzo, setIndirizzo] =
     useState('');
@@ -102,6 +91,9 @@ export default function ContributoAttivitaForm({
 
   const [loading, setLoading] =
     useState(false);
+
+  const [opzioniAlimentari, setOpzioniAlimentari] =
+    useState<string[]>([]);
 
   const [
     fasceOrarie,
@@ -285,6 +277,8 @@ export default function ContributoAttivitaForm({
                 note_equipaggi: hotelDati.note_equipaggi?.trim() || null,
               },
             }
+          : CATEGORIE_ALIMENTARI.includes(categoria) && opzioniAlimentari.length > 0
+          ? { dati_extra: { opzioni_alimentari: opzioniAlimentari } }
           : {}),
       };
 
@@ -420,7 +414,7 @@ export default function ContributoAttivitaForm({
           className="border border-gray-200 rounded-xl px-3 py-2 text-base"
         >
 
-          {categorie.map(
+          {CATEGORIE_ATTIVITA.map(
             (cat) => (
 
               <option key={cat}>
@@ -635,6 +629,11 @@ export default function ContributoAttivitaForm({
             <HotelFieldsSection value={hotelDati} onChange={setHotelDati} />
             <QrCheckinUpload onChange={setQrData} />
           </>
+        )}
+
+        {/* OPZIONI ALIMENTARI — facoltative, solo categorie alimentari */}
+        {CATEGORIE_ALIMENTARI.includes(categoria) && (
+          <OpzioniAlimentariSection value={opzioniAlimentari} onChange={setOpzioniAlimentari} />
         )}
 
         {/* NOTE */}
