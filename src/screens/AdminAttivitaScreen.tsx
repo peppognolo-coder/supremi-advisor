@@ -23,10 +23,12 @@ import {
   ripristinaAttivita,
   updateAttivita,
   CATEGORIE_ATTIVITA,
+  CATEGORIE_ALIMENTARI,
   DISTANZE_ATTIVITA,
 } from '../lib/adminApi';
 
 import AddAttivitaModal from '../components/AddAttivitaModal';
+import OpzioniAlimentariSection from '../components/forms/OpzioniAlimentariSection';
 
 // =========================
 // PROPS
@@ -672,6 +674,19 @@ export default function AdminAttivitaScreen({ adminPin, initialEditId }: Props) 
                 </div>
 
               </div>
+            )}
+
+            {/* OPZIONI ALIMENTARI (solo categorie alimentari) */}
+            {CATEGORIE_ALIMENTARI.includes(editingAttivita.categoria) && (
+              <OpzioniAlimentariSection
+                value={editingAttivita.dati_extra?.opzioni_alimentari ?? []}
+                onChange={(opzioni_alimentari) =>
+                  setEditingAttivita({
+                    ...editingAttivita,
+                    dati_extra: { ...(editingAttivita.dati_extra ?? {}), opzioni_alimentari },
+                  })
+                }
+              />
             )}
 
             {/* INDIRIZZO */}
