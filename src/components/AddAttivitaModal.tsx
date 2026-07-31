@@ -1,11 +1,13 @@
 import { useState } from 'react';
 import { useScrollLock } from '../lib/useScrollLock';
-import { X, Store, Hotel, Clock3, Plus, Trash2 } from 'lucide-react';
+import { X, Store, Plus, Trash2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { supabase } from '../lib/supabase';
 import { useSwipeDown } from '../lib/useSwipeDown';
-import { CATEGORIE_ATTIVITA, DISTANZE_ATTIVITA, addAttivita } from '../lib/adminApi';
+import { CATEGORIE_ATTIVITA, DISTANZE_ATTIVITA, addAttivita, uploadQrHotel } from '../lib/adminApi';
 import type { HotelDatiExtra } from '../lib/adminApi';
+import HotelFieldsSection from './forms/HotelFieldsSection';
+import QrCheckinUpload, { type QrCheckinData } from './forms/QrCheckinUpload';
 
 interface Props {
   stazioneId: string;
@@ -64,6 +66,7 @@ export default function AddAttivitaModal({ stazioneId, onClose, onSuccess, direc
   });
 
   const isHotel = categoria === 'Hotel';
+  const [qrData, setQrData] = useState<QrCheckinData | null>(null);
 
   // ── Fasce orarie ─────────────────────────────────────────────────────────
   function addFascia() {
@@ -108,6 +111,11 @@ export default function AddAttivitaModal({ stazioneId, onClose, onSuccess, direc
         telefono:        hotelDati.telefono?.trim() || null,
         note_equipaggi:  hotelDati.note_equipaggi?.trim() || null,
       } : null,
+      // QR check-in facoltativo — solo se l'utente ha caricato un'immagine.
+      // In modalità contributo finisce in coda con l'attività; in modalità
+      // diretta va caricato subito dopo l'insert (vedi sotto), perché
+      // l'attività esiste già e non passa da nessuna revisione.
+      ...(isHotel && qrData && !direct ? { qr_checkin_new: qrData } : {}),
     };
 
     let ok = true;
@@ -117,6 +125,17 @@ export default function AddAttivitaModal({ stazioneId, onClose, onSuccess, direc
       const res = await addAttivita(adminPin, payload);
       ok = res.ok;
       errorMsg = res.error?.message ?? null;
+
+      // QR facoltativo e non bloccante: se l'upload fallisce l'attività
+      // resta comunque creata, si può ricaricare il QR in seguito da Attività.
+      if (ok && res.data?.id && isHotel && qrData) {
+        const uploadRes = await uploadQrHotel(
+          adminPin, res.data.id, qrData.imageBase64, qrData.mimeType, qrData.scadenza ?? undefined
+        );
+        if (!uploadRes.ok) {
+          toast.error('Attività creata, ma il QR non è stato caricato. Puoi ricaricarlo da Attività.');
+        }
+      }
     } else {
       const { error } = await supabase.from('contributi').insert({
         tipo:  'attivita',
@@ -201,41 +220,13 @@ export default function AddAttivitaModal({ stazioneId, onClose, onSuccess, direc
             </select>
           </div>
 
-          {/* CAMPI HOTEL (solo se categoria = Hotel) */}
+          {/* CAMPI HOTEL + QR CHECK-IN (solo se categoria = Hotel) */}
           {isHotel && (
-            <div className="flex flex-col gap-3 bg-blue-50 border border-blue-100 rounded-2xl p-4">
-              <p className="text-xs font-semibold text-blue-700 uppercase tracking-wide">🏨 Informazioni hotel</p>
-
-              <div className="flex flex-col gap-1">
-                <label className="text-xs font-semibold text-gray-400 uppercase tracking-wide">Telefono</label>
-                <input value={hotelDati.telefono ?? ''} onChange={(e) => setHotelDati((p) => ({ ...p, telefono: e.target.value }))}
-                  placeholder="+39 02 1234567" type="tel"
-                  className="border border-gray-200 rounded-xl px-3 py-2.5 text-base bg-white" />
-              </div>
-
-              <div className="flex flex-col gap-2">
-                <Switch label="Reception H24" value={hotelDati.reception_h24 ?? false}
-                  onChange={(v) => setHotelDati((p) => ({ ...p, reception_h24: v }))} />
-                <Switch label="Colazione disponibile" value={hotelDati.colazione ?? false}
-                  onChange={(v) => setHotelDati((p) => ({ ...p, colazione: v }))} />
-                <Switch label="WiFi disponibile" value={hotelDati.wifi ?? false}
-                  onChange={(v) => setHotelDati((p) => ({ ...p, wifi: v }))} />
-                <Switch label="Navetta disponibile" value={hotelDati.navetta ?? false}
-                  onChange={(v) => setHotelDati((p) => ({ ...p, navetta: v }))} />
-                <Switch label="Ristorante interno" value={hotelDati.ristorante ?? false}
-                  onChange={(v) => setHotelDati((p) => ({ ...p, ristorante: v }))} />
-                <Switch label="Convenzionato Trenord" value={convenzionato}
-                  onChange={setConvenzionato} />
-              </div>
-
-              <div className="flex flex-col gap-1">
-                <label className="text-xs font-semibold text-gray-400 uppercase tracking-wide">Note equipaggi</label>
-                <textarea value={hotelDati.note_equipaggi ?? ''}
-                  onChange={(e) => setHotelDati((p) => ({ ...p, note_equipaggi: e.target.value }))}
-                  rows={3} placeholder="es. colazione dalle 6:00, navetta ogni 30 min, check-in anticipato possibile..."
-                  className="border border-gray-200 rounded-xl px-3 py-2.5 text-base resize-none bg-white" />
-              </div>
-            </div>
+            <>
+              <HotelFieldsSection value={hotelDati} onChange={setHotelDati} />
+              <Switch label="Convenzionato Trenord" value={convenzionato} onChange={setConvenzionato} />
+              <QrCheckinUpload onChange={setQrData} />
+            </>
           )}
 
           {/* CONVENZIONATO (solo per non-hotel) */}
