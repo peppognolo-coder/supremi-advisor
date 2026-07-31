@@ -17,6 +17,8 @@ import {
 
 import toast from 'react-hot-toast';
 
+import { supabase } from '../lib/supabase';
+
 import {
   type Contributo,
   type StazioneRow,
@@ -128,6 +130,9 @@ export default function AdminContributiScreen({ adminPin }: Props) {
   const [stazioni, setStazioni]         = useState<StazioneRow[]>([]);
   const [editingContributo, setEditingContributo] = useState<any>(null);
   const [processingId, setProcessingId] = useState<string | null>(null);
+  // id delle attività di cui è stata verificata l'esistenza, per i contributi
+  // tipo 'modifica_attivita' — badge "attività non più esistente" altrimenti.
+  const [attivitaEsistentiIds, setAttivitaEsistentiIds] = useState<Set<string>>(new Set());
   const firstInputRef = useRef<HTMLInputElement>(null);
 
   // =========================
@@ -142,9 +147,28 @@ export default function AdminContributiScreen({ adminPin }: Props) {
       setLoading(false);
       return;
     }
-    setContributi(res.data?.contributi ?? []);
+    const contributiCaricati = res.data?.contributi ?? [];
+    setContributi(contributiCaricati);
     setStazioni(res.data?.stazioni ?? []);
     setLoading(false);
+
+    // Controllo in un'unica query se le attività referenziate dai
+    // contributi 'modifica_attivita' esistono ancora (potrebbero essere
+    // state eliminate nel frattempo).
+    const idsDaVerificare = [...new Set(
+      contributiCaricati
+        .filter((c) => c.tipo === 'modifica_attivita' && c.dati?.attivita_id)
+        .map((c) => c.dati.attivita_id as string)
+    )];
+    if (idsDaVerificare.length > 0) {
+      const { data } = await supabase
+        .from('attivita_stazione')
+        .select('id')
+        .in('id', idsDaVerificare);
+      setAttivitaEsistentiIds(new Set((data ?? []).map((r) => r.id)));
+    } else {
+      setAttivitaEsistentiIds(new Set());
+    }
   }
 
   useEffect(() => { load(); }, []);
@@ -319,6 +343,11 @@ export default function AdminContributiScreen({ adminPin }: Props) {
                     {c.tipo === 'saletta' && !c.dati?.stazione_id && (
                       <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-amber-100 text-amber-700">
                         ⚠️ Stazione da verificare
+                      </span>
+                    )}
+                    {c.tipo === 'modifica_attivita' && (c.dati as any)?.attivita_id && !attivitaEsistentiIds.has((c.dati as any).attivita_id) && (
+                      <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-red-100 text-red-700">
+                        ⚠️ Attività non più esistente
                       </span>
                     )}
                   </div>
@@ -900,6 +929,63 @@ export default function AdminContributiScreen({ adminPin }: Props) {
                 })}
               />
             )}
+
+            {/* MODIFICA ATTIVITA — diff Prima/Dopo */}
+            {editingContributo.tipo === 'modifica_attivita' && (() => {
+              const LABEL: Record<string, string> = {
+                nome: 'Nome', categoria: 'Categoria', indirizzo: 'Indirizzo',
+                ubicazione: 'Ubicazione', distanza_piedi: 'Distanza dalla stazione',
+                note: 'Note', convenzionato: 'Convenzionato Trenord', maps_query: 'Google Maps',
+                fasce_orarie: 'Fasce orarie', dati_extra: 'Info aggiuntive (hotel / opzioni alimentari)',
+              };
+              const fmt = (v: unknown) => {
+                if (v === null || v === undefined || v === '') return '—';
+                if (typeof v === 'boolean') return v ? 'Sì' : 'No';
+                if (typeof v === 'object') return JSON.stringify(v);
+                return String(v);
+              };
+              const modifiche = editingContributo.dati?.modifiche ?? {};
+              const attivitaId = editingContributo.dati?.attivita_id;
+              const esiste = attivitaId ? attivitaEsistentiIds.has(attivitaId) : true;
+
+              return (
+                <div className="flex flex-col gap-3">
+                  <p className="text-xs font-semibold text-gray-400 uppercase">
+                    Modifica proposta per "{editingContributo.dati?.nome_attivita}"
+                  </p>
+
+                  {!esiste && (
+                    <div className="text-xs text-red-700 bg-red-50 border border-red-200 rounded-lg px-3 py-2">
+                      ⚠️ Questa attività non esiste più (eliminata dopo l'invio della proposta). Approvando, il contributo verrà comunque marcato come gestito, ma nessuna modifica potrà essere applicata.
+                    </div>
+                  )}
+
+                  <div className="flex flex-col gap-2">
+                    {Object.entries(modifiche).map(([campo, diff]) => (
+                      <div key={campo} className="border border-gray-200 rounded-xl p-3">
+                        <p className="text-xs font-semibold text-gray-500 mb-1.5">{LABEL[campo] ?? campo}</p>
+                        <div className="flex items-center gap-2 text-sm">
+                          <span className="text-gray-400 line-through flex-1 truncate">
+                            {fmt((diff as any).prima)}
+                          </span>
+                          <span className="text-gray-300">→</span>
+                          <span className="text-gray-900 font-medium flex-1 truncate">
+                            {fmt((diff as any).dopo)}
+                          </span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  {editingContributo.dati?.nota_utente && (
+                    <div className="text-sm text-gray-600 bg-gray-50 border border-gray-200 rounded-xl p-3">
+                      <p className="text-xs font-semibold text-gray-400 uppercase mb-1">Nota dell'utente</p>
+                      {editingContributo.dati.nota_utente}
+                    </div>
+                  )}
+                </div>
+              );
+            })()}
 
             {/* STAZIONE */}
             {editingContributo.tipo === 'stazione' && (
