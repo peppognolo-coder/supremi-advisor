@@ -26,8 +26,11 @@ import {
   rejectContributo,
   CATEGORIE_ATTIVITA,   // FIX P2: import da adminApi invece di array locale
   DISTANZE_ATTIVITA,    // FIX P2: import da adminApi invece di array locale
+  CATEGORIE_ALIMENTARI,
   uploadQrHotel,
 } from '../lib/adminApi';
+
+import OpzioniAlimentariSection from '../components/forms/OpzioniAlimentariSection';
 
 // =========================
 // PROPS
@@ -882,6 +885,20 @@ export default function AdminContributiScreen({ adminPin }: Props) {
                   </div>
                 )}
               </>
+            )}
+
+            {/* OPZIONI ALIMENTARI (solo categorie alimentari) */}
+            {editingContributo.tipo === 'attivita' && CATEGORIE_ALIMENTARI.includes(editingContributo.dati?.categoria) && (
+              <OpzioniAlimentariSection
+                value={editingContributo.dati?.dati_extra?.opzioni_alimentari ?? []}
+                onChange={(opzioni_alimentari) => setEditingContributo({
+                  ...editingContributo,
+                  dati: {
+                    ...editingContributo.dati,
+                    dati_extra: { ...(editingContributo.dati?.dati_extra ?? {}), opzioni_alimentari },
+                  },
+                })}
+              />
             )}
 
             {/* STAZIONE */}
