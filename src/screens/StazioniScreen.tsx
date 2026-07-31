@@ -1115,6 +1115,7 @@ export default function StazioniScreen({
 
                         <AttivitaVerifica
                           attivitaId={attivita.id}
+                          attivita={attivita}
                         />
 
                       </div>
