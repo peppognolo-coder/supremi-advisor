@@ -161,8 +161,9 @@ export const handler: Handler = async (event: HandlerEvent) => {
     }
 
     if (action === 'addSaletta') {
-      const { stazione_id, tipo } = (payload ?? {}) as { stazione_id?: string; tipo?: string };
+      const { stazione_id, tipo, etichetta } = (payload ?? {}) as { stazione_id?: string; tipo?: string; etichetta?: string };
       if (!stazione_id) return err({ ...ERRORS.MISSING_PAYLOAD, message: 'Campo obbligatorio: stazione_id' });
+      if (!tipo)        return err({ ...ERRORS.MISSING_PAYLOAD, message: 'Campo obbligatorio: tipo (sezione)' });
 
       // Il nome testuale viene sempre derivato dalla stazione selezionata,
       // mai digitato a mano: garantisce che stazione_id e stazione (testo,
@@ -173,15 +174,18 @@ export const handler: Handler = async (event: HandlerEvent) => {
 
       const { data, error } = await supabase
         .from('salette')
-        .insert({ stazione_id, stazione: staz.nome, nome: staz.nome, tipo: tipo?.trim() || 'Equipaggi', stato: 'aperta' })
+        .insert({ stazione_id, stazione: staz.nome, nome: staz.nome, tipo, etichetta: etichetta?.trim() || null, stato: 'aperta' })
         .select().single();
       if (error) return dbErr(error.message);
       return ok(data);
     }
 
     if (action === 'updateSaletta') {
-      const { id, stazione_id, tipo, codice_accesso, ubicazione, note, microonde, distributori, acqua, climatizzata } =
-        (payload ?? {}) as any;
+      const {
+        id, stazione_id, tipo, etichetta, codice_accesso, ubicazione, note,
+        microonde, distributori, acqua, climatizzata, docce, armadietti,
+        modalita_accesso, tipologia_accesso, fasce_orarie, stato,
+      } = (payload ?? {}) as any;
       if (!id) return err({ ...ERRORS.MISSING_PAYLOAD, message: 'Campo obbligatorio: id' });
       if (!stazione_id) return err({ ...ERRORS.MISSING_PAYLOAD, message: 'Campo obbligatorio: stazione_id' });
 
@@ -191,9 +195,14 @@ export const handler: Handler = async (event: HandlerEvent) => {
 
       const { data, error } = await supabase
         .from('salette')
-        .update({ stazione_id, stazione: staz.nome, tipo, codice_accesso: codice_accesso ?? null, ubicazione: ubicazione ?? null,
+        .update({ stazione_id, stazione: staz.nome, tipo, etichetta: etichetta?.trim() || null,
+                  codice_accesso: codice_accesso ?? null, ubicazione: ubicazione ?? null,
                   note: note ?? null, microonde: microonde ?? false, distributori: distributori ?? false,
-                  acqua: acqua ?? false, climatizzata: climatizzata ?? false })
+                  acqua: acqua ?? false, climatizzata: climatizzata ?? false,
+                  docce: docce ?? false, armadietti: armadietti ?? false,
+                  modalita_accesso: modalita_accesso ?? null, tipologia_accesso: tipologia_accesso ?? null,
+                  fasce_orarie: Array.isArray(fasce_orarie) ? fasce_orarie : null,
+                  stato: stato ?? null })
         .eq('id', id).select().single();
       if (error) return dbErr(error.message);
       return ok(data);
@@ -405,26 +414,52 @@ export const handler: Handler = async (event: HandlerEvent) => {
       // se arriva comunque null si ricade sul vecchio raggruppamento testuale
       // per non perdere il contributo.
       if (tipo === 'saletta') {
+        // FIX: il form (ContributoSalettaForm.tsx) invia i servizi annidati
+        // in dati.servizi.{microonde,distributori,acqua,climatizzata,docce,
+        // armadietti} — prima qui si leggeva dati.microonde etc. al livello
+        // sbagliato, quindi questi valori (e fasce_orarie/modalita_accesso/
+        // tipologia_accesso, mai scritti affatto) venivano sempre persi
+        // silenziosamente all'approvazione. Vedi conversazione.
+        const servizi = (dati.servizi ?? {}) as Record<string, unknown>;
         const groupId = normalizeGroupId(dati.stazione);
-        const { data: existing } = await supabase
-          .from('salette').select('*')
-          .eq('saletta_group_id', groupId).eq('tipo', dati.tipo).maybeSingle();
+
+        // L'etichetta entra nel match: due sale della stessa sezione nella
+        // stessa stazione (es. "Trenord"/"Trenitalia") sono righe distinte,
+        // non la stessa riga da sovrascrivere a vicenda.
+        let query = supabase.from('salette').select('*')
+          .eq('saletta_group_id', groupId).eq('tipo', dati.tipo);
+        query = dati.etichetta
+          ? query.eq('etichetta', dati.etichetta)
+          : query.is('etichetta', null);
+        const { data: existing } = await query.maybeSingle();
+
+        const campiComuni = {
+          stazione_id: dati.stazione_id ?? undefined,
+          etichetta: dati.etichetta ?? null,
+          codice_accesso: dati.codice_accesso ?? null,
+          ubicazione: dati.ubicazione ?? null,
+          stato: dati.stato ?? null,
+          note: dati.note ?? null,
+          modalita_accesso: dati.modalita_accesso ?? null,
+          tipologia_accesso: dati.tipologia_accesso ?? null,
+          fasce_orarie: Array.isArray(dati.fasce_orarie) ? dati.fasce_orarie : null,
+          microonde: servizi.microonde ?? false,
+          distributori: servizi.distributori ?? false,
+          acqua: servizi.acqua ?? false,
+          climatizzata: servizi.climatizzata ?? false,
+          docce: servizi.docce ?? false,
+          armadietti: servizi.armadietti ?? false,
+        };
 
         if (existing) {
           const { error } = await supabase.from('salette')
-            .update({ stazione_id: dati.stazione_id ?? existing.stazione_id ?? null,
-                      codice_accesso: dati.codice_accesso, ubicazione: dati.ubicazione, stato: dati.stato,
-                      note: dati.note, microonde: dati.microonde, distributori: dati.distributori,
-                      acqua: dati.acqua, climatizzata: dati.climatizzata })
+            .update({ ...campiComuni, stazione_id: dati.stazione_id ?? existing.stazione_id ?? null })
             .eq('id', existing.id);
           if (error) return dbErr(error.message);
         } else {
           const { error } = await supabase.from('salette')
-            .insert({ saletta_group_id: groupId, stazione_id: dati.stazione_id ?? null,
-                      stazione: dati.stazione, nome: dati.stazione,
-                      tipo: dati.tipo, codice_accesso: dati.codice_accesso, ubicazione: dati.ubicazione,
-                      stato: dati.stato, note: dati.note, microonde: dati.microonde,
-                      distributori: dati.distributori, acqua: dati.acqua, climatizzata: dati.climatizzata });
+            .insert({ saletta_group_id: groupId, stazione: dati.stazione, nome: dati.stazione,
+                      tipo: dati.tipo, ...campiComuni, stazione_id: dati.stazione_id ?? null });
           if (error) return dbErr(error.message);
         }
       }
