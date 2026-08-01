@@ -139,7 +139,7 @@ export default function SaletteScreen({
           // NOTA: stringa unica (non concatenata con +) — la concatenazione
           // fa perdere a Supabase l'inferenza del tipo di ritorno, che
           // ricade su GenericStringError.
-          'id, stazione_id, tipo, ubicazione, stato, note, microonde, distributori, acqua, climatizzata, operatore, attiva, updated_at, stazione, has_codice'
+          'id, stazione_id, tipo, etichetta, ubicazione, stato, note, microonde, distributori, acqua, climatizzata, docce, armadietti, modalita_accesso, tipologia_accesso, fasce_orarie, operatore, attiva, updated_at, stazione, has_codice'
         ),
         supabase.from('stazioni').select('id, nome, lat, lng').eq('attiva', true),
       ]);
