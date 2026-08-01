@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from 'react';
 import {
   MapPin, Phone,
   Clock, Star, X, AlertTriangle, CheckCircle,
-  QrCode, KeyRound, Eye, EyeOff, Smartphone, Upload, Calendar,
+  QrCode, KeyRound, Smartphone, Upload, Calendar,
 } from 'lucide-react';
 
 import toast from 'react-hot-toast';
