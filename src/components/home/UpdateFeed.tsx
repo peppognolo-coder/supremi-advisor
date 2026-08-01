@@ -1,62 +1,49 @@
 import React from 'react';
-import { Bell, CheckCircle2, AlertCircle, Info } from 'lucide-react';
+import { Bell, CheckCircle2, AlertCircle, Info, ChevronRight } from 'lucide-react';
+import type { FeedItem } from '../../lib/homeFeed';
 
-type FeedItemType = 'info' | 'avviso' | 'risolto';
+export type { FeedItem };
 
-export interface FeedItem {
-  id: string;
-  tipo: FeedItemType;
-  titolo: string;
-  descrizione: string;
-  stazione?: string;
-  /** Timestamp leggibile — verrà formattato dalla logica reale in futuro */
-  tempo: string;
-}
+type FeedItemType = FeedItem['tipo'];
 
 interface UpdateFeedProps {
   items: FeedItem[];
+  loading?: boolean;
+  onItemClick?: (item: FeedItem) => void;
 }
 
 const TIPO_CONFIG: Record<
   FeedItemType,
-  { icon: React.ReactNode; dotColor: string; iconColor: string; labelColor: string; label: string }
+  { icon: React.ReactNode; iconColor: string }
 > = {
   info: {
     icon: <Info className="w-4 h-4" />,
-    dotColor: 'bg-blue-400',
     iconColor: 'text-blue-500',
-    labelColor: 'text-blue-600 bg-blue-50',
-    label: 'Info',
   },
   avviso: {
     icon: <AlertCircle className="w-4 h-4" />,
-    dotColor: 'bg-orange-400',
     iconColor: 'text-orange-500',
-    labelColor: 'text-orange-600 bg-orange-50',
-    label: 'Avviso',
   },
   risolto: {
     icon: <CheckCircle2 className="w-4 h-4" />,
-    dotColor: 'bg-green-400',
     iconColor: 'text-trenord-green',
-    labelColor: 'text-trenord-green bg-green-50',
-    label: 'Risolto',
   },
 };
 
-export const UpdateFeed: React.FC<UpdateFeedProps> = ({ items }) => {
+export const UpdateFeed: React.FC<UpdateFeedProps> = ({ items, loading = false, onItemClick }) => {
   return (
     <div className="px-4">
       <div className="flex items-center justify-between mb-3">
         <p className="section-title">Da sapere</p>
-        {items.length > 0 && (
-          <span className="text-xs font-medium text-trenord-green cursor-pointer">
-            Vedi tutti
-          </span>
-        )}
       </div>
 
-      {items.length === 0 ? (
+      {loading ? (
+        <div className="flex flex-col gap-2">
+          {[1, 2].map((i) => (
+            <div key={i} className="bg-white rounded-2xl border border-gray-100 px-4 py-3.5 h-[72px] animate-pulse" />
+          ))}
+        </div>
+      ) : items.length === 0 ? (
         <div className="bg-white rounded-2xl border border-gray-100 px-4 py-6 text-center">
           <Bell className="w-6 h-6 text-gray-300 mx-auto mb-2" />
           <p className="text-sm text-gray-400 font-medium">Nessun aggiornamento</p>
@@ -68,10 +55,14 @@ export const UpdateFeed: React.FC<UpdateFeedProps> = ({ items }) => {
         <div className="flex flex-col gap-2">
           {items.map((item) => {
             const config = TIPO_CONFIG[item.tipo];
+            const clickable = !!item.link && !!onItemClick;
             return (
               <div
                 key={item.id}
-                className="bg-white rounded-2xl border border-gray-100 shadow-sm px-4 py-3.5 flex items-start gap-3"
+                onClick={clickable ? () => onItemClick!(item) : undefined}
+                className={`bg-white rounded-2xl border border-gray-100 shadow-sm px-4 py-3.5 flex items-start gap-3 ${
+                  clickable ? 'cursor-pointer hover:border-gray-200 active:bg-gray-50 transition-colors' : ''
+                }`}
               >
                 {/* Icona tipo */}
                 <div className={`mt-0.5 flex-shrink-0 ${config.iconColor}`}>
@@ -99,6 +90,10 @@ export const UpdateFeed: React.FC<UpdateFeedProps> = ({ items }) => {
                     {item.descrizione}
                   </p>
                 </div>
+
+                {clickable && (
+                  <ChevronRight className="w-4 h-4 text-gray-300 flex-shrink-0 mt-1" />
+                )}
               </div>
             );
           })}
