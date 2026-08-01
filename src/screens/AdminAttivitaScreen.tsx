@@ -73,7 +73,7 @@ function ConfirmModal({
   loading: boolean;
 }) {
   return (
-    <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
+    <div className="fixed inset-0 bg-black/40 z-[9999] flex items-center justify-center p-4">
       <div className="bg-white rounded-2xl w-full max-w-sm p-6 flex flex-col gap-4">
         <p className="text-sm text-gray-700">{message}</p>
         <div className="flex gap-2">
@@ -103,7 +103,7 @@ function PickStazioneModal({
 }) {
   const [stazioneId, setStazioneId] = useState(stazioni[0]?.id ?? '');
   return (
-    <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
+    <div className="fixed inset-0 bg-black/40 z-[9999] flex items-center justify-center p-4">
       <div className="bg-white rounded-2xl w-full max-w-sm p-6 flex flex-col gap-4">
         <h2 className="text-lg font-bold text-gray-900">Aggiungi attività</h2>
         <div className="flex flex-col gap-1">
@@ -508,7 +508,7 @@ export default function AdminAttivitaScreen({ adminPin, initialEditId }: Props) 
 
       {/* MODAL MODIFICA */}
       {editingAttivita && (
-        <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4"
+        <div className="fixed inset-0 bg-black/40 z-[9999] flex items-center justify-center p-4"
           onClick={(e) => { if (e.target === e.currentTarget) setEditingAttivita(null); }}>
           <div className="bg-white rounded-3xl w-full max-w-2xl p-6 pb-24 flex flex-col gap-4 max-h-[90vh] overflow-y-auto">
 
