@@ -470,32 +470,41 @@ export default function AdminContributiScreen({ adminPin }: Props) {
             )}
 
             {/* SEGNALAZIONE SALETTA */}
-            {editingContributo.tipo === 'segnalazione_saletta' && (
-              <div className="flex flex-col gap-4">
-                <div className="bg-amber-50 border border-amber-200 rounded-xl p-3">
-                  <p className="text-xs font-semibold text-amber-700 uppercase tracking-wide mb-2">Segnalazione saletta</p>
-                  <div className="flex flex-col gap-2 text-sm">
-                    <div className="flex justify-between">
-                      <span className="text-gray-500">Tipo</span>
-                      <span className="font-medium text-gray-900">{editingContributo.dati?.tipo?.replace(/_/g, ' ')}</span>
+            {editingContributo.tipo === 'segnalazione_saletta' && (() => {
+              // Formato nuovo: dati.selezioni = [{tipo, valore}, ...] — più
+              // campi segnalati insieme. Fallback al vecchio formato
+              // (dati.tipo singolo) per i contributi già in coda da prima.
+              const selezioni = Array.isArray(editingContributo.dati?.selezioni)
+                ? editingContributo.dati.selezioni
+                : editingContributo.dati?.tipo
+                ? [{ tipo: editingContributo.dati.tipo, valore: editingContributo.dati.valore }]
+                : [];
+
+              return (
+                <div className="flex flex-col gap-4">
+                  <div className="bg-amber-50 border border-amber-200 rounded-xl p-3">
+                    <p className="text-xs font-semibold text-amber-700 uppercase tracking-wide mb-2">
+                      Segnalazione saletta {selezioni.length > 1 ? `(${selezioni.length} campi)` : ''}
+                    </p>
+                    <div className="flex flex-col gap-2 text-sm">
+                      {selezioni.map((sel: { tipo: string; valore?: string | null }, i: number) => (
+                        <div key={i} className="flex justify-between gap-3 border-b border-amber-100 last:border-0 pb-2 last:pb-0">
+                          <span className="text-gray-500 capitalize">{sel.tipo?.replace(/_/g, ' ')}</span>
+                          {sel.valore && <span className="font-medium text-gray-900 text-right">{sel.valore}</span>}
+                        </div>
+                      ))}
+                      {editingContributo.dati?.nota && (
+                        <div className="flex flex-col gap-1 pt-1">
+                          <span className="text-gray-500">Note</span>
+                          <span className="text-gray-900 bg-white rounded-lg p-2 border border-amber-100">{editingContributo.dati.nota}</span>
+                        </div>
+                      )}
                     </div>
-                    {editingContributo.dati?.valore && (
-                      <div className="flex justify-between">
-                        <span className="text-gray-500">Valore</span>
-                        <span className="font-medium text-gray-900">{editingContributo.dati.valore}</span>
-                      </div>
-                    )}
-                    {editingContributo.dati?.nota && (
-                      <div className="flex flex-col gap-1">
-                        <span className="text-gray-500">Note</span>
-                        <span className="text-gray-900 bg-white rounded-lg p-2 border border-amber-100">{editingContributo.dati.nota}</span>
-                      </div>
-                    )}
                   </div>
+                  <p className="text-xs text-gray-400 text-center">Approvando questa segnalazione i campi indicati verranno aggiornati automaticamente nella saletta (dove applicabile).</p>
                 </div>
-                <p className="text-xs text-gray-400 text-center">Approvando questa segnalazione il campo indicato verrà aggiornato automaticamente nella saletta.</p>
-              </div>
-            )}
+              );
+            })()}
 
             {/* SALETTA — rendering dinamico per sezione */}
             {editingContributo.tipo === 'saletta' && (() => {
