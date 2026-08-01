@@ -380,14 +380,14 @@ export default function AttivitaVerifica({
         </p>
 
         {/* AZIONI */}
-        <div className="flex gap-2">
+        <div className="flex flex-col gap-2">
 
-          {/* CONFERMA */}
+          {/* CONFERMA — azione primaria, piena larghezza */}
           <button
             type="button"
             onClick={conferma}
             disabled={!puoFareVerifica || submitting}
-            className={`flex-1 flex items-center justify-center gap-1.5 px-2 py-2 rounded-xl text-xs font-medium transition-colors ${
+            className={`w-full flex items-center justify-center gap-1.5 px-2 py-2 rounded-xl text-xs font-medium transition-colors ${
               puoFareVerifica
                 ? 'bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100'
                 : 'bg-gray-50 text-gray-400 border border-gray-200 cursor-not-allowed'
@@ -408,41 +408,46 @@ export default function AttivitaVerifica({
 
           </button>
 
-          {/* SEGNALA */}
-          <button
-            type="button"
-            onClick={() => setShowModal(true)}
-            disabled={submitting}
-            className="flex items-center justify-center gap-1.5 px-2 py-2 rounded-xl text-xs font-medium bg-amber-50 text-amber-700 border border-amber-200 hover:bg-amber-100 transition-colors disabled:opacity-50"
-          >
+          {/* SEGNALA + PROPONI MODIFICA — azioni secondarie, metà larghezza ciascuna */}
+          <div className="grid grid-cols-2 gap-2">
 
-            <AlertTriangle className="w-3.5 h-3.5 flex-shrink-0" />
+            {/* SEGNALA */}
+            <button
+              type="button"
+              onClick={() => setShowModal(true)}
+              disabled={submitting}
+              className="flex items-center justify-center gap-1.5 px-2 py-2 rounded-xl text-xs font-medium bg-amber-50 text-amber-700 border border-amber-200 hover:bg-amber-100 transition-colors disabled:opacity-50 text-center leading-tight"
+            >
 
-            <span className="whitespace-nowrap">
+              <AlertTriangle className="w-3.5 h-3.5 flex-shrink-0" />
 
-              Segnala problema
+              <span>
 
-            </span>
+                Segnala problema
 
-          </button>
+              </span>
 
-          {/* PROPONI MODIFICA */}
-          <button
-            type="button"
-            onClick={() => setShowProponiModifica(true)}
-            disabled={submitting}
-            className="flex items-center justify-center gap-1.5 px-2 py-2 rounded-xl text-xs font-medium bg-blue-50 text-blue-700 border border-blue-200 hover:bg-blue-100 transition-colors disabled:opacity-50"
-          >
+            </button>
 
-            <Pencil className="w-3.5 h-3.5 flex-shrink-0" />
+            {/* PROPONI MODIFICA */}
+            <button
+              type="button"
+              onClick={() => setShowProponiModifica(true)}
+              disabled={submitting}
+              className="flex items-center justify-center gap-1.5 px-2 py-2 rounded-xl text-xs font-medium bg-blue-50 text-blue-700 border border-blue-200 hover:bg-blue-100 transition-colors disabled:opacity-50 text-center leading-tight"
+            >
 
-            <span className="whitespace-nowrap">
+              <Pencil className="w-3.5 h-3.5 flex-shrink-0" />
 
-              Proponi modifica
+              <span>
 
-            </span>
+                Proponi modifica
 
-          </button>
+              </span>
+
+            </button>
+
+          </div>
 
         </div>
 
