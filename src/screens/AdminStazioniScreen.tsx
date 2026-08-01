@@ -32,19 +32,6 @@ import AddStazioneModal from '../components/AddStazioneModal';
 // PROPS
 // =========================
 
-type FiltroQualita =
-  | '__coord__'
-  | '__maps__'
-  | '__indirizzo__'
-  | '__pluscode__'
-  | '__no_coord__'
-  | '__no_maps__'
-  | '__no_indirizzo__'
-  | '__no_codice__'
-  | '__disattivate__'
-  | '__no_pluscode__'
-  | '';
-
 interface Props {
   adminPin: string;
   initialFiltro?: 'tutte' | 'attive' | 'disattivate';
