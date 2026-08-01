@@ -1,10 +1,11 @@
-import React, { useRef } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import { Settings } from 'lucide-react';
 
 import type { Tab } from '../types';
 import type { HomeStationData } from '../hooks/useHomeStation';
 
 import { useHomeFavorites } from '../hooks/useHomeFavorites';
+import { getHomeFeed } from '../lib/homeFeed';
 
 import {
   StazioneCard,
@@ -14,37 +15,6 @@ import {
   FeedItem,
   SearchBar,
 } from '../components/home';
-
-// ---------------------------------------------------------------------------
-// Feed statico — rimosso in Iterazione 3
-// ---------------------------------------------------------------------------
-
-const STATIC_FEED_ITEMS: FeedItem[] = [
-  {
-    id: 'feed-001',
-    tipo: 'avviso',
-    titolo: 'Saletta Equipaggi chiusa',
-    stazione: 'Milano Porta Garibaldi',
-    descrizione: 'La saletta è temporaneamente chiusa per manutenzione straordinaria.',
-    tempo: '1h fa',
-  },
-  {
-    id: 'feed-002',
-    tipo: 'info',
-    titolo: 'Nuovo orario bar interno',
-    stazione: 'Brescia',
-    descrizione: 'Il bar del piano 2 ha modificato gli orari: aperto 6:00–21:00.',
-    tempo: '3h fa',
-  },
-  {
-    id: 'feed-003',
-    tipo: 'risolto',
-    titolo: 'Problema risolto',
-    stazione: 'Bergamo',
-    descrizione: 'Il guasto alla porta principale è stato riparato.',
-    tempo: 'Ieri',
-  },
-];
 
 // ---------------------------------------------------------------------------
 // Props
@@ -70,6 +40,9 @@ interface HomeScreenProps {
   // Deep-link
   onOpenStazione: (stationId: string, stationName?: string, categoriaFilter?: string) => void;
   onOpenSegnalazione: (stationName: string) => void;
+
+  /** Incrementato da App.tsx a ogni pull-to-refresh: ricarica il feed "Da sapere". */
+  refreshKey?: number;
 }
 
 // ---------------------------------------------------------------------------
@@ -89,12 +62,39 @@ const HomeScreen: React.FC<HomeScreenProps> = ({
   onStationCleared,
   onOpenStazione,
   onOpenSegnalazione,
+  refreshKey,
 }) => {
   const { favoriteStations, loading: favLoading } = useHomeFavorites(activeStationId);
 
   const badgeCount = stationData?.problemiAperti.length ?? 0;
 
   const scrollRef = useRef<HTMLDivElement>(null);
+
+  // ── Feed "Da sapere" ─────────────────────────────────────────────────────
+
+  const [feedItems, setFeedItems] = useState<FeedItem[]>([]);
+  const [feedLoading, setFeedLoading] = useState(true);
+
+  useEffect(() => {
+    let cancelled = false;
+    setFeedLoading(true);
+    getHomeFeed().then((items) => {
+      if (!cancelled) {
+        setFeedItems(items);
+        setFeedLoading(false);
+      }
+    });
+    return () => { cancelled = true; };
+  }, [refreshKey]);
+
+  function handleFeedItemClick(item: FeedItem) {
+    if (!item.link) return;
+    if (item.link.tipo === 'stazione' && item.link.stazioneId) {
+      onOpenStazione(item.link.stazioneId, item.link.stazioneNome);
+    } else if (item.link.tipo === 'salette' && item.link.stazioneNome) {
+      onOpenSegnalazione(item.link.stazioneNome);
+    }
+  }
 
   // ── Handlers ──────────────────────────────────────────────────────────────
 
@@ -215,7 +215,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({
 
         <SearchBar onFocus={onOpenSearch} />
 
-        <UpdateFeed items={STATIC_FEED_ITEMS} />
+        <UpdateFeed items={feedItems} loading={feedLoading} onItemClick={handleFeedItemClick} />
       </div>
     </div>
   );
