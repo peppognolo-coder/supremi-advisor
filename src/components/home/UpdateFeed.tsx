@@ -1,6 +1,9 @@
 import React from 'react';
-import { Bell, CheckCircle2, AlertCircle, Info, ChevronRight } from 'lucide-react';
-import type { FeedItem } from '../../lib/homeFeed';
+import {
+  Bell, CheckCircle2, AlertCircle, Info, ChevronRight,
+  Store, Train, DoorOpen, Pencil, MessageSquarePlus, AlertTriangle,
+} from 'lucide-react';
+import type { FeedItem, FeedCategoria } from '../../lib/homeFeed';
 
 export type { FeedItem };
 
@@ -30,6 +33,19 @@ const TIPO_CONFIG: Record<
   },
 };
 
+// Icona specifica per categoria — più precisa dell'icona generica per
+// "gravità" (info/avviso/risolto) usata come fallback. Il colore resta
+// sempre legato al tipo (blu/arancio/verde), qui cambia solo il simbolo.
+const CATEGORIA_ICON: Partial<Record<FeedCategoria, React.ReactNode>> = {
+  nuova_attivita: <Store className="w-4 h-4" />,
+  nuova_stazione: <Train className="w-4 h-4" />,
+  nuovo_elemento: <DoorOpen className="w-4 h-4" />,
+  modifica_attivita: <Pencil className="w-4 h-4" />,
+  aggiornamento_saletta: <MessageSquarePlus className="w-4 h-4" />,
+  problema_aperto: <AlertTriangle className="w-4 h-4" />,
+  problema_risolto: <CheckCircle2 className="w-4 h-4" />,
+};
+
 export const UpdateFeed: React.FC<UpdateFeedProps> = ({ items, loading = false, onItemClick }) => {
   return (
     <div className="px-4">
@@ -55,6 +71,7 @@ export const UpdateFeed: React.FC<UpdateFeedProps> = ({ items, loading = false, 
         <div className="flex flex-col gap-2">
           {items.map((item) => {
             const config = TIPO_CONFIG[item.tipo];
+            const icon = CATEGORIA_ICON[item.categoria] ?? config.icon;
             const clickable = !!item.link && !!onItemClick;
             return (
               <div
@@ -66,7 +83,7 @@ export const UpdateFeed: React.FC<UpdateFeedProps> = ({ items, loading = false, 
               >
                 {/* Icona tipo */}
                 <div className={`mt-0.5 flex-shrink-0 ${config.iconColor}`}>
-                  {config.icon}
+                  {icon}
                 </div>
 
                 {/* Contenuto */}
