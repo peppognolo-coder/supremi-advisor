@@ -42,6 +42,16 @@ import AdminProblemiSaletteScreen from './AdminProblemiSaletteScreen';
 
 import AdminStazioniScreen from './AdminStazioniScreen';
 
+// Monta useScrollLock() solo mentre è renderizzato — usato per bloccare lo
+// scroll unicamente quando il modal TOTP è aperto, senza modificare
+// useScrollLock() stesso (usato invariato in altri 10 punti del progetto)
+// né passargli un argomento che non gestisce (bug precedente: lo scroll
+// restava bloccato dal mount dell'intero pannello Admin, non dal modal).
+function ScrollLockWhileOpen() {
+  useScrollLock();
+  return null;
+}
+
 // =========================
 // TIPI
 // =========================
@@ -143,9 +153,6 @@ export default function AdminScreen({ adminPin }: Props) {
   const [totpSecret, setTotpSecret]         = useState<string | null>(null);
   const [totpLoading, setTotpLoading]       = useState(false);
   const [totpError, setTotpError]           = useState('');
-
-  // Blocca scroll della pagina quando il modal TOTP è aperto
-  useScrollLock(showTotpModal);
 
   async function caricaQrTotp() {
     setTotpLoading(true);
@@ -1009,7 +1016,7 @@ export default function AdminScreen({ adminPin }: Props) {
       {
         label: 'Attività senza note',
         valore: qualita.senzaNote.length,
-        onClick: () => { apriModificaDaQualita && setShowAttivitaManager(true); },
+        onClick: () => apriModalQualita('note', 'Senza note', qualita.senzaNote),
       },
       {
         label: 'Stazioni senza Plus Code',
@@ -3543,6 +3550,8 @@ export default function AdminScreen({ adminPin }: Props) {
 
       {/* MODAL TOTP — Configura Authenticator */}
       {showTotpModal && (
+        <>
+          <ScrollLockWhileOpen />
         <div
           className="fixed inset-0 bg-black/50 z-[9999] flex items-center justify-center p-4"
           onClick={(e) => { if (e.target === e.currentTarget) setShowTotpModal(false); }}
@@ -3721,6 +3730,7 @@ export default function AdminScreen({ adminPin }: Props) {
 
           </div>
         </div>
+        </>
       )}
 
     </>
