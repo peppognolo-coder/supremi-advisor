@@ -35,6 +35,12 @@ export interface Saletta {
   attiva: boolean;
 }
 
+// Variante usata lato utente (SaletteScreen.tsx, SalettaCard.tsx): la query
+// pubblica esclude sempre codice_accesso per sicurezza (non deve mai
+// arrivare al client) ed espone invece has_codice, un booleano calcolato
+// dal database (colonna generata, migration 015).
+export type SalettaPublic = Omit<Saletta, 'codice_accesso'> & { has_codice?: boolean };
+
 export interface FasciaOraria {
   giorni: string[];
   apertura: string;
