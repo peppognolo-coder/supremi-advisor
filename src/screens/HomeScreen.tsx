@@ -1,4 +1,4 @@
-import React, { useRef, useState, useEffect } from 'react';
+import React, { useRef, useState, useEffect, useMemo } from 'react';
 import { Settings } from 'lucide-react';
 
 import type { Tab } from '../types';
@@ -95,6 +95,24 @@ const HomeScreen: React.FC<HomeScreenProps> = ({
       onOpenSegnalazione(item.link.stazioneNome);
     }
   }
+
+  // Voci delle stazioni preferite (o di quella attiva) prima, mantenendo
+  // l'ordine cronologico sia dentro il gruppo prioritario sia nel resto —
+  // il feed resta comunque completo, solo riordinato, non filtrato.
+  const nomiPrioritari = useMemo(() => {
+    const nomi = favoriteStations.map((s) => s.nome);
+    if (stationData?.stazione.nome) nomi.push(stationData.stazione.nome);
+    return new Set(nomi.map((n) => n.toLowerCase().trim()));
+  }, [favoriteStations, stationData]);
+
+  const feedItemsOrdinati = useMemo(() => {
+    if (nomiPrioritari.size === 0) return feedItems;
+    return [...feedItems].sort((a, b) => {
+      const aPrioritaria = a.stazione && nomiPrioritari.has(a.stazione.toLowerCase().trim()) ? 0 : 1;
+      const bPrioritaria = b.stazione && nomiPrioritari.has(b.stazione.toLowerCase().trim()) ? 0 : 1;
+      return aPrioritaria - bPrioritaria;
+    });
+  }, [feedItems, nomiPrioritari]);
 
   // ── Handlers ──────────────────────────────────────────────────────────────
 
@@ -215,7 +233,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({
 
         <SearchBar onFocus={onOpenSearch} />
 
-        <UpdateFeed items={feedItems} loading={feedLoading} onItemClick={handleFeedItemClick} />
+        <UpdateFeed items={feedItemsOrdinati} loading={feedLoading} onItemClick={handleFeedItemClick} />
       </div>
     </div>
   );
