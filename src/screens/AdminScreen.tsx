@@ -2927,7 +2927,7 @@ export default function AdminScreen({ adminPin, refreshKey }: Props) {
         >
 
           <div
-            className="bg-white rounded-3xl w-full max-w-lg max-h-[80vh] overflow-y-auto p-5 flex flex-col gap-4 shadow-2xl"
+            className="bg-white rounded-3xl w-full max-w-lg max-h-[80dvh] overflow-y-auto p-5 flex flex-col gap-4 shadow-2xl"
             onClick={(e) => e.stopPropagation()}
           >
 
@@ -3088,7 +3088,7 @@ export default function AdminScreen({ adminPin, refreshKey }: Props) {
         >
 
           <div
-            className="bg-white rounded-3xl w-full max-w-lg max-h-[80vh] overflow-y-auto p-5 flex flex-col gap-4 shadow-2xl"
+            className="bg-white rounded-3xl w-full max-w-lg max-h-[80dvh] overflow-y-auto p-5 flex flex-col gap-4 shadow-2xl"
             onClick={(e) => e.stopPropagation()}
           >
 
@@ -3325,7 +3325,7 @@ export default function AdminScreen({ adminPin, refreshKey }: Props) {
               max-w-2xl
               flex
               flex-col
-              max-h-[85vh]
+              max-h-[85dvh]
               overflow-hidden
             "
           >
@@ -3540,7 +3540,7 @@ export default function AdminScreen({ adminPin, refreshKey }: Props) {
           className="fixed inset-0 bg-black/50 z-[9999] flex items-center justify-center p-4"
           onClick={(e) => { if (e.target === e.currentTarget) setShowTotpModal(false); }}
         >
-          <div className="bg-white rounded-3xl w-full max-w-sm flex flex-col gap-5 p-6 max-h-[80vh] overflow-y-auto">
+          <div className="bg-white rounded-3xl w-full max-w-sm flex flex-col gap-5 p-6 max-h-[80dvh] overflow-y-auto">
 
             {/* HEADER */}
             <div className="flex items-start justify-between flex-shrink-0">
