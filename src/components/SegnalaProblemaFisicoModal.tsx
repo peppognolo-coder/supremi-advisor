@@ -1,5 +1,7 @@
 import { useState } from 'react';
 
+import { createPortal } from 'react-dom';
+
 import { X, AlertTriangle } from 'lucide-react';
 
 import toast from 'react-hot-toast';
@@ -100,7 +102,9 @@ export default function SegnalaProblemaFisicoModal({
   const { panelRef, dragStyle, handleDragStart } = useSwipeDown({ onClose });
 
   const [sezione, setSezione]                     = useState('equipaggi');
-  const [tipoSelezionato, setTipoSelezionato]     = useState('');
+  // Più problemi selezionabili insieme, invece di uno solo — stesso
+  // principio già applicato a "Modifica informazioni saletta".
+  const [tipiSelezionati, setTipiSelezionati]     = useState<Set<string>>(new Set());
   const [note, setNote]                           = useState('');
   const [loading, setLoading]                     = useState(false);
 
@@ -108,52 +112,70 @@ export default function SegnalaProblemaFisicoModal({
 
   function handleSezioneChange(nuovaSezione: string) {
     setSezione(nuovaSezione);
-    setTipoSelezionato(''); // reset: la selezione precedente non vale per la nuova sezione
+    setTipiSelezionati(new Set()); // reset: la selezione precedente non vale per la nuova sezione
+  }
+
+  function toggleTipo(tipo: string) {
+    setTipiSelezionati((prev) => {
+      const next = new Set(prev);
+      if (next.has(tipo)) next.delete(tipo);
+      else next.add(tipo);
+      return next;
+    });
   }
 
   async function submit() {
-    if (!tipoSelezionato) {
-      toast.error('Seleziona il tipo di problema');
+    if (tipiSelezionati.size === 0) {
+      toast.error('Seleziona almeno un tipo di problema');
       return;
     }
 
     setLoading(true);
 
     try {
-      const { data: existing } = await supabase
-        .from('saletta_problemi')
-        .select('id, segnalazioni_count')
-        .eq('saletta_id', salettaId)
-        .eq('tipo_problema', tipoSelezionato)
-        .eq('stato', 'aperta')
-        .maybeSingle();
-
-      if (existing) {
-        const { error } = await supabase
+      // Un problema fisico per riga in saletta_problemi: con più problemi
+      // selezionati, ripete la stessa logica (aggiorna se già aperto,
+      // altrimenti crea) per ciascuno — un solo invio, più segnalazioni.
+      for (const tipoProblema of tipiSelezionati) {
+        const { data: existing } = await supabase
           .from('saletta_problemi')
-          .update({
-            segnalazioni_count: existing.segnalazioni_count + 1,
-            ...(note.trim() ? { note: note.trim() } : {}),
-          })
-          .eq('id', existing.id);
+          .select('id, segnalazioni_count')
+          .eq('saletta_id', salettaId)
+          .eq('tipo_problema', tipoProblema)
+          .eq('stato', 'aperta')
+          .maybeSingle();
 
-        if (error) throw error;
-        toast.success('Grazie! La tua segnalazione si aggiunge alle precedenti.');
-      } else {
-        const { error } = await supabase
-          .from('saletta_problemi')
-          .insert({
-            saletta_id:         salettaId,
-            tipo_problema:      tipoSelezionato,
-            sezione:            sezione,
-            note:               note.trim() || null,
-            stato:              'aperta',
-            segnalazioni_count: 1,
-          });
+        if (existing) {
+          const { error } = await supabase
+            .from('saletta_problemi')
+            .update({
+              segnalazioni_count: existing.segnalazioni_count + 1,
+              ...(note.trim() ? { note: note.trim() } : {}),
+            })
+            .eq('id', existing.id);
 
-        if (error) throw error;
-        toast.success('Problema segnalato. Il team lo verificherà al più presto.');
+          if (error) throw error;
+        } else {
+          const { error } = await supabase
+            .from('saletta_problemi')
+            .insert({
+              saletta_id:         salettaId,
+              tipo_problema:      tipoProblema,
+              sezione:            sezione,
+              note:               note.trim() || null,
+              stato:              'aperta',
+              segnalazioni_count: 1,
+            });
+
+          if (error) throw error;
+        }
       }
+
+      toast.success(
+        tipiSelezionati.size > 1
+          ? `${tipiSelezionati.size} problemi segnalati. Il team li verificherà al più presto.`
+          : 'Problema segnalato. Il team lo verificherà al più presto.'
+      );
 
       onClose();
     } catch (err) {
@@ -164,20 +186,16 @@ export default function SegnalaProblemaFisicoModal({
     }
   }
 
-  return (
+  return createPortal(
     <div
       className="fixed inset-0 bg-black/40 z-[9999] flex items-end sm:items-center justify-center p-0 sm:p-4"
       onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
     >
-      {/*
-        PANNELLO: overflow-hidden + flex-col
-        Il drag-handle in cima attiva lo swipe-down.
-        Il body sotto scorre liberamente con overflow-y-auto.
-      */}
       <div
         ref={panelRef}
         style={dragStyle}
-        className="bg-white rounded-t-3xl sm:rounded-3xl w-full sm:max-w-md flex flex-col max-h-[90vh] overflow-hidden"
+        className="bg-white rounded-t-3xl sm:rounded-3xl w-full sm:max-w-md flex flex-col max-h-[92dvh] sm:max-h-[85dvh] overflow-hidden"
+        onClick={(e) => e.stopPropagation()}
       >
 
         {/* ── DRAG HANDLE (attiva swipe-down) ── */}
@@ -237,26 +255,30 @@ export default function SegnalaProblemaFisicoModal({
               </select>
             </div>
 
-            {/* TIPO PROBLEMA */}
+            {/* TIPO PROBLEMA — selezione multipla */}
             <div className="flex flex-col gap-2">
               <label className="text-xs font-semibold text-gray-400 uppercase tracking-wide">
-                Tipo di problema *
+                Tipo di problema * <span className="normal-case font-normal text-gray-400">(puoi selezionarne più di uno)</span>
               </label>
               <div className="flex flex-col gap-2">
-                {tipiDisponibili.map((tipo) => (
-                  <button
-                    key={tipo}
-                    type="button"
-                    onClick={() => setTipoSelezionato(tipo)}
-                    className={`text-left px-4 py-3 rounded-xl border text-base font-medium transition-colors ${
-                      tipoSelezionato === tipo
-                        ? 'bg-red-600 text-white border-red-600'
-                        : 'bg-white text-gray-700 border-gray-200 hover:border-red-300 hover:bg-red-50'
-                    }`}
-                  >
-                    {tipo}
-                  </button>
-                ))}
+                {tipiDisponibili.map((tipo) => {
+                  const selezionato = tipiSelezionati.has(tipo);
+                  return (
+                    <button
+                      key={tipo}
+                      type="button"
+                      onClick={() => toggleTipo(tipo)}
+                      className={`flex items-center justify-between text-left px-4 py-3 rounded-xl border text-base font-medium transition-colors ${
+                        selezionato
+                          ? 'bg-red-600 text-white border-red-600'
+                          : 'bg-white text-gray-700 border-gray-200 hover:border-red-300 hover:bg-red-50'
+                      }`}
+                    >
+                      {tipo}
+                      {selezionato && <span className="text-sm">✓</span>}
+                    </button>
+                  );
+                })}
               </div>
             </div>
 
@@ -274,28 +296,43 @@ export default function SegnalaProblemaFisicoModal({
               />
             </div>
 
-            {/* SUBMIT */}
-            <button
-              type="button"
-              onClick={submit}
-              disabled={loading || !tipoSelezionato}
-              className="flex items-center justify-center gap-2 w-full py-3 rounded-xl bg-red-600 text-white font-medium text-base hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed transition-opacity"
-            >
-              {loading && (
-                <span className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />
-              )}
-              {loading ? 'Invio...' : '🚨 Segnala guasto'}
-            </button>
-
-            <p className="text-xs text-gray-400 text-center">
-              La segnalazione viene inviata al team di manutenzione Trenord.
-            </p>
-
           </div>
         </div>
         {/* ── FINE BODY SCROLLABILE ── */}
 
+        {/* ── FOOTER FISSO ── */}
+        <div
+          className="flex-shrink-0 px-5 pt-4 border-t border-gray-100 bg-white flex flex-col gap-2"
+          style={{ paddingBottom: 'max(1rem, env(safe-area-inset-bottom))' }}
+        >
+          <div className="flex gap-2">
+            <button
+              type="button"
+              onClick={onClose}
+              disabled={loading}
+              className="flex-1 py-3 rounded-xl border border-gray-200 text-gray-600 font-medium text-base hover:bg-gray-50 disabled:opacity-50 transition-colors"
+            >
+              Annulla
+            </button>
+            <button
+              type="button"
+              onClick={submit}
+              disabled={loading || tipiSelezionati.size === 0}
+              className="flex-[2] flex items-center justify-center gap-2 py-3 rounded-xl bg-red-600 text-white font-medium text-base hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed transition-opacity"
+            >
+              {loading && (
+                <span className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />
+              )}
+              {loading ? 'Invio...' : `🚨 Segnala guasto${tipiSelezionati.size > 1 ? ` (${tipiSelezionati.size})` : ''}`}
+            </button>
+          </div>
+          <p className="text-xs text-gray-400 text-center">
+            La segnalazione viene inviata al team di manutenzione Trenord.
+          </p>
+        </div>
+
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
