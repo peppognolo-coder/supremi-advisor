@@ -432,9 +432,9 @@ export async function uploadQrHotel(
       body: JSON.stringify({ adminPin, attivitaId, imageBase64, mimeType, scadenza }),
     });
     const data = await res.json();
-    if (!res.ok) return { ok: false, error: data.error ?? 'Errore upload' };
+    if (!res.ok) return { ok: false, error: { code: 'UPLOAD_ERROR', message: data.error ?? 'Errore upload' } };
     return { ok: true, data };
   } catch {
-    return { ok: false, error: 'Errore di rete' };
+    return { ok: false, error: { code: 'NETWORK_ERROR', message: 'Errore di rete' } };
   }
 }
