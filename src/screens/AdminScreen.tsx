@@ -81,13 +81,6 @@ interface AttivitaQualita {
   distanza_piedi: string | null;
 }
 
-interface StazioneNome {
-
-  id: string;
-
-  nome: string;
-}
-
 type TipoControllo =
   | 'maps_query'
   | 'indirizzo'
@@ -111,9 +104,13 @@ interface ModalQualita {
 
 interface Props {
   adminPin: string;
+  /** Incrementato da App.tsx a ogni pull-to-refresh/tap sull'icona refresh:
+      ricarica le statistiche della dashboard, che altrimenti restano
+      ferme al primo mount anche tornando dai sotto-pannelli. */
+  refreshKey?: number;
 }
 
-export default function AdminScreen({ adminPin }: Props) {
+export default function AdminScreen({ adminPin, refreshKey }: Props) {
 
   const [loading, setLoading] =
     useState(true);
@@ -465,19 +462,6 @@ export default function AdminScreen({ adminPin }: Props) {
       });
 
     // STAZIONI (per nomi)
-    const {
-      data: stazioniData,
-    } = await supabase
-      .from('salette')
-      .select('stazione');
-
-    const uniqueStations =
-      new Set(
-        (stazioniData ?? []).map(
-          (s) => s.stazione
-        )
-      );
-
     // PENDING CONTRIBUTI
     const {
       count: pendingCount,
@@ -686,7 +670,7 @@ export default function AdminScreen({ adminPin }: Props) {
 
     load();
 
-  }, []);
+  }, [refreshKey]);
 
   // =========================
   // CALCOLI QUALITÀ (memo)
