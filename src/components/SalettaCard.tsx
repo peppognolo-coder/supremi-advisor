@@ -8,6 +8,7 @@ import {
   Coffee,
   Droplets,
   Snowflake,
+  Shirt,
   MessageSquarePlus,
   AlertTriangle,
   KeyRound,
@@ -15,10 +16,13 @@ import {
   EyeOff,
   X,
   Smartphone,
+  Clock,
 } from 'lucide-react';
 
 import type { SalettaPublic } from '../lib/adminApi';
 import { formatTitle } from '../lib/format';
+import { getSezione } from '../lib/localitaSezioni';
+import { getStatoApertura } from '../lib/getStatoApertura';
 import SegnalazioneModal from './SegnalazioneModal';
 import SalettaVerifica from './SalettaVerifica';
 import SegnalaProblemaFisicoModal from './SegnalaProblemaFisicoModal';
@@ -194,11 +198,14 @@ export default function SalettaCard({
                 key={saletta.id}
                 className="bg-white rounded-xl border border-gray-100 p-4 flex flex-col gap-4"
               >
-                {/* TIPO */}
+                {/* TIPO / SEZIONE */}
                 <div className="flex items-center justify-between">
                   <div>
                     <h3 className="font-semibold text-gray-900 text-lg">
-                      {formatTitle(saletta.tipo)}
+                      {getSezione(saletta.tipo).label}
+                      {saletta.etichetta && (
+                        <span className="text-gray-400 font-normal"> — {formatTitle(saletta.etichetta)}</span>
+                      )}
                     </h3>
                     {saletta.ubicazione && (
                       <div className="flex items-center gap-2 text-sm text-gray-500 mt-1">
@@ -209,25 +216,82 @@ export default function SalettaCard({
                   </div>
                 </div>
 
-                {/* DOTAZIONI */}
-                <div className="grid grid-cols-2 gap-2">
-                  <div className={`flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-medium transition-colors ${saletta.microonde ? 'bg-emerald-50 text-emerald-700 border border-emerald-100' : 'bg-gray-50 text-gray-400 border border-gray-100'}`}>
-                    <Microwave className={`w-4 h-4 flex-shrink-0 ${saletta.microonde ? 'text-emerald-600' : 'text-gray-300'}`} />
-                    <span>Microonde</span>
+                {/* STATO */}
+                {saletta.stato && (
+                  <div className="inline-flex self-start items-center gap-1.5 px-3 py-1 rounded-full bg-blue-50 text-blue-700 text-xs font-medium">
+                    {saletta.stato}
                   </div>
-                  <div className={`flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-medium transition-colors ${saletta.distributori ? 'bg-emerald-50 text-emerald-700 border border-emerald-100' : 'bg-gray-50 text-gray-400 border border-gray-100'}`}>
-                    <Coffee className={`w-4 h-4 flex-shrink-0 ${saletta.distributori ? 'text-emerald-600' : 'text-gray-300'}`} />
-                    <span>Distributori</span>
+                )}
+
+                {/* MODALITÀ / TIPOLOGIA DI ACCESSO — bagni, cancelletto */}
+                {(saletta.modalita_accesso || saletta.tipologia_accesso) && (
+                  <div className="flex items-center gap-2 text-sm text-gray-600 bg-gray-50 border border-gray-100 rounded-xl px-3 py-2">
+                    <KeyRound className="w-4 h-4 flex-shrink-0" />
+                    <span>Accesso: {saletta.modalita_accesso ?? saletta.tipologia_accesso}</span>
                   </div>
-                  <div className={`flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-medium transition-colors ${saletta.acqua ? 'bg-emerald-50 text-emerald-700 border border-emerald-100' : 'bg-gray-50 text-gray-400 border border-gray-100'}`}>
-                    <Droplets className={`w-4 h-4 flex-shrink-0 ${saletta.acqua ? 'text-emerald-600' : 'text-gray-300'}`} />
-                    <span>Acqua</span>
+                )}
+
+                {/* DOTAZIONI — solo per la sala equipaggi, dove hanno senso */}
+                {getSezione(saletta.tipo).id === 'equipaggi' && (
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className={`flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-medium transition-colors ${saletta.microonde ? 'bg-emerald-50 text-emerald-700 border border-emerald-100' : 'bg-gray-50 text-gray-400 border border-gray-100'}`}>
+                      <Microwave className={`w-4 h-4 flex-shrink-0 ${saletta.microonde ? 'text-emerald-600' : 'text-gray-300'}`} />
+                      <span>Microonde</span>
+                    </div>
+                    <div className={`flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-medium transition-colors ${saletta.distributori ? 'bg-emerald-50 text-emerald-700 border border-emerald-100' : 'bg-gray-50 text-gray-400 border border-gray-100'}`}>
+                      <Coffee className={`w-4 h-4 flex-shrink-0 ${saletta.distributori ? 'text-emerald-600' : 'text-gray-300'}`} />
+                      <span>Distributori</span>
+                    </div>
+                    <div className={`flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-medium transition-colors ${saletta.acqua ? 'bg-emerald-50 text-emerald-700 border border-emerald-100' : 'bg-gray-50 text-gray-400 border border-gray-100'}`}>
+                      <Droplets className={`w-4 h-4 flex-shrink-0 ${saletta.acqua ? 'text-emerald-600' : 'text-gray-300'}`} />
+                      <span>Acqua</span>
+                    </div>
+                    <div className={`flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-medium transition-colors ${saletta.climatizzata ? 'bg-emerald-50 text-emerald-700 border border-emerald-100' : 'bg-gray-50 text-gray-400 border border-gray-100'}`}>
+                      <Snowflake className={`w-4 h-4 flex-shrink-0 ${saletta.climatizzata ? 'text-emerald-600' : 'text-gray-300'}`} />
+                      <span>Climatizzata</span>
+                    </div>
                   </div>
-                  <div className={`flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-medium transition-colors ${saletta.climatizzata ? 'bg-emerald-50 text-emerald-700 border border-emerald-100' : 'bg-gray-50 text-gray-400 border border-gray-100'}`}>
-                    <Snowflake className={`w-4 h-4 flex-shrink-0 ${saletta.climatizzata ? 'text-emerald-600' : 'text-gray-300'}`} />
-                    <span>Climatizzata</span>
+                )}
+
+                {/* DOCCE / ARMADIETTI — solo spogliatoi */}
+                {getSezione(saletta.tipo).id === 'spogliatoi' && (
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className={`flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-medium transition-colors ${saletta.docce ? 'bg-emerald-50 text-emerald-700 border border-emerald-100' : 'bg-gray-50 text-gray-400 border border-gray-100'}`}>
+                      <Droplets className={`w-4 h-4 flex-shrink-0 ${saletta.docce ? 'text-emerald-600' : 'text-gray-300'}`} />
+                      <span>Docce</span>
+                    </div>
+                    <div className={`flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-medium transition-colors ${saletta.armadietti ? 'bg-emerald-50 text-emerald-700 border border-emerald-100' : 'bg-gray-50 text-gray-400 border border-gray-100'}`}>
+                      <Shirt className={`w-4 h-4 flex-shrink-0 ${saletta.armadietti ? 'text-emerald-600' : 'text-gray-300'}`} />
+                      <span>Armadietti</span>
+                    </div>
                   </div>
-                </div>
+                )}
+
+                {/* FASCE ORARIE + STATO CALCOLATO — solo segreteria, versamenti */}
+                {(getSezione(saletta.tipo).id === 'segreteria' || getSezione(saletta.tipo).id === 'versamenti') && (
+                  Array.isArray(saletta.fasce_orarie) && saletta.fasce_orarie.length > 0 ? (() => {
+                    const stato = getStatoApertura(saletta);
+                    return (
+                      <div className="flex flex-col gap-2">
+                        <div className={`inline-flex self-start items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium ${
+                          stato.aperto ? 'bg-emerald-100 text-emerald-700' : 'bg-gray-100 text-gray-500'
+                        }`}>
+                          <Clock className="w-3.5 h-3.5" />
+                          {stato.testo}
+                        </div>
+                        <div className="flex flex-col gap-1">
+                          {saletta.fasce_orarie.map((f, i) => (
+                            <div key={i} className="text-xs text-gray-500">
+                              {f.giorni.join(', ') || '—'}: {f.apertura || '—'}–{f.chiusura || '—'}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    );
+                  })() : (
+                    <p className="text-xs text-gray-400">Orari non ancora indicati.</p>
+                  )
+                )}
 
                 {/* NOTE */}
                 {saletta.note && (
@@ -256,7 +320,7 @@ export default function SalettaCard({
                       onClick={() => {
                         setProblemaTargetSaletta({
                           id: saletta.id,
-                          nome: `${stazioneName ?? ''} — ${saletta.tipo ?? ''}`.trim(),
+                          nome: `${stazioneName ?? ''} — ${getSezione(saletta.tipo).label}${saletta.etichetta ? ' (' + saletta.etichetta + ')' : ''}`.trim(),
                         });
                         setShowProblemaModal(true);
                       }}
