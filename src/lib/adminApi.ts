@@ -25,13 +25,21 @@ export interface Saletta {
   stazione: string;
   stazione_id: string | null;
   tipo: string;
+  /** Distingue più righe della stessa sezione nella stessa stazione (es. "Trenord"/"Trenitalia"). */
+  etichetta: string | null;
   codice_accesso: string | null;
   ubicazione: string | null;
   note: string | null;
+  stato: string | null;
+  modalita_accesso: string | null;
+  tipologia_accesso: string | null;
   microonde: boolean;
   distributori: boolean;
   acqua: boolean;
   climatizzata: boolean;
+  docce: boolean;
+  armadietti: boolean;
+  fasce_orarie: { giorni: string[]; apertura: string; chiusura: string }[] | null;
   attiva: boolean;
 }
 
@@ -172,7 +180,7 @@ export async function getSalette(adminPin: string): Promise<AdminApiResult<Salet
 
 export async function addSaletta(
   adminPin: string,
-  payload: { stazione_id: string; tipo?: string }
+  payload: { stazione_id: string; tipo: string; etichetta?: string }
 ): Promise<AdminApiResult<Saletta>> {
   return call<Saletta>('addSaletta', adminPin, payload);
 }
@@ -180,9 +188,13 @@ export async function addSaletta(
 export async function updateSaletta(
   adminPin: string,
   payload: {
-    id: string; stazione_id: string; tipo: string;
+    id: string; stazione_id: string; tipo: string; etichetta?: string | null;
     codice_accesso: string | null; ubicazione: string | null; note: string | null;
     microonde: boolean; distributori: boolean; acqua: boolean; climatizzata: boolean;
+    docce?: boolean; armadietti?: boolean;
+    modalita_accesso?: string | null; tipologia_accesso?: string | null;
+    fasce_orarie?: { giorni: string[]; apertura: string; chiusura: string }[] | null;
+    stato?: string | null;
   }
 ): Promise<AdminApiResult<Saletta>> {
   return call<Saletta>('updateSaletta', adminPin, payload as unknown as Record<string, unknown>);
