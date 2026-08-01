@@ -172,7 +172,7 @@ export default function ProponiModificaAttivitaModal({ attivita, onClose, onSucc
       <div
         ref={panelRef}
         style={dragStyle}
-        className="bg-white w-full md:max-w-2xl lg:max-w-3xl rounded-t-3xl md:rounded-3xl flex flex-col max-h-[92vh] md:max-h-[80vh] overflow-hidden shadow-2xl"
+        className="bg-white w-full md:max-w-2xl lg:max-w-3xl rounded-t-3xl md:rounded-3xl flex flex-col max-h-[92dvh] md:max-h-[80dvh] overflow-hidden shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
 
@@ -335,9 +335,13 @@ export default function ProponiModificaAttivitaModal({ attivita, onClose, onSucc
         </div>
 
         {/* FOOTER FISSO */}
-        <div className="flex-shrink-0 px-5 py-4 border-t border-gray-100 bg-white">
+        <div className="flex-shrink-0 px-5 py-4 border-t border-gray-100 bg-white flex gap-2">
+          <button type="button" onClick={onClose} disabled={loading}
+            className="flex-1 py-3.5 rounded-xl border border-gray-200 text-gray-600 font-medium text-base hover:bg-gray-50 disabled:opacity-50 transition-colors">
+            Annulla
+          </button>
           <button type="button" onClick={submit} disabled={loading || !nome.trim() || !categoria}
-            className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl bg-trenord-green text-white font-medium text-base hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed transition-opacity">
+            className="flex-[2] flex items-center justify-center gap-2 py-3.5 rounded-xl bg-trenord-green text-white font-medium text-base hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed transition-opacity">
             {loading && <span className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />}
             {loading ? 'Invio...' : 'Invia proposta'}
           </button>
