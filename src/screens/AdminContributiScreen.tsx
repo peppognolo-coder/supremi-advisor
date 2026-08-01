@@ -252,7 +252,9 @@ export default function AdminContributiScreen({ adminPin }: Props) {
 
     // Gestione speciale per QR hotel: upload immagine su Storage
     if (c.tipo === 'hotel_qr') {
-      const { attivita_id, imageBase64, mimeType, scadenza } = c.dati ?? {};
+      const { attivita_id, imageBase64, mimeType, scadenza } = (c.dati ?? {}) as {
+        attivita_id?: string; imageBase64?: string; mimeType?: string; scadenza?: string;
+      };
       if (!attivita_id || !imageBase64) {
         toast.error('Dati QR mancanti nel contributo');
         setProcessingId(null);
@@ -260,7 +262,7 @@ export default function AdminContributiScreen({ adminPin }: Props) {
       }
       const uploadRes = await uploadQrHotel(adminPin, attivita_id, imageBase64, mimeType ?? 'image/jpeg', scadenza);
       if (!uploadRes.ok) {
-        toast.error(uploadRes.error ?? 'Errore upload QR');
+        toast.error(uploadRes.error?.message ?? 'Errore upload QR');
         setProcessingId(null);
         return;
       }
