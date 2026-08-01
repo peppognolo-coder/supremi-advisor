@@ -17,23 +17,24 @@ import {
   Smartphone,
 } from 'lucide-react';
 
-import type { Saletta } from '../lib/database.types';
+import type { SalettaPublic } from '../lib/adminApi';
 import { formatTitle } from '../lib/format';
 import SegnalazioneModal from './SegnalazioneModal';
 import SalettaVerifica from './SalettaVerifica';
 import SegnalaProblemaFisicoModal from './SegnalaProblemaFisicoModal';
 
-// has_codice: campo calcolato dalla query (codice_accesso is not null).
-// codice_accesso NON arriva mai nel payload — viene fornito solo dalla
-// Netlify Function verify-totp + get-codice-saletta dopo verifica TOTP.
-type SalettaConFlag = Saletta & { has_codice?: boolean };
+// has_codice: campo già calcolato dalla query (colonna generata dal
+// database — vedi migration 015). codice_accesso NON arriva mai nel
+// payload — viene fornito solo dalla Netlify Function verify-totp +
+// get-codice-saletta dopo verifica TOTP. Tipo condiviso: SalettaPublic
+// (adminApi.ts) — Saletta senza codice_accesso, con has_codice.
 
 // Durata visibilità codice dopo verifica: 5 minuti
 const CODICE_TTL_SEC = 5 * 60;
 
 interface Props {
   stazioneName?: string;
-  salette?: SalettaConFlag[];
+  salette?: SalettaPublic[];
   initialExpanded?: boolean;
 }
 
@@ -267,7 +268,7 @@ export default function SalettaCard({
                   </div>
 
                   {/* MOSTRA CODICE — solo se la saletta ha un codice nel DB */}
-                  {(saletta as SalettaConFlag).has_codice && (
+                  {(saletta as SalettaPublic).has_codice && (
                     <button
                       onClick={() => apriModalCodice(saletta.id)}
                       className="flex items-center gap-2 px-3 py-2 rounded-xl bg-gray-800 text-white text-xs font-medium hover:opacity-90 transition-opacity self-start"
