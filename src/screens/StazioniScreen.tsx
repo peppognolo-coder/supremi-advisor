@@ -39,7 +39,6 @@ import type {
   AttivitaStazione,
 } from '../lib/database.types';
 
-import EmptyState from '../components/EmptyState';
 
 import AddAttivitaModal from '../components/AddAttivitaModal';
 
@@ -872,8 +871,8 @@ export default function StazioniScreen({
                 {/* CATEGORIA FILTER */}
                 {(() => {
 
-                  const cats = Array.from(
-                    new Set(
+                  const cats = Array.from<string>(
+                    new Set<string>(
                       stazione.attivita_stazione
                         .filter((a: any) => a.categoria)
                         .map((a: any) => a.categoria as string)
