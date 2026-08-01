@@ -6,13 +6,7 @@ import {
   Coffee,
   Droplets,
   Snowflake,
-  Users,
-  Bath,
-  DoorOpen,
-  MoreHorizontal,
   Shirt,
-  BookOpen,
-  Banknote,
   Plus,
   Trash2,
 } from 'lucide-react';
@@ -21,110 +15,18 @@ import toast from 'react-hot-toast';
 
 import { supabase } from '../../lib/supabase';
 import type { FasciaOraria } from '../../lib/getStatoApertura';
+import {
+  SEZIONI_LOCALITA as areeLocalita,
+  type SezioneId as AreaId,
+  MODALITA_ACCESSO,
+  TIPOLOGIA_ACCESSO,
+  GIORNI_SETTIMANA,
+} from '../../lib/localitaSezioni';
 
 interface Props {
   onBack: () => void;
   stazionePredefinita?: string;
 }
-
-// =============================================================================
-// CONFIGURAZIONE SEZIONI DELLA LOCALITÀ
-//
-// Fonte di verità del componente. Per aggiungere una sezione: solo qui.
-//
-//   id          → valore salvato nel database (stabile, non cambia mai)
-//   label       → testo mostrato all'utente
-//   description → descrizione breve (tooltip futuro)
-//   icon        → icona Lucide nella card di selezione
-//   ordine      → ordine di visualizzazione, indipendente dalla posizione nell'array
-//   attiva      → false = nascosta senza toccare la logica
-//   stati       → opzioni della select Stato per questa sezione ([] = campo assente)
-//   campi       → campi da mostrare, nell'ordine in cui appaiono nel form
-//
-// Convenzione id: minuscolo, italiano, nessuno spazio.
-// =============================================================================
-
-const areeLocalita = [
-  {
-    id: 'equipaggi',
-    label: 'Saletta equipaggi',
-    description: 'Saletta riservata al personale di bordo',
-    icon: Users,
-    ordine: 1,
-    attiva: true,
-    stati: ['Aperta', 'Chiusa', 'In pulizia', 'Guasto'],
-    campi: ['codice', 'ubicazione', 'stato', 'servizi', 'note'],
-  },
-  {
-    id: 'bagni',
-    label: 'Bagni',
-    description: 'Servizi igienici riservati al personale',
-    icon: Bath,
-    ordine: 2,
-    attiva: true,
-    stati: ['Aperti', 'Chiusi', 'In pulizia'],
-    campi: ['ubicazione', 'stato', 'modalita_accesso', 'note'],
-  },
-  {
-    id: 'cancelletto',
-    label: 'Cancelletto',
-    description: 'Accesso riservato al personale ferroviario',
-    icon: DoorOpen,
-    ordine: 3,
-    attiva: true,
-    stati: [],
-    campi: ['codice', 'ubicazione', 'tipologia_accesso', 'note'],
-  },
-  {
-    id: 'trenitalia',
-    label: 'Locali Trenitalia',
-    description: 'Spazi e servizi Trenitalia',
-    icon: MoreHorizontal,
-    ordine: 4,
-    attiva: true,
-    stati: ['Aperto', 'Chiuso', 'Guasto'],
-    campi: ['codice', 'ubicazione', 'stato', 'note'],
-  },
-  {
-    id: 'spogliatoi',
-    label: 'Spogliatoi',
-    description: 'Spogliatoi riservati al personale',
-    icon: Shirt,
-    ordine: 5,
-    attiva: true,
-    stati: ['Aperti', 'Chiusi', 'In pulizia'],
-    campi: ['ubicazione', 'stato', 'docce', 'armadietti', 'note'],
-  },
-  {
-    id: 'segreteria',
-    label: 'Segreteria',
-    description: 'Ufficio di segreteria della stazione',
-    icon: BookOpen,
-    ordine: 6,
-    attiva: true,
-    stati: ['Aperta', 'Chiusa'],
-    // fasce_orarie sostituisce il campo orari testuale:
-    // stesso sistema delle attività, compatibile con getStatoApertura
-    campi: ['ubicazione', 'stato', 'fasce_orarie', 'note'],
-  },
-  {
-    id: 'versamenti',
-    label: 'Ufficio versamenti',
-    description: 'Ufficio per i versamenti del personale',
-    icon: Banknote,
-    ordine: 7,
-    attiva: true,
-    stati: ['Aperto', 'Chiuso'],
-    campi: ['ubicazione', 'stato', 'fasce_orarie', 'note'],
-  },
-] as const;
-
-type AreaId = typeof areeLocalita[number]['id'];
-
-const MODALITA_ACCESSO  = ['Libero', 'Chiave', 'Codice', 'Badge'];
-const TIPOLOGIA_ACCESSO = ['Badge', 'Tastierino', 'Citofono', 'Apertura manuale'];
-
-const GIORNI_SETTIMANA = ['Lun', 'Mar', 'Mer', 'Gio', 'Ven', 'Sab', 'Dom'];
 
 function nuovaFascia(): FasciaOraria {
   return { giorni: [], apertura: '', chiusura: '' };
@@ -186,6 +88,7 @@ export default function ContributoSalettaForm({
   }, [stazionePredefinita]);
 
   const [areaId, setAreaId]             = useState<AreaId>(areeLocalita[0].id);
+  const [etichetta, setEtichetta]       = useState('');
   const [codice, setCodice]             = useState('');
   const [ubicazione, setUbicazione]     = useState('');
   const [stato, setStato]               = useState('');
@@ -269,6 +172,7 @@ export default function ContributoSalettaForm({
         // il contributo va in revisione admin per essere collegato a mano.
         stazione_id:       usaTestoLibero ? null : stazioneId,
         tipo:              areaId,
+        etichetta:         etichetta.trim() || null,
         codice_accesso:    codice.trim(),
         ubicazione:        ubicazione.trim(),
         stato,
@@ -413,6 +317,24 @@ export default function ContributoSalettaForm({
               </button>
             </>
           )}
+        </div>
+
+        {/* ETICHETTA — sempre presente, per distinguere più elementi della
+            stessa sezione nella stessa stazione (es. "Trenord"/"Trenitalia",
+            "Accesso esterno"/"Accesso saletta") */}
+        <div>
+          <label className="text-xs font-semibold text-gray-400 uppercase">
+            Etichetta (facoltativa)
+          </label>
+          <input
+            value={etichetta}
+            onChange={(e) => setEtichetta(e.target.value)}
+            placeholder="Es. Trenord, Trenitalia, Accesso saletta..."
+            className="mt-1 border border-gray-200 rounded-xl px-3 py-2 w-full text-base"
+          />
+          <p className="mt-1.5 text-xs text-gray-400">
+            Utile solo se in questa stazione ci sono più elementi della stessa sezione (es. due sale equipaggi).
+          </p>
         </div>
 
         {/* CODICE */}
