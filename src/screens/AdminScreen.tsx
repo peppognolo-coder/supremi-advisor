@@ -2931,7 +2931,7 @@ export default function AdminScreen({ adminPin }: Props) {
       {modalSegnalazioniSalette && (
 
         <div
-          className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4"
+          className="fixed inset-0 z-[9999] bg-black/40 flex items-center justify-center p-4"
           onClick={() => setModalSegnalazioniSalette(null)}
         >
 
@@ -3092,7 +3092,7 @@ export default function AdminScreen({ adminPin }: Props) {
       {modalSegnalazioniAttivita && (
 
         <div
-          className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4"
+          className="fixed inset-0 z-[9999] bg-black/40 flex items-center justify-center p-4"
           onClick={() => setModalSegnalazioniAttivita(null)}
         >
 
@@ -3544,7 +3544,7 @@ export default function AdminScreen({ adminPin }: Props) {
       {/* MODAL TOTP — Configura Authenticator */}
       {showTotpModal && (
         <div
-          className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4"
+          className="fixed inset-0 bg-black/50 z-[9999] flex items-center justify-center p-4"
           onClick={(e) => { if (e.target === e.currentTarget) setShowTotpModal(false); }}
         >
           <div className="bg-white rounded-3xl w-full max-w-sm flex flex-col gap-5 p-6 max-h-[80vh] overflow-y-auto">
