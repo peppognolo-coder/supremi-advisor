@@ -218,6 +218,7 @@ export default function App() {
             onStationCleared={clearActiveStation}
             onOpenStazione={handleOpenStazione}
             onOpenSegnalazione={handleOpenSegnalazione}
+            refreshKey={refreshKey}
           />
         )}
 
