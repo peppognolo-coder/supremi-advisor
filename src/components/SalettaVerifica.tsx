@@ -141,16 +141,6 @@ export default function SalettaVerifica({
 
     setLoading(true);
 
-    // Check cache locale prima
-    const cache = getLSCache();
-    const cached = cache[salettaId];
-
-    // Se ho cache recente (< 1 ora) uso quella per UX veloce
-    // ma carico comunque il DB per i contatori
-    const sevenDaysAgo = new Date(
-      Date.now() - GIORNI_LIMITE * 24 * 60 * 60 * 1000
-    ).toISOString();
-
     // Query: tutte le verifiche di questa saletta
     const { data, error } =
       await supabase
