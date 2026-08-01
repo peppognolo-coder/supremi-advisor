@@ -56,7 +56,7 @@ export default function AddStazioneModal({ adminPin, onClose, onAdded }: Props) 
       className="fixed inset-0 bg-black/40 z-[9999] flex items-center justify-center p-4"
       onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
     >
-      <div className="bg-white rounded-3xl w-full max-w-2xl p-6 pb-24 flex flex-col gap-4 max-h-[90vh] overflow-y-auto">
+      <div className="bg-white rounded-3xl w-full max-w-2xl p-6 pb-24 flex flex-col gap-4 max-h-[90dvh] overflow-y-auto">
 
         {/* HEADER */}
         <div className="flex items-center justify-between">
