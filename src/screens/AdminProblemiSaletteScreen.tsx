@@ -372,7 +372,7 @@ export default function AdminProblemiSaletteScreen({ adminPin }: Props) {
       {/* MODAL DETTAGLIO */}
       {dettaglio && (
         <div
-          className="fixed inset-0 bg-black/40 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4"
+          className="fixed inset-0 bg-black/40 z-[9999] flex items-end sm:items-center justify-center p-0 sm:p-4"
           onClick={(e) => { if (e.target === e.currentTarget) setDettaglio(null); }}
         >
           <div className="bg-white rounded-t-3xl sm:rounded-3xl w-full sm:max-w-md p-5 flex flex-col gap-4">
