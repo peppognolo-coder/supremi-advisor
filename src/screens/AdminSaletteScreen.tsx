@@ -10,13 +10,12 @@ import {
   Coffee,
   Droplets,
   Snowflake,
+  Shirt,
   Power,
   PowerOff,
 } from 'lucide-react';
 
 import toast from 'react-hot-toast';
-
-import { formatTitle } from '../lib/format';
 
 import {
   type Saletta,
@@ -28,6 +27,14 @@ import {
   deleteSaletta,
   toggleAttivaSaletta,
 } from '../lib/adminApi';
+
+import {
+  SEZIONI_LOCALITA,
+  getSezione,
+  MODALITA_ACCESSO,
+  TIPOLOGIA_ACCESSO,
+  GIORNI_SETTIMANA,
+} from '../lib/localitaSezioni';
 
 // =========================
 // PROPS
@@ -90,7 +97,8 @@ function AddSalettaModal({
   onAdded: (s: Saletta) => void;
 }) {
   const [stazioneId, setStazioneId] = useState(stazioni[0]?.id ?? '');
-  const [tipo, setTipo] = useState('Equipaggi');
+  const [sezioneId, setSezioneId] = useState(SEZIONI_LOCALITA[0].id);
+  const [etichetta, setEtichetta] = useState('');
   const [loading, setLoading] = useState(false);
 
   async function submit() {
@@ -100,7 +108,11 @@ function AddSalettaModal({
     }
 
     setLoading(true);
-    const res = await addSaletta(adminPin, { stazione_id: stazioneId, tipo });
+    const res = await addSaletta(adminPin, {
+      stazione_id: stazioneId,
+      tipo: sezioneId,
+      etichetta: etichetta.trim() || undefined,
+    });
     setLoading(false);
 
     if (!res.ok || !res.data) {
@@ -108,7 +120,7 @@ function AddSalettaModal({
       return;
     }
 
-    toast.success('Saletta aggiunta');
+    toast.success('Elemento aggiunto');
     onAdded(res.data);
     onClose();
   }
@@ -118,10 +130,10 @@ function AddSalettaModal({
       className="fixed inset-0 bg-black/40 z-[9999] flex items-center justify-center p-4"
       onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
     >
-      <div className="bg-white rounded-2xl w-full max-w-sm p-6 flex flex-col gap-4">
+      <div className="bg-white rounded-2xl w-full max-w-sm p-6 flex flex-col gap-4 max-h-[90vh] overflow-y-auto">
 
         <div className="flex items-center justify-between">
-          <h2 className="text-lg font-bold text-gray-900">Nuova saletta</h2>
+          <h2 className="text-lg font-bold text-gray-900">Nuovo elemento Località Operativa</h2>
           <button onClick={onClose}>
             <X className="w-5 h-5 text-gray-400" />
           </button>
@@ -146,19 +158,32 @@ function AddSalettaModal({
 
         <div className="flex flex-col gap-1">
           <label className="text-xs font-semibold text-gray-400 uppercase">
-            Tipo
+            Sezione *
           </label>
           <select
-            value={tipo}
-            onChange={(e) => setTipo(e.target.value)}
+            value={sezioneId}
+            onChange={(e) => setSezioneId(e.target.value)}
             className="border border-gray-200 rounded-xl px-3 py-2 text-base"
           >
-            <option>Equipaggi</option>
-            <option>Macchinisti</option>
-            <option>Capitreno</option>
-            <option>DM</option>
-            <option>Personale</option>
+            {SEZIONI_LOCALITA.filter((s) => s.attiva).sort((a, b) => a.ordine - b.ordine).map((s) => (
+              <option key={s.id} value={s.id}>{s.label}</option>
+            ))}
           </select>
+        </div>
+
+        <div className="flex flex-col gap-1">
+          <label className="text-xs font-semibold text-gray-400 uppercase">
+            Etichetta (facoltativa)
+          </label>
+          <input
+            value={etichetta}
+            onChange={(e) => setEtichetta(e.target.value)}
+            placeholder="Es. Trenord, Trenitalia, Accesso saletta..."
+            className="border border-gray-200 rounded-xl px-3 py-2 text-base"
+          />
+          <p className="text-xs text-gray-400">
+            Utile solo se in questa stazione ci sono più elementi della stessa sezione.
+          </p>
         </div>
 
         <button
@@ -169,7 +194,7 @@ function AddSalettaModal({
           {loading && (
             <span className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />
           )}
-          {loading ? 'Aggiunta...' : 'Aggiungi saletta'}
+          {loading ? 'Aggiunta...' : 'Aggiungi'}
         </button>
 
       </div>
@@ -299,7 +324,8 @@ export default function AdminSaletteScreen({
     return (
       !q ||
       s.stazione?.toLowerCase().includes(q) ||
-      s.tipo?.toLowerCase().includes(q)
+      s.tipo?.toLowerCase().includes(q) ||
+      s.etichetta?.toLowerCase().includes(q)
     );
   });
 
@@ -313,6 +339,34 @@ export default function AdminSaletteScreen({
     );
   }
 
+  // Fasce orarie: stesso pattern di AdminContributiScreen.tsx, ma operando
+  // sull'array locale `salette` invece che su un singolo editingContributo.
+  function addFascia(salettaId: string) {
+    const s = salette.find((x) => x.id === salettaId);
+    const fasce = [...(s?.fasce_orarie ?? []), { giorni: [], apertura: '', chiusura: '' }];
+    updateField(salettaId, 'fasce_orarie', fasce);
+  }
+  function removeFascia(salettaId: string, index: number) {
+    const s = salette.find((x) => x.id === salettaId);
+    const fasce = (s?.fasce_orarie ?? []).filter((_, i) => i !== index);
+    updateField(salettaId, 'fasce_orarie', fasce);
+  }
+  function updateFascia(salettaId: string, index: number, field: string, value: unknown) {
+    const s = salette.find((x) => x.id === salettaId);
+    const fasce = [...(s?.fasce_orarie ?? [])];
+    fasce[index] = { ...fasce[index], [field]: value };
+    updateField(salettaId, 'fasce_orarie', fasce);
+  }
+  function toggleGiorno(salettaId: string, index: number, giorno: string) {
+    const s = salette.find((x) => x.id === salettaId);
+    const fascia = s?.fasce_orarie?.[index];
+    if (!fascia) return;
+    const giorni = fascia.giorni.includes(giorno)
+      ? fascia.giorni.filter((g) => g !== giorno)
+      : [...fascia.giorni, giorno];
+    updateFascia(salettaId, index, 'giorni', giorni);
+  }
+
   // =========================
   // SAVE
   // =========================
@@ -321,16 +375,23 @@ export default function AdminSaletteScreen({
     setSavingId(saletta.id);
 
     const res = await updateSaletta(adminPin, {
-      id:             saletta.id,
-      stazione_id:    saletta.stazione_id ?? '',
-      tipo:           saletta.tipo,
-      codice_accesso: saletta.codice_accesso,
-      ubicazione:     saletta.ubicazione,
-      note:           saletta.note,
-      microonde:      saletta.microonde,
-      distributori:   saletta.distributori,
-      acqua:          saletta.acqua,
-      climatizzata:   saletta.climatizzata,
+      id:                 saletta.id,
+      stazione_id:        saletta.stazione_id ?? '',
+      tipo:               saletta.tipo,
+      etichetta:          saletta.etichetta,
+      codice_accesso:     saletta.codice_accesso,
+      ubicazione:         saletta.ubicazione,
+      note:               saletta.note,
+      microonde:          saletta.microonde,
+      distributori:       saletta.distributori,
+      acqua:              saletta.acqua,
+      climatizzata:       saletta.climatizzata,
+      docce:              saletta.docce,
+      armadietti:         saletta.armadietti,
+      modalita_accesso:   saletta.modalita_accesso,
+      tipologia_accesso:  saletta.tipologia_accesso,
+      fasce_orarie:       saletta.fasce_orarie,
+      stato:              saletta.stato,
     });
 
     setSavingId(null);
@@ -340,7 +401,7 @@ export default function AdminSaletteScreen({
       return;
     }
 
-    toast.success('Saletta aggiornata');
+    toast.success('Aggiornato');
   }
 
   // =========================
@@ -348,7 +409,7 @@ export default function AdminSaletteScreen({
   // =========================
 
   function richiediElimina(s: Saletta) {
-    setConfirmDelete({ id: s.id, nome: `${s.stazione} — ${s.tipo}`, loading: false });
+    setConfirmDelete({ id: s.id, nome: `${s.stazione} — ${getSezione(s.tipo).label}`, loading: false });
   }
 
   async function confermaElimina() {
@@ -363,7 +424,7 @@ export default function AdminSaletteScreen({
       return;
     }
 
-    toast.success('Saletta eliminata');
+    toast.success('Eliminato');
     setConfirmDelete(null);
     setSalette((prev) => prev.filter((s) => s.id !== confirmDelete.id));
   }
@@ -376,7 +437,7 @@ export default function AdminSaletteScreen({
     const nuovoStato = !(s.attiva ?? true);
     setConfirmToggle({
       id: s.id,
-      nome: `${s.stazione} — ${s.tipo}`,
+      nome: `${s.stazione} — ${getSezione(s.tipo).label}`,
       nuovoStato,
       loading: false,
     });
@@ -394,7 +455,7 @@ export default function AdminSaletteScreen({
       return;
     }
 
-    toast.success(confirmToggle.nuovoStato ? 'Saletta attivata' : 'Saletta disattivata');
+    toast.success(confirmToggle.nuovoStato ? 'Attivato' : 'Disattivato');
     setSalette((prev) =>
       prev.map((s) => (s.id === confirmToggle.id ? { ...s, attiva: confirmToggle.nuovoStato } : s))
     );
@@ -434,7 +495,7 @@ export default function AdminSaletteScreen({
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
           <input
             type="text"
-            placeholder="Cerca stazione o tipo..."
+            placeholder="Cerca stazione, sezione o etichetta..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="w-full bg-white border border-gray-200 rounded-xl pl-9 pr-9 py-2.5 text-base"
@@ -477,8 +538,8 @@ export default function AdminSaletteScreen({
         {!loading && filtered.length === 0 && (
           <div className="bg-white rounded-2xl border border-gray-100 p-8 text-center text-sm text-gray-400">
             {search
-              ? `Nessuna saletta trovata per "${search}"`
-              : 'Nessuna saletta presente.'}
+              ? `Nessun elemento trovato per "${search}"`
+              : 'Nessun elemento presente.'}
           </div>
         )}
 
@@ -486,6 +547,9 @@ export default function AdminSaletteScreen({
         <div className="flex flex-col gap-4">
           {filtered.map((s) => {
             const isSaving = savingId === s.id;
+            const sezione = getSezione(s.tipo);
+            const mostra = (campo: string) => (sezione.campi as readonly string[]).includes(campo);
+
             return (
               <div
                 key={s.id}
@@ -520,24 +584,51 @@ export default function AdminSaletteScreen({
                   {(s.attiva ?? true) ? '🟢 Attiva' : '⚫ Disattivata'}
                 </span>
 
+                {/* SEZIONE */}
                 <div>
-                  <label className="text-xs font-semibold text-gray-400 uppercase">Tipo</label>
-                  <input
-                    value={formatTitle(s.tipo ?? '')}
+                  <label className="text-xs font-semibold text-gray-400 uppercase">Sezione</label>
+                  <select
+                    value={s.tipo}
                     onChange={(e) => updateField(s.id, 'tipo', e.target.value)}
                     className="mt-1 w-full border border-gray-200 rounded-xl px-3 py-2 text-base"
-                  />
+                  >
+                    {SEZIONI_LOCALITA.filter((sez) => sez.attiva).sort((a, b) => a.ordine - b.ordine).map((sez) => (
+                      <option key={sez.id} value={sez.id}>{sez.label}</option>
+                    ))}
+                    {/* Valore attuale se non corrisponde a nessuna delle 7 sezioni
+                        (dato legacy non ancora rimappato) — evita di perderlo silenziosamente. */}
+                    {!SEZIONI_LOCALITA.some((sez) => sez.id === s.tipo) && (
+                      <option value={s.tipo}>{s.tipo} (valore non standard)</option>
+                    )}
+                  </select>
                 </div>
 
+                {/* ETICHETTA */}
                 <div>
-                  <label className="text-xs font-semibold text-gray-400 uppercase">Codice accesso</label>
+                  <label className="text-xs font-semibold text-gray-400 uppercase">
+                    Etichetta <span className="normal-case font-normal text-gray-400">(facoltativa, per distinguere più elementi della stessa sezione)</span>
+                  </label>
                   <input
-                    value={s.codice_accesso ?? ''}
-                    onChange={(e) => updateField(s.id, 'codice_accesso', e.target.value || null)}
+                    value={s.etichetta ?? ''}
+                    onChange={(e) => updateField(s.id, 'etichetta', e.target.value || null)}
+                    placeholder="Es. Trenord, Trenitalia, Accesso saletta..."
                     className="mt-1 w-full border border-gray-200 rounded-xl px-3 py-2 text-base"
                   />
                 </div>
 
+                {/* CODICE */}
+                {mostra('codice') && (
+                  <div>
+                    <label className="text-xs font-semibold text-gray-400 uppercase">Codice accesso</label>
+                    <input
+                      value={s.codice_accesso ?? ''}
+                      onChange={(e) => updateField(s.id, 'codice_accesso', e.target.value || null)}
+                      className="mt-1 w-full border border-gray-200 rounded-xl px-3 py-2 text-base"
+                    />
+                  </div>
+                )}
+
+                {/* UBICAZIONE */}
                 <div>
                   <label className="text-xs font-semibold text-gray-400 uppercase">Ubicazione</label>
                   <input
@@ -547,6 +638,118 @@ export default function AdminSaletteScreen({
                   />
                 </div>
 
+                {/* STATO */}
+                {mostra('stato') && sezione.stati.length > 0 && (
+                  <div>
+                    <label className="text-xs font-semibold text-gray-400 uppercase">Stato</label>
+                    <select
+                      value={s.stato ?? sezione.stati[0]}
+                      onChange={(e) => updateField(s.id, 'stato', e.target.value)}
+                      className="mt-1 w-full border border-gray-200 rounded-xl px-3 py-2 text-base"
+                    >
+                      {sezione.stati.map((st) => <option key={st} value={st}>{st}</option>)}
+                    </select>
+                  </div>
+                )}
+
+                {/* MODALITA ACCESSO — bagni */}
+                {mostra('modalita_accesso') && (
+                  <div>
+                    <label className="text-xs font-semibold text-gray-400 uppercase">Modalità di accesso</label>
+                    <select
+                      value={s.modalita_accesso ?? MODALITA_ACCESSO[0]}
+                      onChange={(e) => updateField(s.id, 'modalita_accesso', e.target.value)}
+                      className="mt-1 w-full border border-gray-200 rounded-xl px-3 py-2 text-base"
+                    >
+                      {MODALITA_ACCESSO.map((v) => <option key={v} value={v}>{v}</option>)}
+                    </select>
+                  </div>
+                )}
+
+                {/* TIPOLOGIA ACCESSO — cancelletto */}
+                {mostra('tipologia_accesso') && (
+                  <div>
+                    <label className="text-xs font-semibold text-gray-400 uppercase">Tipologia di accesso</label>
+                    <select
+                      value={s.tipologia_accesso ?? TIPOLOGIA_ACCESSO[0]}
+                      onChange={(e) => updateField(s.id, 'tipologia_accesso', e.target.value)}
+                      className="mt-1 w-full border border-gray-200 rounded-xl px-3 py-2 text-base"
+                    >
+                      {TIPOLOGIA_ACCESSO.map((v) => <option key={v} value={v}>{v}</option>)}
+                    </select>
+                  </div>
+                )}
+
+                {/* SERVIZI — equipaggi */}
+                {mostra('servizi') && (
+                  <div className="flex flex-col gap-3">
+                    <label className="text-xs font-semibold text-gray-400 uppercase">Servizi</label>
+                    <ServiceToggle active={s.microonde ?? false} onClick={() => updateField(s.id, 'microonde', !s.microonde)} icon={<Microwave className="w-5 h-5" />} label="Microonde" />
+                    <ServiceToggle active={s.distributori ?? false} onClick={() => updateField(s.id, 'distributori', !s.distributori)} icon={<Coffee className="w-5 h-5" />} label="Distributori" />
+                    <ServiceToggle active={s.acqua ?? false} onClick={() => updateField(s.id, 'acqua', !s.acqua)} icon={<Droplets className="w-5 h-5" />} label="Acqua" />
+                    <ServiceToggle active={s.climatizzata ?? false} onClick={() => updateField(s.id, 'climatizzata', !s.climatizzata)} icon={<Snowflake className="w-5 h-5" />} label="Climatizzata" />
+                  </div>
+                )}
+
+                {/* DOCCE — spogliatoi */}
+                {mostra('docce') && (
+                  <ServiceToggle active={s.docce ?? false} onClick={() => updateField(s.id, 'docce', !s.docce)}
+                    icon={<Droplets className="w-5 h-5" />} label="Docce disponibili" />
+                )}
+
+                {/* ARMADIETTI — spogliatoi */}
+                {mostra('armadietti') && (
+                  <ServiceToggle active={s.armadietti ?? false} onClick={() => updateField(s.id, 'armadietti', !s.armadietti)}
+                    icon={<Shirt className="w-5 h-5" />} label="Armadietti disponibili" />
+                )}
+
+                {/* FASCE ORARIE — segreteria e versamenti */}
+                {mostra('fasce_orarie') && (
+                  <div className="flex flex-col gap-3">
+                    <div className="flex items-center justify-between">
+                      <label className="text-xs font-semibold text-gray-400 uppercase">Orari di apertura</label>
+                      <button type="button" onClick={() => addFascia(s.id)} className="text-sm text-trenord-green font-medium">
+                        + Aggiungi fascia
+                      </button>
+                    </div>
+                    {(s.fasce_orarie ?? []).map((fascia, index) => (
+                      <div key={index} className="border border-gray-200 rounded-2xl p-3 flex flex-col gap-3">
+                        <div className="flex items-center justify-between">
+                          <span className="font-medium text-sm text-gray-700">Fascia {index + 1}</span>
+                          <button type="button" onClick={() => removeFascia(s.id, index)} className="text-red-600">
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
+                        <div className="grid grid-cols-4 gap-1.5">
+                          {GIORNI_SETTIMANA.map((giorno) => (
+                            <button key={giorno} type="button" onClick={() => toggleGiorno(s.id, index, giorno)}
+                              className={`rounded-lg py-1.5 text-xs font-medium border transition-colors ${
+                                fascia.giorni.includes(giorno) ? 'bg-trenord-green text-white border-trenord-green' : 'bg-white text-gray-600 border-gray-200'
+                              }`}>
+                              {giorno}
+                            </button>
+                          ))}
+                        </div>
+                        <div className="grid grid-cols-2 gap-2">
+                          <div>
+                            <label className="text-xs text-gray-400 mb-1 block">Apertura</label>
+                            <input type="time" value={fascia.apertura}
+                              onChange={(e) => updateFascia(s.id, index, 'apertura', e.target.value)}
+                              className="border border-gray-200 rounded-xl px-3 py-2 w-full text-base" />
+                          </div>
+                          <div>
+                            <label className="text-xs text-gray-400 mb-1 block">Chiusura</label>
+                            <input type="time" value={fascia.chiusura}
+                              onChange={(e) => updateFascia(s.id, index, 'chiusura', e.target.value)}
+                              className="border border-gray-200 rounded-xl px-3 py-2 w-full text-base" />
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {/* NOTE */}
                 <div>
                   <label className="text-xs font-semibold text-gray-400 uppercase">Note</label>
                   <textarea
@@ -554,14 +757,6 @@ export default function AdminSaletteScreen({
                     onChange={(e) => updateField(s.id, 'note', e.target.value || null)}
                     className="mt-1 w-full border border-gray-200 rounded-xl px-3 py-2 text-base min-h-[80px]"
                   />
-                </div>
-
-                <div className="flex flex-col gap-3">
-                  <label className="text-xs font-semibold text-gray-400 uppercase">Servizi</label>
-                  <ServiceToggle active={s.microonde ?? false} onClick={() => updateField(s.id, 'microonde', !s.microonde)} icon={<Microwave className="w-5 h-5" />} label="Microonde" />
-                  <ServiceToggle active={s.distributori ?? false} onClick={() => updateField(s.id, 'distributori', !s.distributori)} icon={<Coffee className="w-5 h-5" />} label="Distributori" />
-                  <ServiceToggle active={s.acqua ?? false} onClick={() => updateField(s.id, 'acqua', !s.acqua)} icon={<Droplets className="w-5 h-5" />} label="Acqua" />
-                  <ServiceToggle active={s.climatizzata ?? false} onClick={() => updateField(s.id, 'climatizzata', !s.climatizzata)} icon={<Snowflake className="w-5 h-5" />} label="Climatizzata" />
                 </div>
 
                 <div className="flex gap-2">
@@ -615,7 +810,7 @@ export default function AdminSaletteScreen({
 
       {confirmDelete && (
         <ConfirmModal
-          message={`Eliminare la saletta "${confirmDelete.nome}"? L'operazione è irreversibile.`}
+          message={`Eliminare "${confirmDelete.nome}"? L'operazione è irreversibile.`}
           onConfirm={confermaElimina}
           onCancel={() => setConfirmDelete(null)}
           loading={confirmDelete.loading}
@@ -626,8 +821,8 @@ export default function AdminSaletteScreen({
         <ConfirmModal
           message={
             confirmToggle.nuovoStato
-              ? `Attivare la saletta "${confirmToggle.nome}"? Tornerà visibile agli utenti.`
-              : `Disattivare la saletta "${confirmToggle.nome}"? Non sarà più visibile agli utenti né nelle ricerche.`
+              ? `Attivare "${confirmToggle.nome}"? Tornerà visibile agli utenti.`
+              : `Disattivare "${confirmToggle.nome}"? Non sarà più visibile agli utenti né nelle ricerche.`
           }
           onConfirm={confermaToggle}
           onCancel={() => setConfirmToggle(null)}
