@@ -33,6 +33,13 @@ import {
 } from '../lib/adminApi';
 
 import OpzioniAlimentariSection from '../components/forms/OpzioniAlimentariSection';
+import {
+  SEZIONI_LOCALITA,
+  getSezione,
+  MODALITA_ACCESSO,
+  TIPOLOGIA_ACCESSO,
+  GIORNI_SETTIMANA,
+} from '../lib/localitaSezioni';
 
 // =========================
 // PROPS
@@ -41,68 +48,6 @@ import OpzioniAlimentariSection from '../components/forms/OpzioniAlimentariSecti
 interface Props {
   adminPin: string;
 }
-
-// =========================
-// COSTANTI
-// =========================
-
-// FIX P2: CATEGORIE e DISTANZE rimosse — ora importate da adminApi come
-// CATEGORIE_ATTIVITA e DISTANZE_ATTIVITA (sorgente di verità unica)
-
-const GIORNI_SETTIMANA = ['Lun', 'Mar', 'Mer', 'Gio', 'Ven', 'Sab', 'Dom'];
-
-// =============================================================================
-// CONFIGURAZIONE SEZIONI LOCALITÀ
-// Stessa struttura del form contributi — fonte di verità per il pannello admin.
-// =============================================================================
-
-const SEZIONI_LOCALITA = [
-  {
-    id: 'equipaggi',
-    label: 'Saletta equipaggi',
-    stati: ['Aperta', 'Chiusa', 'In pulizia', 'Guasto'],
-    campi: ['codice', 'ubicazione', 'stato', 'servizi', 'note'],
-  },
-  {
-    id: 'bagni',
-    label: 'Bagni',
-    stati: ['Aperti', 'Chiusi', 'In pulizia'],
-    campi: ['ubicazione', 'stato', 'modalita_accesso', 'note'],
-  },
-  {
-    id: 'cancelletto',
-    label: 'Cancelletto',
-    stati: [],
-    campi: ['codice', 'ubicazione', 'tipologia_accesso', 'note'],
-  },
-  {
-    id: 'trenitalia',
-    label: 'Locali Trenitalia',
-    stati: ['Aperto', 'Chiuso', 'Guasto'],
-    campi: ['codice', 'ubicazione', 'stato', 'note'],
-  },
-  {
-    id: 'spogliatoi',
-    label: 'Spogliatoi',
-    stati: ['Aperti', 'Chiusi', 'In pulizia'],
-    campi: ['ubicazione', 'stato', 'docce', 'armadietti', 'note'],
-  },
-  {
-    id: 'segreteria',
-    label: 'Segreteria',
-    stati: ['Aperta', 'Chiusa'],
-    campi: ['ubicazione', 'stato', 'fasce_orarie', 'note'],
-  },
-  {
-    id: 'versamenti',
-    label: 'Ufficio versamenti',
-    stati: ['Aperto', 'Chiuso'],
-    campi: ['ubicazione', 'stato', 'fasce_orarie', 'note'],
-  },
-] as const;
-
-const MODALITA_ACCESSO  = ['Libero', 'Chiave', 'Codice', 'Badge'];
-const TIPOLOGIA_ACCESSO = ['Badge', 'Tastierino', 'Citofono', 'Apertura manuale'];
 
 // =========================
 // HELPER renderValore
@@ -508,9 +453,7 @@ export default function AdminContributiScreen({ adminPin }: Props) {
 
             {/* SALETTA — rendering dinamico per sezione */}
             {editingContributo.tipo === 'saletta' && (() => {
-              const sezioneId = editingContributo.dati?.tipo ?? 'equipaggi';
-              const sezione   = SEZIONI_LOCALITA.find((s) => s.id === sezioneId)
-                             ?? SEZIONI_LOCALITA[0];
+              const sezione   = getSezione(editingContributo.dati?.tipo);
               const mostra    = (campo: string) =>
                 (sezione.campi as readonly string[]).includes(campo);
               const upd       = (field: string, val: unknown) =>
@@ -522,10 +465,29 @@ export default function AdminContributiScreen({ adminPin }: Props) {
               return (
                 <div className="flex flex-col gap-4">
 
-                  {/* INTESTAZIONE SEZIONE */}
-                  <div className="bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 flex items-center gap-2">
-                    <span className="text-xs font-semibold text-gray-400 uppercase">Sezione</span>
-                    <span className="font-semibold text-gray-800">{sezione.label}</span>
+                  {/* SEZIONE — editabile: l'admin può correggere la
+                      classificazione prima di approvare. */}
+                  <div>
+                    <label className="text-xs font-semibold text-gray-400 uppercase">Sezione</label>
+                    <select value={editingContributo.dati?.tipo ?? sezione.id}
+                      onChange={(e) => upd('tipo', e.target.value)}
+                      className="mt-1 border border-gray-200 rounded-xl px-3 py-2 w-full text-base">
+                      {SEZIONI_LOCALITA.map((s) => (
+                        <option key={s.id} value={s.id}>{s.label}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {/* ETICHETTA — distingue più elementi della stessa sezione
+                      nella stessa stazione (es. "Trenord"/"Trenitalia"). */}
+                  <div>
+                    <label className="text-xs font-semibold text-gray-400 uppercase">
+                      Etichetta <span className="normal-case font-normal text-gray-400">(facoltativa)</span>
+                    </label>
+                    <input value={editingContributo.dati?.etichetta || ''}
+                      onChange={(e) => upd('etichetta', e.target.value)}
+                      placeholder="Es. Trenord, Trenitalia, Accesso saletta..."
+                      className="mt-1 border border-gray-200 rounded-xl px-3 py-2 w-full text-base" />
                   </div>
 
                   {/* STAZIONE — editabile: l'admin può collegare/correggere
