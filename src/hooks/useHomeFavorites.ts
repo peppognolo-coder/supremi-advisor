@@ -16,7 +16,7 @@ export interface FavoriteStationSummary {
 // Hook
 // ---------------------------------------------------------------------------
 
-export function useHomeFavorites(activeStationId: string | null) {
+export function useHomeFavorites(_activeStationId: string | null) {
   const [favoriteIds, setFavoriteIds] = useState<string[]>([]);
   const [stations, setStations] = useState<FavoriteStationSummary[]>([]);
   const [loading, setLoading] = useState(false);
