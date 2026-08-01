@@ -60,7 +60,7 @@ export function usePullToRefresh({
 
     function onTouchStart(e: TouchEvent) {
       // 1. Il refresh parte solo dalla cima.
-      if (scroller.scrollTop > 0) return;
+      if (scroller!.scrollTop > 0) return;
       if (refreshing.current)     return;
 
       startY.current  = e.touches[0].clientY;
@@ -84,7 +84,7 @@ export function usePullToRefresh({
       }
 
       // Se il contenitore ha scrollato nel frattempo, annulla.
-      if (scroller.scrollTop > 2) {
+      if (scroller!.scrollTop > 2) {
         pulling.current = false;
         translate(0, true);
         startY.current = 0;
