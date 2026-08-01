@@ -68,6 +68,7 @@ interface FeedLink {
 interface FeedItem {
   id: string;
   tipo: 'info' | 'avviso' | 'risolto';
+  categoria: 'nuova_attivita' | 'nuova_stazione' | 'nuovo_elemento' | 'modifica_attivita' | 'aggiornamento_saletta' | 'problema_aperto' | 'problema_risolto';
   titolo: string;
   descrizione: string;
   stazione?: string;
@@ -108,7 +109,7 @@ export const handler: Handler = async (event: HandlerEvent) => {
       if (c.tipo === 'attivita') {
         const stazioneNome = stazioniMap.get(dati.stazione_id) ?? dati.stazione ?? null;
         items.push({
-          id: `contrib-${c.id}`, tipo: 'info',
+          id: `contrib-${c.id}`, tipo: 'info', categoria: 'nuova_attivita',
           titolo: `Nuova attività: ${dati.nome ?? 'senza nome'}`,
           descrizione: dati.categoria ? `Categoria: ${dati.categoria}` : 'Aggiunta alla stazione',
           stazione: stazioneNome ?? undefined,
@@ -118,7 +119,7 @@ export const handler: Handler = async (event: HandlerEvent) => {
       } else if (c.tipo === 'stazione') {
         const match = (stazioniRes.data ?? []).find((s: any) => s.nome === dati.nome);
         items.push({
-          id: `contrib-${c.id}`, tipo: 'info',
+          id: `contrib-${c.id}`, tipo: 'info', categoria: 'nuova_stazione',
           titolo: `Nuova stazione: ${dati.nome ?? ''}`,
           descrizione: [dati.regione, dati.provincia].filter(Boolean).join(' · ') || 'Aggiunta al database',
           tempo: tempoFa(c.created_at), timestamp: c.created_at,
@@ -126,7 +127,7 @@ export const handler: Handler = async (event: HandlerEvent) => {
         });
       } else if (c.tipo === 'saletta') {
         items.push({
-          id: `contrib-${c.id}`, tipo: 'info',
+          id: `contrib-${c.id}`, tipo: 'info', categoria: 'nuovo_elemento',
           titolo: `Nuovo elemento: ${sezioneLabel(dati.tipo)}`,
           descrizione: dati.ubicazione ? `Ubicazione: ${dati.ubicazione}` : 'Aggiunto alla Località Operativa',
           stazione: dati.stazione ?? undefined,
@@ -138,7 +139,7 @@ export const handler: Handler = async (event: HandlerEvent) => {
         const stazioneNome = attivita ? stazioniMap.get(attivita.stazione_id) : null;
         const nCampi = dati.modifiche ? Object.keys(dati.modifiche).length : 0;
         items.push({
-          id: `contrib-${c.id}`, tipo: 'info',
+          id: `contrib-${c.id}`, tipo: 'info', categoria: 'modifica_attivita',
           titolo: `Info aggiornate: ${dati.nome_attivita ?? attivita?.nome ?? 'attività'}`,
           descrizione: nCampi > 0 ? `${nCampi} informazion${nCampi === 1 ? 'e' : 'i'} aggiornat${nCampi === 1 ? 'a' : 'e'}` : 'Informazioni aggiornate',
           stazione: stazioneNome ?? undefined,
@@ -149,7 +150,7 @@ export const handler: Handler = async (event: HandlerEvent) => {
         const saletta = saletteMap.get(dati.saletta_id);
         const nSel = Array.isArray(dati.selezioni) ? dati.selezioni.length : 0;
         items.push({
-          id: `contrib-${c.id}`, tipo: 'info',
+          id: `contrib-${c.id}`, tipo: 'info', categoria: 'aggiornamento_saletta',
           titolo: `Aggiornamento: ${sezioneLabel(saletta?.tipo ?? dati.sezione)}`,
           descrizione: nSel > 0 ? `${nSel} informazion${nSel === 1 ? 'e' : 'i'} aggiornat${nSel === 1 ? 'a' : 'e'}` : 'Informazioni aggiornate',
           stazione: saletta?.stazione ?? undefined,
@@ -164,7 +165,7 @@ export const handler: Handler = async (event: HandlerEvent) => {
       const saletta = (p as any).salette;
       if (p.stato === 'aperta') {
         items.push({
-          id: `prob-${p.id}`, tipo: 'avviso',
+          id: `prob-${p.id}`, tipo: 'avviso', categoria: 'problema_aperto',
           titolo: p.tipo_problema,
           descrizione: saletta ? `Segnalato nella ${sezioneLabel(saletta.tipo)}` : 'Segnalato di recente',
           stazione: saletta?.stazione ?? undefined,
@@ -173,7 +174,7 @@ export const handler: Handler = async (event: HandlerEvent) => {
         });
       } else if (p.stato === 'risolta') {
         items.push({
-          id: `prob-${p.id}`, tipo: 'risolto',
+          id: `prob-${p.id}`, tipo: 'risolto', categoria: 'problema_risolto',
           titolo: `Risolto: ${p.tipo_problema}`,
           descrizione: saletta ? `${sezioneLabel(saletta.tipo)} di nuovo regolare` : 'Problema risolto',
           stazione: saletta?.stazione ?? undefined,
