@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { createPortal } from 'react-dom';
 import { useScrollLock } from '../lib/useScrollLock';
 
 import {
@@ -137,11 +138,11 @@ export default function SegnalaProblemaAttivitaModal({
     }
   }
 
-  return (
+  return createPortal(
 
-    <div className="fixed inset-0 z-[999] bg-black/40 flex items-end justify-center p-4">
+    <div className="fixed inset-0 z-[9999] bg-black/40 flex items-end justify-center p-4">
 
-      <div ref={panelRef} style={dragStyle} onTouchStart={handleDragStart} className="bg-white rounded-3xl w-full max-w-md flex flex-col gap-4 p-5 shadow-2xl animate-in slide-in-from-bottom duration-200">
+      <div ref={panelRef} style={{ ...dragStyle, paddingBottom: 'max(1.25rem, env(safe-area-inset-bottom))' }} onTouchStart={handleDragStart} className="bg-white rounded-3xl w-full max-w-md flex flex-col gap-4 px-5 pt-5 shadow-2xl animate-in slide-in-from-bottom duration-200">
           {/* DRAG INDICATOR */}
           <div className="flex justify-center pt-3 pb-1 cursor-grab active:cursor-grabbing flex-shrink-0">
             <div className="w-10 h-1 rounded-full bg-gray-200" />
@@ -258,6 +259,7 @@ export default function SegnalaProblemaAttivitaModal({
 
       </div>
 
-    </div>
+    </div>,
+    document.body
   );
 }
