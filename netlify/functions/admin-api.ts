@@ -359,17 +359,37 @@ export const handler: Handler = async (event: HandlerEvent) => {
       // ------ SEGNALAZIONE SALETTA ------
       if (tipo === 'segnalazione_saletta') {
         const updatePayload: any = {};
-        if (dati.tipo === 'codice_accesso' && dati.valore)   updatePayload.codice_accesso = dati.valore;
-        else if (dati.tipo === 'ubicazione' && dati.valore)  updatePayload.ubicazione = dati.valore;
-        else if (dati.tipo === 'note' && dati.valore)        updatePayload.note = dati.valore;
-        else if (dati.tipo === 'climatizzata')               updatePayload.climatizzata = true;
-        else if (dati.tipo === 'remove_climatizzata')        updatePayload.climatizzata = false;
-        else if (dati.tipo === 'microonde')                  updatePayload.microonde = true;
-        else if (dati.tipo === 'remove_microonde')           updatePayload.microonde = false;
-        else if (dati.tipo === 'fontana_acqua')              updatePayload.acqua = true;
-        else if (dati.tipo === 'remove_fontana_acqua')       updatePayload.acqua = false;
-        else if (dati.tipo === 'distributori')               updatePayload.distributori = true;
-        else if (dati.tipo === 'remove_distributori')        updatePayload.distributori = false;
+
+        // Applica una singola selezione {tipo, valore} al payload di update.
+        function applicaSelezione(selTipo: string, valore: unknown) {
+          if (selTipo === 'codice_accesso' && valore)   updatePayload.codice_accesso = valore;
+          else if (selTipo === 'ubicazione' && valore)  updatePayload.ubicazione = valore;
+          else if (selTipo === 'note' && valore)        updatePayload.note = valore;
+          else if (selTipo === 'climatizzata')               updatePayload.climatizzata = true;
+          else if (selTipo === 'remove_climatizzata')        updatePayload.climatizzata = false;
+          else if (selTipo === 'microonde')                  updatePayload.microonde = true;
+          else if (selTipo === 'remove_microonde')           updatePayload.microonde = false;
+          else if (selTipo === 'fontana_acqua')              updatePayload.acqua = true;
+          else if (selTipo === 'remove_fontana_acqua')       updatePayload.acqua = false;
+          else if (selTipo === 'distributori')               updatePayload.distributori = true;
+          else if (selTipo === 'remove_distributori')        updatePayload.distributori = false;
+          // Le altre sezioni (bagni, cancelletto, trenitalia, spogliatoi,
+          // segreteria, versamenti) non hanno colonne dedicate in salette:
+          // restano visibili all'admin in fase di revisione ma non generano
+          // un update automatico — stesso comportamento di prima.
+        }
+
+        // Formato nuovo: dati.selezioni = [{ tipo, valore }, ...] — più campi
+        // segnalati in un unico contributo. Fallback al formato precedente
+        // (dati.tipo singolo) per compatibilità coi contributi già in coda
+        // prima di questo aggiornamento.
+        if (Array.isArray(dati.selezioni)) {
+          for (const sel of dati.selezioni as { tipo: string; valore?: unknown }[]) {
+            applicaSelezione(sel.tipo, sel.valore);
+          }
+        } else if (dati.tipo) {
+          applicaSelezione(dati.tipo as string, dati.valore);
+        }
 
         if (Object.keys(updatePayload).length > 0 && dati.saletta_id) {
           const { error } = await supabase.from('salette').update(updatePayload).eq('id', dati.saletta_id);
