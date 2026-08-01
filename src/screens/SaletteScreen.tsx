@@ -19,9 +19,7 @@ import {
 
 import { usePullToRefresh } from '../lib/usePullToRefresh';
 
-import type {
-  Saletta,
-} from '../lib/database.types';
+import type { SalettaPublic } from '../lib/adminApi';
 
 import SalettaCard from '../components/SalettaCard';
 
@@ -29,7 +27,7 @@ import LoadingSpinner from '../components/LoadingSpinner';
 
 interface GroupedSaletta {
   stazione: string;
-  salette: Saletta[];
+  salette: SalettaPublic[];
   distanza?: number;
 }
 
@@ -137,9 +135,11 @@ export default function SaletteScreen({
           // prima veniva calcolata con un trucco di select
           // (has_codice:codice_accesso.not.is(null)) che un aggiornamento
           // di PostgREST ha reso invalido, causando 400 su tutta la query.
-          'id, stazione_id, tipo, ubicazione, stato, note, ' +
-          'microonde, distributori, acqua, climatizzata, ' +
-          'operatore, attiva, updated_at, stazione, has_codice'
+          //
+          // NOTA: stringa unica (non concatenata con +) — la concatenazione
+          // fa perdere a Supabase l'inferenza del tipo di ritorno, che
+          // ricade su GenericStringError.
+          'id, stazione_id, tipo, ubicazione, stato, note, microonde, distributori, acqua, climatizzata, operatore, attiva, updated_at, stazione, has_codice'
         ),
         supabase.from('stazioni').select('id, nome, lat, lng').eq('attiva', true),
       ]);
@@ -200,10 +200,12 @@ export default function SaletteScreen({
     if (userLocation) {
       sorted = rawGrouped.map((group) => {
         const first = group.salette[0];
-        let lat = first?.lat;
-        let lng = first?.lng;
+        // Le salette non hanno coordinate proprie: si usano sempre quelle
+        // della stazione associata (via nome, coerente col resto del file).
+        let lat: number | undefined;
+        let lng: number | undefined;
 
-        if ((!lat || !lng) && first?.stazione) {
+        if (first?.stazione) {
           const stazioneMatch = stazioniCoordinates.find(
             (s) => s.nome?.trim().toLowerCase() === first.stazione?.trim().toLowerCase()
           );
