@@ -4,9 +4,15 @@ export interface FeedLink {
   stazioneNome?: string;
 }
 
+export type FeedCategoria =
+  | 'nuova_attivita' | 'nuova_stazione' | 'nuovo_elemento'
+  | 'modifica_attivita' | 'aggiornamento_saletta'
+  | 'problema_aperto' | 'problema_risolto';
+
 export interface FeedItem {
   id: string;
   tipo: 'info' | 'avviso' | 'risolto';
+  categoria: FeedCategoria;
   titolo: string;
   descrizione: string;
   stazione?: string;
