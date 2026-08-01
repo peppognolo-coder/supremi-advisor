@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { createPortal } from 'react-dom';
 import { useScrollLock } from '../lib/useScrollLock';
 import { X, Pencil, Plus, Trash2 } from 'lucide-react';
 import toast from 'react-hot-toast';
@@ -156,7 +157,7 @@ export default function ProponiModificaAttivitaModal({ attivita, onClose, onSucc
     onClose();
   }
 
-  return (
+  return createPortal(
    <div
   className="
     fixed inset-0 z-[9999]
@@ -335,7 +336,7 @@ export default function ProponiModificaAttivitaModal({ attivita, onClose, onSucc
         </div>
 
         {/* FOOTER FISSO */}
-        <div className="flex-shrink-0 px-5 py-4 border-t border-gray-100 bg-white flex gap-2">
+        <div className="flex-shrink-0 px-5 pt-4 border-t border-gray-100 bg-white flex gap-2" style={{ paddingBottom: 'max(1rem, env(safe-area-inset-bottom))' }}>
           <button type="button" onClick={onClose} disabled={loading}
             className="flex-1 py-3.5 rounded-xl border border-gray-200 text-gray-600 font-medium text-base hover:bg-gray-50 disabled:opacity-50 transition-colors">
             Annulla
@@ -348,6 +349,7 @@ export default function ProponiModificaAttivitaModal({ attivita, onClose, onSucc
         </div>
 
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
