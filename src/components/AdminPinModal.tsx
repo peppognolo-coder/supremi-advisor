@@ -11,6 +11,7 @@ interface Props {
   mode: 'login' | 'logout';
   onConfirm: (pin?: string) => void;
   onClose: () => void;
+  loading?: boolean;
 }
 
 function Key({
@@ -47,6 +48,7 @@ export default function AdminPinModal({
   mode,
   onConfirm,
   onClose,
+  loading = false,
 }: Props) {
   useScrollLock();
 
@@ -55,18 +57,17 @@ export default function AdminPinModal({
   const MAX_LEN = 4;
 
   function pressDigit(digit: string) {
-    if (pin.length < MAX_LEN) {
+    if (pin.length < MAX_LEN && !loading) {
       setPin((prev) => prev + digit);
     }
   }
 
   function deleteLast() {
-    setPin((prev) => prev.slice(0, -1));
+    if (!loading) setPin((prev) => prev.slice(0, -1));
   }
 
   function handleConfirm() {
     onConfirm(pin);
-    setPin('');
   }
 
   // =========================
@@ -154,10 +155,11 @@ export default function AdminPinModal({
         {/* CONFERMA */}
         <button
           onClick={handleConfirm}
-          disabled={pin.length === 0}
-          className="bg-trenord-green text-white rounded-2xl py-3 font-semibold text-sm hover:opacity-90 transition-opacity disabled:opacity-40"
+          disabled={pin.length === 0 || loading}
+          className="flex items-center justify-center gap-2 bg-trenord-green text-white rounded-2xl py-3 font-semibold text-sm hover:opacity-90 transition-opacity disabled:opacity-40"
         >
-          Accedi
+          {loading && <span className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />}
+          {loading ? 'Verifica...' : 'Accedi'}
         </button>
 
       </div>
