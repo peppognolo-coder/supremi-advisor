@@ -18,6 +18,7 @@
 
 import { createClient } from '@supabase/supabase-js';
 import type { Handler, HandlerEvent } from '@netlify/functions';
+import { checkAdminPin } from './_shared/verifyAdminPin';
 
 const supabase = createClient(
   process.env.SUPABASE_URL!,
@@ -55,8 +56,8 @@ export const handler: Handler = async (event: HandlerEvent) => {
     return json(400, { error: 'Body non valido' });
   }
 
-  // Verifica PIN admin
-  if (!body.adminPin || body.adminPin !== process.env.ADMIN_PIN) {
+  // Verifica PIN admin — hash nel database (migration 018)
+  if (!(await checkAdminPin(supabase, body.adminPin))) {
     return json(403, { error: 'PIN admin non valido' });
   }
 
