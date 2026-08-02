@@ -1,5 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
 import type { Handler, HandlerEvent, HandlerResponse } from '@netlify/functions';
+import { checkAdminPin } from './_shared/verifyAdminPin';
 
 // =============================================================
 // TIPI
@@ -124,15 +125,9 @@ export const handler: Handler = async (event: HandlerEvent) => {
 
   const { action, payload, adminPin } = body;
 
-  // Verifica PIN
-  if (!adminPin) return err(ERRORS.MISSING_PIN, 401);
-  const expectedPin = process.env.ADMIN_PIN;
-  if (!expectedPin || adminPin !== expectedPin) return err(ERRORS.INVALID_PIN, 401);
-
-  // Verifica action
-  if (!action) return err(ERRORS.MISSING_ACTION, 400);
-
-  // Client Supabase con service_role key
+  // Client Supabase con service_role key — costruito prima della verifica
+  // PIN perché ora il controllo passa dal database (funzione SQL
+  // verify_admin_pin), non più da una variabile d'ambiente.
   const supabaseUrl = process.env.SUPABASE_URL;
   const serviceKey  = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
@@ -144,6 +139,14 @@ export const handler: Handler = async (event: HandlerEvent) => {
   const supabase = createClient(supabaseUrl, serviceKey, {
     auth: { persistSession: false },
   });
+
+  // Verifica PIN — hash nel database (migration 018), mai in chiaro nel codice.
+  if (!adminPin) return err(ERRORS.MISSING_PIN, 401);
+  const pinValido = await checkAdminPin(supabase, adminPin);
+  if (!pinValido) return err(ERRORS.INVALID_PIN, 401);
+
+  // Verifica action
+  if (!action) return err(ERRORS.MISSING_ACTION, 400);
 
   try {
 
