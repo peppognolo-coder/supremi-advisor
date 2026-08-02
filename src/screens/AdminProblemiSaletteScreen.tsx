@@ -10,6 +10,7 @@ import {
   Archive,
   Wrench,
   X,
+  FileDown,
 } from 'lucide-react';
 
 import toast from 'react-hot-toast';
@@ -19,6 +20,8 @@ import {
   getProblemiSalette,
   aggiornaStatoProblema,
 } from '../lib/adminApi';
+
+import { exportProblemiSalette } from '../lib/exportProblemiSalette';
 
 // =========================
 // PROPS
@@ -85,6 +88,7 @@ export default function AdminProblemiSaletteScreen({ adminPin }: Props) {
   const [filtro, setFiltro]         = useState<FiltroStato>('aperta');
   const [processingId, setProcessingId] = useState<string | null>(null);
   const [dettaglio, setDettaglio]   = useState<SalettaProblema | null>(null);
+  const [esportando, setEsportando] = useState(false);
 
   // =========================
   // LOAD
@@ -150,6 +154,24 @@ export default function AdminProblemiSaletteScreen({ adminPin }: Props) {
     ? problemi
     : problemi.filter((p) => p.stato === filtro);
 
+  async function handleEsporta() {
+    if (filtrati.length === 0) {
+      toast.error('Nessun problema da esportare con questo filtro');
+      return;
+    }
+    setEsportando(true);
+    try {
+      const etichetta = FILTRI.find((f) => f.mode === filtro)?.label ?? 'tutti';
+      await exportProblemiSalette(filtrati, etichetta.toLowerCase());
+      toast.success('Report scaricato');
+    } catch (err) {
+      console.error(err);
+      toast.error('Errore durante la generazione del report');
+    } finally {
+      setEsportando(false);
+    }
+  }
+
   // =========================
   // UI
   // =========================
@@ -159,11 +181,24 @@ export default function AdminProblemiSaletteScreen({ adminPin }: Props) {
       <div className="flex flex-col gap-4">
 
         {/* TITOLO */}
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">Problemi Salette</h1>
-          <p className="text-sm text-gray-500 mt-1">
-            Segnalazioni fisiche del personale
-          </p>
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">Problemi Salette</h1>
+            <p className="text-sm text-gray-500 mt-1">
+              Segnalazioni fisiche del personale
+            </p>
+          </div>
+
+          <button
+            onClick={handleEsporta}
+            disabled={esportando || filtrati.length === 0}
+            className="flex items-center gap-2 px-4 py-2 rounded-xl bg-trenord-green text-white text-sm font-medium hover:opacity-90 disabled:opacity-50 flex-shrink-0"
+          >
+            {esportando
+              ? <span className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />
+              : <FileDown className="w-4 h-4" />}
+            {esportando ? 'Esporto...' : `Esporta (${filtrati.length})`}
+          </button>
         </div>
 
         {/* STATISTICHE RAPIDE */}
