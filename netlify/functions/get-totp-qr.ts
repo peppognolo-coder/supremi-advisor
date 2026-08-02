@@ -10,7 +10,9 @@
  */
 
 import QRCode from 'qrcode';
+import { createClient } from '@supabase/supabase-js';
 import type { Handler, HandlerEvent } from '@netlify/functions';
+import { checkAdminPin } from './_shared/verifyAdminPin';
 
 function json(statusCode: number, body: object) {
   return {
@@ -46,8 +48,7 @@ export const handler: Handler = async (event: HandlerEvent) => {
     return json(405, { error: 'Method not allowed' });
   }
 
-  const adminPin = process.env.ADMIN_PIN;
-  const secret   = process.env.TOTP_SECRET;
+  const secret = process.env.TOTP_SECRET;
 
   if (!secret) {
     return json(500, { error: 'TOTP_SECRET non configurato. Aggiungilo alle variabili Netlify.' });
@@ -60,7 +61,11 @@ export const handler: Handler = async (event: HandlerEvent) => {
     return json(400, { error: 'Body non valido.' });
   }
 
-  if (!body.adminPin || body.adminPin !== adminPin) {
+  const supabase = createClient(process.env.SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!, {
+    auth: { persistSession: false },
+  });
+
+  if (!(await checkAdminPin(supabase, body.adminPin))) {
     return json(403, { error: 'PIN admin non valido.' });
   }
 
