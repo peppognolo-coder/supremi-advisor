@@ -9,6 +9,7 @@ import {
   MapPin,
   MessageSquareWarning,
   ShieldCheck,
+  Shield,
   Check,
   Plus,
   ArrowLeft,
@@ -41,6 +42,7 @@ import AdminAttivitaScreen from './AdminAttivitaScreen';
 import AdminProblemiSaletteScreen from './AdminProblemiSaletteScreen';
 
 import AdminStazioniScreen from './AdminStazioniScreen';
+import AdminSecurityModal from '../components/AdminSecurityModal';
 
 // Monta useScrollLock() solo mentre è renderizzato — usato per bloccare lo
 // scroll unicamente quando il modal TOTP è aperto, senza modificare
@@ -108,9 +110,12 @@ interface Props {
       ricarica le statistiche della dashboard, che altrimenti restano
       ferme al primo mount anche tornando dai sotto-pannelli. */
   refreshKey?: number;
+  /** Chiamata dopo un cambio PIN riuscito, per aggiornare lo stato in
+      App.tsx (e localStorage) senza forzare un logout. */
+  onPinChanged?: (newPin: string) => void;
 }
 
-export default function AdminScreen({ adminPin, refreshKey }: Props) {
+export default function AdminScreen({ adminPin, refreshKey, onPinChanged }: Props) {
 
   const [loading, setLoading] =
     useState(true);
@@ -150,6 +155,8 @@ export default function AdminScreen({ adminPin, refreshKey }: Props) {
   const [totpSecret, setTotpSecret]         = useState<string | null>(null);
   const [totpLoading, setTotpLoading]       = useState(false);
   const [totpError, setTotpError]           = useState('');
+
+  const [showSecurityModal, setShowSecurityModal] = useState(false);
 
   async function caricaQrTotp() {
     setTotpLoading(true);
@@ -1608,13 +1615,22 @@ export default function AdminScreen({ adminPin, refreshKey }: Props) {
             <span className="font-medium">Problemi salette</span>
           </button>
 
-          {/* AUTHENTICATOR */}
+          {/* AUTHENTICATOR PERSONALE (codici salette) */}
           <button
             onClick={() => { setShowTotpModal(true); caricaQrTotp(); }}
             className="flex items-center gap-3 p-3 rounded-xl bg-gray-800 text-white hover:opacity-90 transition-opacity"
           >
             <Smartphone className="w-5 h-5" />
-            <span className="font-medium">Configura Authenticator</span>
+            <span className="font-medium">Authenticator personale (salette)</span>
+          </button>
+
+          {/* SICUREZZA ADMIN — cambio PIN + autenticatore dedicato */}
+          <button
+            onClick={() => setShowSecurityModal(true)}
+            className="flex items-center gap-3 p-3 rounded-xl bg-trenord-green text-white hover:opacity-90 transition-opacity"
+          >
+            <Shield className="w-5 h-5" />
+            <span className="font-medium">Sicurezza Admin (PIN)</span>
           </button>
 
         </div>
@@ -3715,6 +3731,14 @@ export default function AdminScreen({ adminPin, refreshKey }: Props) {
           </div>
         </div>
         </>
+      )}
+
+      {showSecurityModal && (
+        <AdminSecurityModal
+          adminPin={adminPin}
+          onClose={() => setShowSecurityModal(false)}
+          onPinChanged={(newPin) => onPinChanged?.(newPin)}
+        />
       )}
 
     </>
