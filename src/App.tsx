@@ -21,8 +21,6 @@ import { RefreshCw } from 'lucide-react';
 
 import AdminPinModal from './components/AdminPinModal';
 
-const ADMIN_PIN = '1105';
-
 const screenTitles: Record<Tab, string> = {
   home: 'Home',
   salette: 'Salette',
@@ -128,36 +126,77 @@ export default function App() {
   // ADMIN MODE
   // =========================
   const [adminMode, setAdminMode] = useState(false);
+  const [adminPin, setAdminPinState] = useState<string | null>(null);
   const [showPinModal, setShowPinModal] = useState<'login' | 'logout' | null>(null);
+  const [pinVerificando, setPinVerificando] = useState(false);
 
   useEffect(() => {
-    const stored = localStorage.getItem('trenord_admin');
-    if (stored === 'true') {
-      setAdminMode(true);
-      toast.success('Modalità admin ripristinata');
-    }
+    const stored = localStorage.getItem('trenord_admin_pin');
+    if (!stored) return;
+
+    // Il PIN salvato viene sempre riverificato contro il database
+    // all'avvio — se nel frattempo è stato cambiato (da questo o da un
+    // altro dispositivo), la sessione locale non resta valida per errore.
+    fetch('/.netlify/functions/verify-admin-pin', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ pin: stored }),
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.ok) {
+          setAdminPinState(stored);
+          setAdminMode(true);
+          toast.success('Modalità admin ripristinata');
+        } else {
+          localStorage.removeItem('trenord_admin_pin');
+        }
+      })
+      .catch(() => {
+        // Errore di rete al mount: non blocca l'app, semplicemente non
+        // ripristina la modalità admin — l'utente può rientrare col PIN.
+      });
   }, []);
 
   function handleAdminAccess() {
     adminMode ? setShowPinModal('logout') : setShowPinModal('login');
   }
 
-  function handlePinConfirm(pin?: string) {
+  async function handlePinConfirm(pin?: string) {
     if (showPinModal === 'login') {
-      if (pin === ADMIN_PIN) {
-        localStorage.setItem('trenord_admin', 'true');
-        setAdminMode(true);
-        toast.success('Modalità admin attivata');
-      } else {
-        toast.error('PIN errato');
+      if (!pin) { setShowPinModal(null); return; }
+
+      setPinVerificando(true);
+      try {
+        const res = await fetch('/.netlify/functions/verify-admin-pin', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ pin }),
+        });
+        const data = await res.json();
+
+        if (data.ok) {
+          localStorage.setItem('trenord_admin_pin', pin);
+          setAdminPinState(pin);
+          setAdminMode(true);
+          toast.success('Modalità admin attivata');
+          setShowPinModal(null);
+        } else {
+          toast.error('PIN errato');
+        }
+      } catch {
+        toast.error('Errore di rete, riprova');
+      } finally {
+        setPinVerificando(false);
       }
     } else {
-      localStorage.removeItem('trenord_admin');
+      localStorage.removeItem('trenord_admin_pin');
+      setAdminPinState(null);
       setAdminMode(false);
       setActiveTab('home');
       toast.success('Modalità admin disattivata');
+      setShowPinModal(null);
     }
-    setShowPinModal(null);
   }
 
   const isHomeTab = activeTab === 'home';
@@ -260,7 +299,7 @@ export default function App() {
 
         {activeTab === 'admin' && adminMode && (
           <div className="max-w-2xl mx-auto px-4 py-4">
-            <AdminScreen refreshKey={refreshKey} adminPin={ADMIN_PIN} />
+            <AdminScreen refreshKey={refreshKey} adminPin={adminPin ?? ''} />
           </div>
         )}
       </main>
@@ -294,6 +333,7 @@ export default function App() {
           mode={showPinModal}
           onConfirm={handlePinConfirm}
           onClose={() => setShowPinModal(null)}
+          loading={pinVerificando}
         />
       )}
 
