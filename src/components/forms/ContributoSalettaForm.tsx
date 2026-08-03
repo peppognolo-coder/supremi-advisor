@@ -220,7 +220,7 @@ export default function ContributoSalettaForm({
       {/* BACK */}
       <button
         onClick={onBack}
-        className="self-start px-3 py-2 rounded-xl bg-white border border-gray-200 text-sm"
+        className="self-start px-3 py-2 rounded-xl bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 text-sm"
       >
         <div className="flex items-center gap-2">
           <ArrowLeft className="w-4 h-4" />
@@ -230,7 +230,7 @@ export default function ContributoSalettaForm({
 
       {/* TITLE */}
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
           Contributo Località Operativa
         </h1>
         <p className="text-sm text-gray-500 mt-1">
@@ -258,7 +258,7 @@ export default function ContributoSalettaForm({
                   className={`flex items-center gap-3 rounded-xl border px-4 py-3 text-left transition-colors ${
                     selected
                       ? 'bg-trenord-green text-white border-trenord-green'
-                      : 'bg-white border-gray-200 text-gray-700 hover:border-trenord-green/50'
+                      : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:border-trenord-green/50'
                   }`}
                 >
                   <Icon className="w-5 h-5 flex-shrink-0" />
@@ -270,7 +270,7 @@ export default function ContributoSalettaForm({
       </div>
 
       {/* FORM DINAMICO */}
-      <div className="bg-white rounded-2xl border border-gray-100 p-4 flex flex-col gap-4">
+      <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 p-4 flex flex-col gap-4">
 
         {/* STAZIONE — sempre presente */}
         <div>
@@ -284,7 +284,7 @@ export default function ContributoSalettaForm({
                 value={stazioneId}
                 onChange={(e) => setStazioneId(e.target.value)}
                 disabled={loadingStazioni}
-                className="mt-1 border border-gray-200 rounded-xl px-3 py-2 w-full text-base disabled:opacity-50"
+                className="mt-1 border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2 w-full text-base disabled:opacity-50 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
               >
                 {loadingStazioni && <option>Caricamento stazioni...</option>}
                 {!loadingStazioni && stazioni.map((s) => (
@@ -305,7 +305,7 @@ export default function ContributoSalettaForm({
                 value={stazioneTestoLibero}
                 onChange={(e) => setStazioneTestoLibero(e.target.value)}
                 placeholder="Es. Milano Centrale"
-                className="mt-1 border border-gray-200 rounded-xl px-3 py-2 w-full text-base"
+                className="mt-1 border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2 w-full text-base bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
               />
               <p className="mt-1.5 text-xs text-gray-400">
                 Verrà verificata da un admin prima di essere pubblicata.
@@ -332,7 +332,7 @@ export default function ContributoSalettaForm({
             value={etichetta}
             onChange={(e) => setEtichetta(e.target.value)}
             placeholder="Es. Trenord, Trenitalia, Accesso saletta..."
-            className="mt-1 border border-gray-200 rounded-xl px-3 py-2 w-full text-base"
+            className="mt-1 border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2 w-full text-base bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
           />
           <p className="mt-1.5 text-xs text-gray-400">
             Utile solo se in questa stazione ci sono più elementi della stessa sezione (es. due sale equipaggi).
@@ -349,7 +349,7 @@ export default function ContributoSalettaForm({
               value={codice}
               onChange={(e) => setCodice(e.target.value)}
               placeholder="Es. 14579B"
-              className="mt-1 border border-gray-200 rounded-xl px-3 py-2 w-full text-base"
+              className="mt-1 border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2 w-full text-base bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
             />
           </div>
         )}
@@ -364,7 +364,7 @@ export default function ContributoSalettaForm({
               value={ubicazione}
               onChange={(e) => setUbicazione(e.target.value)}
               placeholder="Es. Binario 1 lato Milano"
-              className="mt-1 border border-gray-200 rounded-xl px-3 py-2 w-full text-base"
+              className="mt-1 border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2 w-full text-base bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
             />
           </div>
         )}
@@ -378,7 +378,7 @@ export default function ContributoSalettaForm({
             <select
               value={stato}
               onChange={(e) => setStato(e.target.value)}
-              className="mt-1 border border-gray-200 rounded-xl px-3 py-2 w-full text-base"
+              className="mt-1 border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2 w-full text-base bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
             >
               {sezioneAttiva.stati.map((s) => (
                 <option key={s}>{s}</option>
@@ -396,7 +396,7 @@ export default function ContributoSalettaForm({
             <select
               value={modalitaAccesso}
               onChange={(e) => setModalitaAccesso(e.target.value)}
-              className="mt-1 border border-gray-200 rounded-xl px-3 py-2 w-full text-base"
+              className="mt-1 border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2 w-full text-base bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
             >
               {MODALITA_ACCESSO.map((v) => (
                 <option key={v}>{v}</option>
@@ -414,7 +414,7 @@ export default function ContributoSalettaForm({
             <select
               value={tipologiaAccesso}
               onChange={(e) => setTipologiaAccesso(e.target.value)}
-              className="mt-1 border border-gray-200 rounded-xl px-3 py-2 w-full text-base"
+              className="mt-1 border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2 w-full text-base bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
             >
               {TIPOLOGIA_ACCESSO.map((v) => (
                 <option key={v}>{v}</option>
@@ -471,11 +471,11 @@ export default function ContributoSalettaForm({
             {fasceOrarie.map((fascia, index) => (
               <div
                 key={index}
-                className="border border-gray-200 rounded-2xl p-4 flex flex-col gap-4"
+                className="border border-gray-200 dark:border-gray-700 rounded-2xl p-4 flex flex-col gap-4"
               >
 
                 <div className="flex items-center justify-between">
-                  <span className="font-medium text-gray-800 text-sm">
+                  <span className="font-medium text-gray-800 dark:text-gray-200 text-sm">
                     Fascia {index + 1}
                   </span>
                   {fasceOrarie.length > 1 && (
@@ -497,7 +497,7 @@ export default function ContributoSalettaForm({
                         className={`rounded-xl border py-2 text-sm font-medium transition-colors ${
                           active
                             ? 'bg-trenord-green text-white border-trenord-green'
-                            : 'bg-white border-gray-200 text-gray-700'
+                            : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300'
                         }`}
                       >
                         {giorno}
@@ -514,7 +514,7 @@ export default function ContributoSalettaForm({
                       type="time"
                       value={fascia.apertura}
                       onChange={(e) => updateFascia(index, 'apertura', e.target.value)}
-                      className="border border-gray-200 rounded-xl px-3 py-2 w-full text-base"
+                      className="border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2 w-full text-base bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
                     />
                   </div>
                   <div>
@@ -523,7 +523,7 @@ export default function ContributoSalettaForm({
                       type="time"
                       value={fascia.chiusura}
                       onChange={(e) => updateFascia(index, 'chiusura', e.target.value)}
-                      className="border border-gray-200 rounded-xl px-3 py-2 w-full text-base"
+                      className="border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2 w-full text-base bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
                     />
                   </div>
                 </div>
@@ -543,7 +543,7 @@ export default function ContributoSalettaForm({
               value={note}
               onChange={(e) => setNote(e.target.value)}
               placeholder="Inserisci eventuali informazioni aggiuntive..."
-              className="mt-1 border border-gray-200 rounded-xl px-3 py-2 w-full min-h-[120px] text-base"
+              className="mt-1 border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2 w-full min-h-[120px] text-base bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
             />
           </div>
         )}
@@ -585,7 +585,7 @@ function ServiceToggle({
       className={`flex items-center justify-between rounded-xl border px-4 py-3 transition-colors ${
         active
           ? 'bg-trenord-green text-white border-trenord-green'
-          : 'bg-white border-gray-200 text-gray-700'
+          : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300'
       }`}
     >
       <div className="flex items-center gap-3">
