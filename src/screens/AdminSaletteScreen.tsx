@@ -67,7 +67,7 @@ function ServiceToggle({
       className={`flex items-center justify-between rounded-xl border px-4 py-3 transition-colors ${
         active
           ? 'bg-trenord-green text-white border-trenord-green'
-          : 'bg-white border-gray-200 text-gray-700'
+          : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300'
       }`}
     >
       <div className="flex items-center gap-3">
@@ -130,10 +130,10 @@ function AddSalettaModal({
       className="fixed inset-0 bg-black/40 z-[9999] flex items-center justify-center p-4"
       onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
     >
-      <div className="bg-white rounded-2xl w-full max-w-sm p-6 flex flex-col gap-4 max-h-[90dvh] overflow-y-auto">
+      <div className="bg-white dark:bg-gray-900 rounded-2xl w-full max-w-sm p-6 flex flex-col gap-4 max-h-[90dvh] overflow-y-auto">
 
         <div className="flex items-center justify-between">
-          <h2 className="text-lg font-bold text-gray-900">Nuovo elemento Località Operativa</h2>
+          <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100">Nuovo elemento Località Operativa</h2>
           <button onClick={onClose}>
             <X className="w-5 h-5 text-gray-400" />
           </button>
@@ -146,7 +146,7 @@ function AddSalettaModal({
           <select
             value={stazioneId}
             onChange={(e) => setStazioneId(e.target.value)}
-            className="border border-gray-200 rounded-xl px-3 py-2 text-base"
+            className="border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2 text-base bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
             autoFocus
           >
             {stazioni.length === 0 && <option value="">Nessuna stazione disponibile</option>}
@@ -163,7 +163,7 @@ function AddSalettaModal({
           <select
             value={sezioneId}
             onChange={(e) => setSezioneId(e.target.value)}
-            className="border border-gray-200 rounded-xl px-3 py-2 text-base"
+            className="border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2 text-base bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
           >
             {SEZIONI_LOCALITA.filter((s) => s.attiva).sort((a, b) => a.ordine - b.ordine).map((s) => (
               <option key={s.id} value={s.id}>{s.label}</option>
@@ -179,7 +179,7 @@ function AddSalettaModal({
             value={etichetta}
             onChange={(e) => setEtichetta(e.target.value)}
             placeholder="Es. Trenord, Trenitalia, Accesso saletta..."
-            className="border border-gray-200 rounded-xl px-3 py-2 text-base"
+            className="border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2 text-base bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
           />
           <p className="text-xs text-gray-400">
             Utile solo se in questa stazione ci sono più elementi della stessa sezione.
@@ -225,13 +225,13 @@ function ConfirmModal({
 }) {
   return (
     <div className="fixed inset-0 bg-black/40 z-[9999] flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl w-full max-w-sm p-6 flex flex-col gap-4">
-        <p className="text-sm text-gray-700">{message}</p>
+      <div className="bg-white dark:bg-gray-900 rounded-2xl w-full max-w-sm p-6 flex flex-col gap-4">
+        <p className="text-sm text-gray-700 dark:text-gray-300">{message}</p>
         <div className="flex gap-2">
           <button
             onClick={onCancel}
             disabled={loading}
-            className="flex-1 px-4 py-2 rounded-xl border border-gray-200 text-sm text-gray-600 hover:bg-gray-50 disabled:opacity-50"
+            className="flex-1 px-4 py-2 rounded-xl border border-gray-200 dark:border-gray-700 text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 disabled:opacity-50"
           >
             Annulla
           </button>
@@ -473,7 +473,7 @@ export default function AdminSaletteScreen({
         {/* TOP */}
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
               Gestione Salette
             </h1>
             <p className="text-sm text-gray-500 mt-1">
@@ -498,7 +498,7 @@ export default function AdminSaletteScreen({
             placeholder="Cerca stazione, sezione o etichetta..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full bg-white border border-gray-200 rounded-xl pl-9 pr-9 py-2.5 text-base"
+            className="w-full bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl pl-9 pr-9 py-2.5 text-base"
           />
           {search.length > 0 && (
             <button
@@ -536,7 +536,7 @@ export default function AdminSaletteScreen({
 
         {/* EMPTY */}
         {!loading && filtered.length === 0 && (
-          <div className="bg-white rounded-2xl border border-gray-100 p-8 text-center text-sm text-gray-400">
+          <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 p-8 text-center text-sm text-gray-400">
             {search
               ? `Nessun elemento trovato per "${search}"`
               : 'Nessun elemento presente.'}
@@ -553,8 +553,8 @@ export default function AdminSaletteScreen({
             return (
               <div
                 key={s.id}
-                className={`bg-white rounded-2xl border p-4 shadow-sm flex flex-col gap-4 ${
-                  (s.attiva ?? true) ? 'border-gray-100' : 'border-gray-200 opacity-60'
+                className={`bg-white dark:bg-gray-900 rounded-2xl border p-4 shadow-sm flex flex-col gap-4 ${
+                  (s.attiva ?? true) ? 'border-gray-100 dark:border-gray-800' : 'border-gray-200 dark:border-gray-700 opacity-60'
                 }`}
               >
 
@@ -564,7 +564,7 @@ export default function AdminSaletteScreen({
                     <select
                       value={s.stazione_id ?? ''}
                       onChange={(e) => updateField(s.id, 'stazione_id', e.target.value)}
-                      className="mt-1 w-full border border-gray-200 rounded-xl px-3 py-2 text-base"
+                      className="mt-1 w-full border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2 text-base bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
                     >
                       {!s.stazione_id && (
                         <option value="">{s.stazione || 'Seleziona stazione'}</option>
@@ -578,7 +578,7 @@ export default function AdminSaletteScreen({
 
                 <span
                   className={`self-start text-xs font-medium px-2 py-1 rounded-full ${
-                    (s.attiva ?? true) ? 'bg-emerald-100 text-emerald-700' : 'bg-gray-100 text-gray-500'
+                    (s.attiva ?? true) ? 'bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-400' : 'bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400'
                   }`}
                 >
                   {(s.attiva ?? true) ? '🟢 Attiva' : '⚫ Disattivata'}
@@ -590,7 +590,7 @@ export default function AdminSaletteScreen({
                   <select
                     value={s.tipo}
                     onChange={(e) => updateField(s.id, 'tipo', e.target.value)}
-                    className="mt-1 w-full border border-gray-200 rounded-xl px-3 py-2 text-base"
+                    className="mt-1 w-full border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2 text-base bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
                   >
                     {SEZIONI_LOCALITA.filter((sez) => sez.attiva).sort((a, b) => a.ordine - b.ordine).map((sez) => (
                       <option key={sez.id} value={sez.id}>{sez.label}</option>
@@ -612,7 +612,7 @@ export default function AdminSaletteScreen({
                     value={s.etichetta ?? ''}
                     onChange={(e) => updateField(s.id, 'etichetta', e.target.value || null)}
                     placeholder="Es. Trenord, Trenitalia, Accesso saletta..."
-                    className="mt-1 w-full border border-gray-200 rounded-xl px-3 py-2 text-base"
+                    className="mt-1 w-full border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2 text-base bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
                   />
                 </div>
 
@@ -623,7 +623,7 @@ export default function AdminSaletteScreen({
                     <input
                       value={s.codice_accesso ?? ''}
                       onChange={(e) => updateField(s.id, 'codice_accesso', e.target.value || null)}
-                      className="mt-1 w-full border border-gray-200 rounded-xl px-3 py-2 text-base"
+                      className="mt-1 w-full border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2 text-base bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
                     />
                   </div>
                 )}
@@ -634,7 +634,7 @@ export default function AdminSaletteScreen({
                   <input
                     value={s.ubicazione ?? ''}
                     onChange={(e) => updateField(s.id, 'ubicazione', e.target.value || null)}
-                    className="mt-1 w-full border border-gray-200 rounded-xl px-3 py-2 text-base"
+                    className="mt-1 w-full border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2 text-base bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
                   />
                 </div>
 
@@ -645,7 +645,7 @@ export default function AdminSaletteScreen({
                     <select
                       value={s.stato ?? sezione.stati[0]}
                       onChange={(e) => updateField(s.id, 'stato', e.target.value)}
-                      className="mt-1 w-full border border-gray-200 rounded-xl px-3 py-2 text-base"
+                      className="mt-1 w-full border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2 text-base bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
                     >
                       {sezione.stati.map((st) => <option key={st} value={st}>{st}</option>)}
                     </select>
@@ -659,7 +659,7 @@ export default function AdminSaletteScreen({
                     <select
                       value={s.modalita_accesso ?? MODALITA_ACCESSO[0]}
                       onChange={(e) => updateField(s.id, 'modalita_accesso', e.target.value)}
-                      className="mt-1 w-full border border-gray-200 rounded-xl px-3 py-2 text-base"
+                      className="mt-1 w-full border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2 text-base bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
                     >
                       {MODALITA_ACCESSO.map((v) => <option key={v} value={v}>{v}</option>)}
                     </select>
@@ -673,7 +673,7 @@ export default function AdminSaletteScreen({
                     <select
                       value={s.tipologia_accesso ?? TIPOLOGIA_ACCESSO[0]}
                       onChange={(e) => updateField(s.id, 'tipologia_accesso', e.target.value)}
-                      className="mt-1 w-full border border-gray-200 rounded-xl px-3 py-2 text-base"
+                      className="mt-1 w-full border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2 text-base bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
                     >
                       {TIPOLOGIA_ACCESSO.map((v) => <option key={v} value={v}>{v}</option>)}
                     </select>
@@ -713,9 +713,9 @@ export default function AdminSaletteScreen({
                       </button>
                     </div>
                     {(s.fasce_orarie ?? []).map((fascia, index) => (
-                      <div key={index} className="border border-gray-200 rounded-2xl p-3 flex flex-col gap-3">
+                      <div key={index} className="border border-gray-200 dark:border-gray-700 rounded-2xl p-3 flex flex-col gap-3">
                         <div className="flex items-center justify-between">
-                          <span className="font-medium text-sm text-gray-700">Fascia {index + 1}</span>
+                          <span className="font-medium text-sm text-gray-700 dark:text-gray-300">Fascia {index + 1}</span>
                           <button type="button" onClick={() => removeFascia(s.id, index)} className="text-red-600">
                             <Trash2 className="w-4 h-4" />
                           </button>
@@ -724,7 +724,7 @@ export default function AdminSaletteScreen({
                           {GIORNI_SETTIMANA.map((giorno) => (
                             <button key={giorno} type="button" onClick={() => toggleGiorno(s.id, index, giorno)}
                               className={`rounded-lg py-1.5 text-xs font-medium border transition-colors ${
-                                fascia.giorni.includes(giorno) ? 'bg-trenord-green text-white border-trenord-green' : 'bg-white text-gray-600 border-gray-200'
+                                fascia.giorni.includes(giorno) ? 'bg-trenord-green text-white border-trenord-green' : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 border-gray-200 dark:border-gray-700'
                               }`}>
                               {giorno}
                             </button>
@@ -735,13 +735,13 @@ export default function AdminSaletteScreen({
                             <label className="text-xs text-gray-400 mb-1 block">Apertura</label>
                             <input type="time" value={fascia.apertura}
                               onChange={(e) => updateFascia(s.id, index, 'apertura', e.target.value)}
-                              className="border border-gray-200 rounded-xl px-3 py-2 w-full text-base" />
+                              className="border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2 w-full text-base bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100" />
                           </div>
                           <div>
                             <label className="text-xs text-gray-400 mb-1 block">Chiusura</label>
                             <input type="time" value={fascia.chiusura}
                               onChange={(e) => updateFascia(s.id, index, 'chiusura', e.target.value)}
-                              className="border border-gray-200 rounded-xl px-3 py-2 w-full text-base" />
+                              className="border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2 w-full text-base bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100" />
                           </div>
                         </div>
                       </div>
@@ -755,7 +755,7 @@ export default function AdminSaletteScreen({
                   <textarea
                     value={s.note ?? ''}
                     onChange={(e) => updateField(s.id, 'note', e.target.value || null)}
-                    className="mt-1 w-full border border-gray-200 rounded-xl px-3 py-2 text-base min-h-[80px]"
+                    className="mt-1 w-full border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2 text-base min-h-[80px] bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
                   />
                 </div>
 
