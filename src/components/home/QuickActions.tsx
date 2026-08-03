@@ -27,14 +27,14 @@ export const QuickActions: React.FC<QuickActionsProps> = ({
       icon: <PlusCircle className="w-5 h-5" />,
       onClick: onNuovoContributo,
       color: 'text-trenord-green',
-      iconBg: 'bg-green-50',
+      iconBg: 'bg-green-50 dark:bg-green-950',
     },
     {
       label: 'Segnala problema',
       icon: <AlertTriangle className="w-5 h-5" />,
       onClick: onSegnalaProblema,
       color: 'text-orange-600',
-      iconBg: 'bg-orange-50',
+      iconBg: 'bg-orange-50 dark:bg-orange-950',
     },
   ];
 
@@ -47,14 +47,14 @@ export const QuickActions: React.FC<QuickActionsProps> = ({
             key={action.label}
             onClick={action.onClick}
             className={[
-              'flex flex-col items-center gap-2 p-4 rounded-2xl bg-white border border-gray-100 shadow-sm',
-              'active:scale-95 transition-all duration-150 hover:border-gray-200 hover:shadow',
+              'flex flex-col items-center gap-2 p-4 rounded-2xl bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 shadow-sm',
+              'active:scale-95 transition-all duration-150 hover:border-gray-200 dark:hover:border-gray-700 hover:shadow',
             ].join(' ')}
           >
             <div className={`${action.iconBg} ${action.color} p-2 rounded-xl`}>
               {action.icon}
             </div>
-            <span className="text-xs font-medium text-gray-700 text-center leading-tight">
+            <span className="text-xs font-medium text-gray-700 dark:text-gray-300 text-center leading-tight">
               {action.label}
             </span>
           </button>
