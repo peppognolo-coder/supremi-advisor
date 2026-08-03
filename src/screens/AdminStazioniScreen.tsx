@@ -69,13 +69,13 @@ function ConfirmModal({
 }) {
   return (
     <div className="fixed inset-0 bg-black/40 z-[9999] flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl w-full max-w-sm p-6 flex flex-col gap-4">
-        <p className="text-sm text-gray-700">{message}</p>
+      <div className="bg-white dark:bg-gray-900 rounded-2xl w-full max-w-sm p-6 flex flex-col gap-4">
+        <p className="text-sm text-gray-700 dark:text-gray-300">{message}</p>
         <div className="flex gap-2">
           <button
             onClick={onCancel}
             disabled={loading}
-            className="flex-1 px-4 py-2 rounded-xl border border-gray-200 text-sm text-gray-600 hover:bg-gray-50 disabled:opacity-50"
+            className="flex-1 px-4 py-2 rounded-xl border border-gray-200 dark:border-gray-700 text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 disabled:opacity-50"
           >
             Annulla
           </button>
@@ -280,7 +280,7 @@ export default function AdminStazioniScreen({
         {/* TITOLO */}
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">Gestione Stazioni</h1>
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Gestione Stazioni</h1>
             <p className="text-sm text-gray-500 mt-1">
               Visualizza e modifica le stazioni nel database
             </p>
@@ -298,29 +298,29 @@ export default function AdminStazioniScreen({
         {!loading && (
           <div className="grid grid-cols-2 gap-3">
 
-            <div className="bg-white rounded-2xl border border-gray-100 p-3 shadow-sm text-center">
-              <div className="text-2xl font-bold text-gray-900">{stats.totale}</div>
+            <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 p-3 shadow-sm text-center">
+              <div className="text-2xl font-bold text-gray-900 dark:text-gray-100">{stats.totale}</div>
               <div className="text-xs text-gray-500 mt-1 uppercase tracking-wide">Totali</div>
             </div>
 
-            <div className="bg-white rounded-2xl border border-emerald-100 p-3 shadow-sm text-center">
+            <div className="bg-white dark:bg-gray-900 rounded-2xl border border-emerald-100 dark:border-emerald-900 p-3 shadow-sm text-center">
               <div className="text-2xl font-bold text-emerald-600">{stats.attive}</div>
               <div className="text-xs text-gray-500 mt-1 uppercase tracking-wide">Attive</div>
             </div>
 
-            <div className="bg-white rounded-2xl border border-gray-100 p-3 shadow-sm text-center">
+            <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 p-3 shadow-sm text-center">
               <div className="text-2xl font-bold text-gray-400">{stats.disattivate}</div>
               <div className="text-xs text-gray-500 mt-1 uppercase tracking-wide">Disattivate</div>
             </div>
 
-            <div className={`rounded-2xl border p-3 shadow-sm text-center ${stats.senzaCoord > 0 ? 'bg-white border-red-100' : 'bg-emerald-50 border-emerald-100'}`}>
+            <div className={`rounded-2xl border p-3 shadow-sm text-center ${stats.senzaCoord > 0 ? 'bg-white dark:bg-gray-900 border-red-100 dark:border-red-900' : 'bg-emerald-50 dark:bg-emerald-950 border-emerald-100 dark:border-emerald-900'}`}>
               <div className={`text-2xl font-bold ${stats.senzaCoord > 0 ? 'text-red-500' : 'text-emerald-600'}`}>
                 {stats.senzaCoord}
               </div>
               <div className="text-xs text-gray-500 mt-1 uppercase tracking-wide">Senza coord.</div>
             </div>
 
-            <div className={`rounded-2xl border p-3 shadow-sm text-center col-span-2 ${stats.senzaCodice > 0 ? 'bg-white border-amber-100' : 'bg-emerald-50 border-emerald-100'}`}>
+            <div className={`rounded-2xl border p-3 shadow-sm text-center col-span-2 ${stats.senzaCodice > 0 ? 'bg-white dark:bg-gray-900 border-amber-100 dark:border-amber-900' : 'bg-emerald-50 dark:bg-emerald-950 border-emerald-100 dark:border-emerald-900'}`}>
               <div className={`text-2xl font-bold ${stats.senzaCodice > 0 ? 'text-amber-600' : 'text-emerald-600'}`}>
                 {stats.senzaCodice}
               </div>
@@ -338,7 +338,7 @@ export default function AdminStazioniScreen({
             placeholder="Cerca per nome, codice, regione, provincia..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full bg-white border border-gray-200 rounded-xl pl-9 pr-9 py-2.5 text-base"
+            className="w-full bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl pl-9 pr-9 py-2.5 text-base"
           />
           {search.length > 0 && (
             <button
@@ -361,20 +361,20 @@ export default function AdminStazioniScreen({
                 className={`px-4 py-2 rounded-xl text-sm font-medium border transition-colors ${
                   filtro === opt.mode
                     ? 'bg-trenord-green text-white border-trenord-green'
-                    : 'bg-white text-gray-600 border-gray-200 hover:border-trenord-green hover:text-trenord-green'
+                    : 'bg-white dark:bg-gray-900 text-gray-600 dark:text-gray-300 border-gray-200 dark:border-gray-700 hover:border-trenord-green hover:text-trenord-green'
                 }`}
               >
                 {opt.label}
                 {opt.mode === 'attive' && (
                   <span className={`ml-1.5 text-xs px-1.5 py-0.5 rounded-full ${
-                    filtro === 'attive' ? 'bg-white/20' : 'bg-emerald-100 text-emerald-700'
+                    filtro === 'attive' ? 'bg-white/20' : 'bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-400'
                   }`}>
                     {stats.attive}
                   </span>
                 )}
                 {opt.mode === 'disattivate' && (
                   <span className={`ml-1.5 text-xs px-1.5 py-0.5 rounded-full ${
-                    filtro === 'disattivate' ? 'bg-white/20' : 'bg-gray-100 text-gray-600'
+                    filtro === 'disattivate' ? 'bg-white/20' : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300'
                   }`}>
                     {stats.disattivate}
                   </span>
@@ -417,7 +417,7 @@ export default function AdminStazioniScreen({
 
         {/* EMPTY */}
         {!loading && filtered.length === 0 && (
-          <div className="bg-white rounded-2xl border border-gray-100 p-6 text-sm text-gray-500 text-center">
+          <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 p-6 text-sm text-gray-500 dark:text-gray-400 text-center">
             {search
               ? `Nessuna stazione trovata per "${search}"`
               : 'Nessuna stazione presente'}
@@ -435,8 +435,8 @@ export default function AdminStazioniScreen({
               return (
                 <div
                   key={s.id}
-                  className={`bg-white rounded-2xl border p-4 shadow-sm flex flex-col gap-3 transition-opacity ${
-                    s.attiva ? 'border-gray-100' : 'border-gray-200 opacity-60'
+                  className={`bg-white dark:bg-gray-900 rounded-2xl border p-4 shadow-sm flex flex-col gap-3 transition-opacity ${
+                    s.attiva ? 'border-gray-100 dark:border-gray-800' : 'border-gray-200 dark:border-gray-700 opacity-60'
                   }`}
                 >
 
@@ -445,7 +445,7 @@ export default function AdminStazioniScreen({
 
                     {/* ICONA */}
                     <div className={`flex-shrink-0 w-10 h-10 rounded-2xl flex items-center justify-center ${
-                      s.attiva ? 'bg-trenord-green/10' : 'bg-gray-100'
+                      s.attiva ? 'bg-trenord-green/10' : 'bg-gray-100 dark:bg-gray-800'
                     }`}>
                       <Building2 className={`w-5 h-5 ${s.attiva ? 'text-trenord-green' : 'text-gray-400'}`} />
                     </div>
@@ -455,9 +455,9 @@ export default function AdminStazioniScreen({
 
                       {/* NOME + BADGE STATO */}
                       <div className="flex items-center gap-2 flex-wrap">
-                        <h3 className="font-semibold text-gray-900">{s.nome}</h3>
+                        <h3 className="font-semibold text-gray-900 dark:text-gray-100">{s.nome}</h3>
                         <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${
-                          s.attiva ? 'bg-emerald-100 text-emerald-700' : 'bg-gray-100 text-gray-500'
+                          s.attiva ? 'bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-400' : 'bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400'
                         }`}>
                           {s.attiva ? '🟢 Attiva' : '⚫ Disattivata'}
                         </span>
@@ -466,7 +466,7 @@ export default function AdminStazioniScreen({
                       {/* CODICE + REGIONE */}
                       <div className="flex items-center gap-3 mt-0.5 flex-wrap">
                         {s.codice ? (
-                          <span className="text-xs font-mono bg-gray-100 text-gray-600 px-2 py-0.5 rounded-md">
+                          <span className="text-xs font-mono bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 px-2 py-0.5 rounded-md">
                             {s.codice}
                           </span>
                         ) : (
@@ -527,7 +527,7 @@ export default function AdminStazioniScreen({
                       disabled={isProcessing}
                       className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium hover:opacity-90 disabled:opacity-50 ${
                         s.attiva
-                          ? 'bg-gray-100 text-gray-700'
+                          ? 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300'
                           : 'bg-emerald-600 text-white'
                       }`}
                     >
@@ -559,12 +559,12 @@ export default function AdminStazioniScreen({
           className="fixed inset-0 bg-black/40 z-[9999] flex items-center justify-center p-4"
           onClick={(e) => { if (e.target === e.currentTarget) setEditing(null); }}
         >
-          <div className="bg-white rounded-3xl w-full max-w-2xl p-6 pb-24 flex flex-col gap-4 max-h-[90dvh] overflow-y-auto">
+          <div className="bg-white dark:bg-gray-900 rounded-3xl w-full max-w-2xl p-6 pb-24 flex flex-col gap-4 max-h-[90dvh] overflow-y-auto">
 
             {/* HEADER */}
             <div className="flex items-center justify-between">
               <div>
-                <h2 className="text-xl font-bold text-gray-900">Modifica stazione</h2>
+                <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">Modifica stazione</h2>
                 <p className="text-xs text-gray-400 mt-0.5">{editing.id}</p>
               </div>
               <button type="button" onClick={() => setEditing(null)}>
@@ -579,7 +579,7 @@ export default function AdminStazioniScreen({
                 value={editing.nome ?? ''}
                 onChange={(e) => setField('nome', e.target.value)}
                 placeholder="es. Milano Centrale"
-                className="border border-gray-200 rounded-xl px-3 py-2 text-base"
+                className="border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2 text-base bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
               />
             </div>
 
@@ -590,7 +590,7 @@ export default function AdminStazioniScreen({
                 value={editing.codice ?? ''}
                 onChange={(e) => setField('codice', e.target.value || null)}
                 placeholder="es. MCTL"
-                className="border border-gray-200 rounded-xl px-3 py-2 text-base font-mono"
+                className="border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2 text-base font-mono bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
               />
             </div>
 
@@ -602,7 +602,7 @@ export default function AdminStazioniScreen({
                   value={editing.regione ?? ''}
                   onChange={(e) => setField('regione', e.target.value || null)}
                   placeholder="es. Lombardia"
-                  className="border border-gray-200 rounded-xl px-3 py-2 text-base"
+                  className="border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2 text-base bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
                 />
               </div>
               <div className="flex flex-col gap-1">
@@ -611,7 +611,7 @@ export default function AdminStazioniScreen({
                   value={editing.provincia ?? ''}
                   onChange={(e) => setField('provincia', e.target.value || null)}
                   placeholder="es. Milano"
-                  className="border border-gray-200 rounded-xl px-3 py-2 text-base"
+                  className="border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2 text-base bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
                 />
               </div>
             </div>
@@ -623,7 +623,7 @@ export default function AdminStazioniScreen({
                 value={editing.indirizzo ?? ''}
                 onChange={(e) => setField('indirizzo', e.target.value || null)}
                 placeholder="es. Piazza Duca d'Aosta 1, Milano"
-                className="border border-gray-200 rounded-xl px-3 py-2 text-base"
+                className="border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2 text-base bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
               />
             </div>
 
@@ -634,7 +634,7 @@ export default function AdminStazioniScreen({
                 value={editing.maps_query ?? ''}
                 onChange={(e) => setField('maps_query', e.target.value || null)}
                 placeholder="es. Milano Centrale stazione ferroviaria"
-                className="border border-gray-200 rounded-xl px-3 py-2 text-base"
+                className="border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2 text-base bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
               />
             </div>
 
@@ -645,7 +645,7 @@ export default function AdminStazioniScreen({
                 value={editing.plus_code ?? ''}
                 onChange={(e) => setField('plus_code', e.target.value || null)}
                 placeholder="es. 8FQ9+WF"
-                className="border border-gray-200 rounded-xl px-3 py-2 text-base font-mono"
+                className="border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2 text-base font-mono bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
               />
             </div>
 
@@ -659,7 +659,7 @@ export default function AdminStazioniScreen({
                   value={editing.lat ?? ''}
                   onChange={(e) => setField('lat', e.target.value === '' ? null : Number(e.target.value))}
                   placeholder="es. 45.4858"
-                  className="border border-gray-200 rounded-xl px-3 py-2 text-base font-mono"
+                  className="border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2 text-base font-mono bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
                 />
               </div>
               <div className="flex flex-col gap-1">
@@ -670,7 +670,7 @@ export default function AdminStazioniScreen({
                   value={editing.lng ?? ''}
                   onChange={(e) => setField('lng', e.target.value === '' ? null : Number(e.target.value))}
                   placeholder="es. 9.2042"
-                  className="border border-gray-200 rounded-xl px-3 py-2 text-base font-mono"
+                  className="border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2 text-base font-mono bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
                 />
               </div>
             </div>
@@ -683,7 +683,7 @@ export default function AdminStazioniScreen({
                 onChange={(e) => setField('note', e.target.value || null)}
                 rows={3}
                 placeholder="Note aggiuntive sulla stazione..."
-                className="border border-gray-200 rounded-xl px-3 py-2 text-base resize-none"
+                className="border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2 text-base resize-none bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
               />
             </div>
 
@@ -694,7 +694,7 @@ export default function AdminStazioniScreen({
               className={`flex items-center justify-between rounded-xl border px-4 py-3 transition-colors ${
                 editing.attiva
                   ? 'bg-trenord-green text-white border-trenord-green'
-                  : 'bg-white border-gray-200 text-gray-700'
+                  : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300'
               }`}
             >
               <div className="flex items-center gap-3">
