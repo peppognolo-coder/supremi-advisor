@@ -156,7 +156,7 @@ export default function ContributoStazioneForm({
       {/* BACK */}
       <button
         onClick={onBack}
-        className="self-start px-3 py-2 rounded-xl bg-white border border-gray-200 text-sm"
+        className="self-start px-3 py-2 rounded-xl bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 text-sm"
       >
 
         <div className="flex items-center gap-2">
@@ -172,7 +172,7 @@ export default function ContributoStazioneForm({
       {/* TITLE */}
       <div>
 
-        <h1 className="text-2xl font-bold text-gray-900">
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
 
           Nuova stazione
 
@@ -187,7 +187,7 @@ export default function ContributoStazioneForm({
       </div>
 
       {/* FORM */}
-      <div className="bg-white rounded-2xl border border-gray-100 p-4 flex flex-col gap-4">
+      <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 p-4 flex flex-col gap-4">
 
         {/* NOME */}
         <div>
@@ -210,7 +210,7 @@ export default function ContributoStazioneForm({
                 )
               }
               placeholder="Es. Milano Centrale"
-              className="w-full border border-gray-200 rounded-xl pl-10 pr-3 py-2"
+              className="w-full border border-gray-200 dark:border-gray-700 rounded-xl pl-10 pr-3 py-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
             />
 
           </div>
@@ -234,7 +234,7 @@ export default function ContributoStazioneForm({
               )
             }
             placeholder="Es. Lombardia"
-            className="mt-1 border border-gray-200 rounded-xl px-3 py-2 w-full"
+            className="mt-1 border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2 w-full bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
           />
 
         </div>
@@ -256,7 +256,7 @@ export default function ContributoStazioneForm({
               )
             }
             placeholder="Es. Milano"
-            className="mt-1 border border-gray-200 rounded-xl px-3 py-2 w-full"
+            className="mt-1 border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2 w-full bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
           />
 
         </div>
@@ -282,7 +282,7 @@ export default function ContributoStazioneForm({
                 )
               }
               placeholder="Es. Piazza Duca d'Aosta"
-              className="w-full border border-gray-200 rounded-xl pl-10 pr-3 py-2"
+              className="w-full border border-gray-200 dark:border-gray-700 rounded-xl pl-10 pr-3 py-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
             />
 
           </div>
@@ -306,7 +306,7 @@ export default function ContributoStazioneForm({
               )
             }
             placeholder="Informazioni aggiuntive..."
-            className="mt-1 border border-gray-200 rounded-xl px-3 py-2 w-full min-h-[120px]"
+            className="mt-1 border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2 w-full min-h-[120px] bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
           />
 
         </div>
