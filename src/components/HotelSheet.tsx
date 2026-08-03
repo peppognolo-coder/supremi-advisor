@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 
 import {
   MapPin, Phone,
@@ -87,16 +88,16 @@ function SegnalaProblemaHotelModal({
     onClose();
   }
 
-  return (
+  return createPortal(
     <div className="fixed inset-0 bg-black/60 z-[10000] flex items-end justify-center p-4"
       onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
-      <div className="bg-white rounded-t-3xl w-full max-w-md flex flex-col max-h-[85vh] overflow-hidden">
-        <div className="flex-shrink-0 px-5 pt-3 pb-4 border-b border-gray-100">
+      <div className="bg-white dark:bg-gray-900 rounded-t-3xl w-full max-w-md flex flex-col max-h-[85dvh] overflow-hidden">
+        <div className="flex-shrink-0 px-5 pt-3 pb-4 border-b border-gray-100 dark:border-gray-800">
           <div className="flex justify-center mb-3">
             <div className="w-10 h-1 rounded-full bg-gray-200" />
           </div>
           <div className="flex items-center justify-between">
-            <h3 className="font-bold text-gray-900">Segnala problema</h3>
+            <h3 className="font-bold text-gray-900 dark:text-gray-100">Segnala problema</h3>
             <button onClick={onClose}><X className="w-5 h-5 text-gray-400" /></button>
           </div>
         </div>
@@ -104,21 +105,22 @@ function SegnalaProblemaHotelModal({
           {TIPI_PROBLEMA_HOTEL.map((t) => (
             <button key={t} type="button" onClick={() => setTipo(t)}
               className={`text-left px-4 py-3 rounded-xl border text-base font-medium transition-colors ${
-                tipo === t ? 'bg-amber-500 text-white border-amber-500' : 'bg-white text-gray-700 border-gray-200 hover:border-amber-300'
+                tipo === t ? 'bg-amber-500 text-white border-amber-500' : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-700 hover:border-amber-300'
               }`}>
               {t}
             </button>
           ))}
           <textarea value={nota} onChange={(e) => setNota(e.target.value)}
             placeholder="Note aggiuntive (opzionale)" rows={2}
-            className="border border-gray-200 rounded-xl px-3 py-2 text-base resize-none mt-1" />
+            className="border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2 text-base resize-none mt-1 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100" />
           <button type="button" onClick={submit} disabled={loading || !tipo}
             className="w-full py-3 rounded-xl bg-amber-500 text-white font-medium text-base disabled:opacity-50">
             {loading ? 'Invio...' : 'Invia segnalazione'}
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
 
@@ -338,13 +340,13 @@ export default function HotelSheet({ hotel, onClose }: Props) {
 
   const activeBadges = BADGE_CONFIG.filter((b) => dati[b.key]);
 
-  return (
+  return createPortal(
     <>
       <div className="fixed inset-0 bg-black/50 z-[9999] flex items-end" onClick={onClose}>
         <div
           ref={panelRef}
           style={dragStyle}
-          className="bg-white w-full rounded-t-3xl flex flex-col max-h-[90vh] overflow-hidden"
+          className="bg-white dark:bg-gray-900 w-full rounded-t-3xl flex flex-col max-h-[90dvh] overflow-hidden"
           onClick={(e) => e.stopPropagation()}
         >
 
@@ -353,9 +355,9 @@ export default function HotelSheet({ hotel, onClose }: Props) {
             <div className="flex justify-center pt-3 pb-0">
               <div className="w-10 h-1 rounded-full bg-gray-200" />
             </div>
-            <div className="flex items-start justify-between px-5 pt-3 pb-3 border-b border-gray-100">
+            <div className="flex items-start justify-between px-5 pt-3 pb-3 border-b border-gray-100 dark:border-gray-800">
               <div className="flex-1 min-w-0">
-                <h2 className="text-lg font-bold text-gray-900 truncate pr-4">{hotel.nome}</h2>
+                <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100 truncate pr-4">{hotel.nome}</h2>
                 <div className="flex items-center gap-2 mt-0.5 flex-wrap">
                   <span className="text-xs text-gray-500">🏨 Hotel</span>
                   {hotel.distanza_piedi && (
@@ -367,7 +369,7 @@ export default function HotelSheet({ hotel, onClose }: Props) {
                 </div>
               </div>
               <button onClick={onClose}
-                className="flex-shrink-0 w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center">
+                className="flex-shrink-0 w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
                 <X className="w-4 h-4 text-gray-500" />
               </button>
             </div>
@@ -390,11 +392,11 @@ export default function HotelSheet({ hotel, onClose }: Props) {
 
             {/* RATING */}
             {stats && (
-              <div className="bg-gray-50 rounded-2xl p-4 flex flex-col gap-3">
+              <div className="bg-gray-50 dark:bg-gray-800 rounded-2xl p-4 flex flex-col gap-3">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <Star className="w-5 h-5 text-amber-400 fill-amber-400" />
-                    <span className="font-bold text-gray-900 text-lg">
+                    <span className="font-bold text-gray-900 dark:text-gray-100 text-lg">
                       {stats.ratingMedio !== null ? stats.ratingMedio.toFixed(1) : '—'}
                     </span>
                     <span className="text-xs text-gray-400">({stats.numVoti} voti)</span>
@@ -423,7 +425,7 @@ export default function HotelSheet({ hotel, onClose }: Props) {
             <div className="flex flex-col gap-3">
               {dati.telefono && (
                 <a href={`tel:${dati.telefono}`}
-                  className="flex items-center gap-3 px-4 py-3 rounded-xl bg-white border border-gray-200 hover:border-blue-300 transition-colors">
+                  className="flex items-center gap-3 px-4 py-3 rounded-xl bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 hover:border-blue-300 transition-colors">
                   <Phone className="w-5 h-5 text-blue-500 flex-shrink-0" />
                   <div>
                     <p className="text-xs text-gray-400">Telefono</p>
@@ -433,21 +435,21 @@ export default function HotelSheet({ hotel, onClose }: Props) {
               )}
 
               {hotel.indirizzo && (
-                <div className="flex items-center gap-3 px-4 py-3 rounded-xl bg-white border border-gray-200">
+                <div className="flex items-center gap-3 px-4 py-3 rounded-xl bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700">
                   <MapPin className="w-5 h-5 text-gray-400 flex-shrink-0" />
                   <div>
                     <p className="text-xs text-gray-400">Indirizzo</p>
-                    <p className="text-sm text-gray-700">{hotel.indirizzo}</p>
+                    <p className="text-sm text-gray-700 dark:text-gray-300">{hotel.indirizzo}</p>
                   </div>
                 </div>
               )}
 
               {hotel.distanza_piedi && (
-                <div className="flex items-center gap-3 px-4 py-3 rounded-xl bg-white border border-gray-200">
+                <div className="flex items-center gap-3 px-4 py-3 rounded-xl bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700">
                   <Clock className="w-5 h-5 text-gray-400 flex-shrink-0" />
                   <div>
                     <p className="text-xs text-gray-400">Distanza dalla stazione</p>
-                    <p className="text-sm text-gray-700">{hotel.distanza_piedi}</p>
+                    <p className="text-sm text-gray-700 dark:text-gray-300">{hotel.distanza_piedi}</p>
                   </div>
                 </div>
               )}
@@ -465,9 +467,9 @@ export default function HotelSheet({ hotel, onClose }: Props) {
 
             {/* NOTE GENERALI */}
             {hotel.note && (
-              <div className="bg-gray-50 rounded-2xl p-4">
+              <div className="bg-gray-50 dark:bg-gray-800 rounded-2xl p-4">
                 <p className="text-xs text-gray-400 mb-1">Note</p>
-                <p className="text-sm text-gray-700">{hotel.note}</p>
+                <p className="text-sm text-gray-700 dark:text-gray-300">{hotel.note}</p>
               </div>
             )}
 
@@ -487,7 +489,7 @@ export default function HotelSheet({ hotel, onClose }: Props) {
               </p>
 
               {hotel.qr_checkin_url ? (
-                <div className="bg-white border border-gray-200 rounded-2xl p-4 flex flex-col gap-3">
+                <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-2xl p-4 flex flex-col gap-3">
                   {/* Data scadenza */}
                   {hotel.qr_scadenza && (
                     <div className="flex items-center gap-2 text-xs text-gray-500">
@@ -499,7 +501,7 @@ export default function HotelSheet({ hotel, onClose }: Props) {
                             ? 'text-red-600'
                             : new Date(hotel.qr_scadenza) < new Date(Date.now() + 7 * 86400000)
                             ? 'text-amber-600'
-                            : 'text-gray-700'
+                            : 'text-gray-700 dark:text-gray-300'
                         }`}>
                           {new Date(hotel.qr_scadenza).toLocaleDateString('it-IT', {
                             day: '2-digit', month: 'long', year: 'numeric'
@@ -512,16 +514,16 @@ export default function HotelSheet({ hotel, onClose }: Props) {
                   {/* QR visibile dopo verifica TOTP */}
                   {qrVisibile ? (
                     <div className="flex flex-col gap-3">
-                      <div className="flex items-center justify-between bg-gray-50 rounded-xl px-4 py-2">
+                      <div className="flex items-center justify-between bg-gray-50 dark:bg-gray-800 rounded-xl px-4 py-2">
                         <span className="text-xs text-gray-500">Si nasconde tra</span>
-                        <span className={`font-mono font-bold text-sm ${secondiRimasti <= 60 ? 'text-red-600' : 'text-gray-800'}`}>
+                        <span className={`font-mono font-bold text-sm ${secondiRimasti <= 60 ? 'text-red-600 dark:text-red-400' : 'text-gray-800 dark:text-gray-200'}`}>
                           {formatCountdown(secondiRimasti)}
                         </span>
                       </div>
                       <img
                         src={hotel.qr_checkin_url}
                         alt="QR Check-in"
-                        className="w-full rounded-xl border border-gray-200"
+                        className="w-full rounded-xl border border-gray-200 dark:border-gray-700"
                       />
                       <p className="text-xs text-gray-400 text-center">
                         Mostra questo QR alla reception al momento del check-in.
@@ -539,7 +541,7 @@ export default function HotelSheet({ hotel, onClose }: Props) {
                   )}
                 </div>
               ) : (
-                <div className="bg-gray-50 border border-dashed border-gray-300 rounded-2xl p-4 text-center">
+                <div className="bg-gray-50 dark:bg-gray-800 border border-dashed border-gray-300 dark:border-gray-600 rounded-2xl p-4 text-center">
                   <QrCode className="w-8 h-8 text-gray-300 mx-auto mb-2" />
                   <p className="text-sm text-gray-500">QR check-in non ancora disponibile.</p>
                   <p className="text-xs text-gray-400 mt-1">Puoi caricarlo usando il bottone qui sotto.</p>
@@ -558,11 +560,11 @@ export default function HotelSheet({ hotel, onClose }: Props) {
 
               {/* Form upload nuovo QR */}
               {showNuovoQr && (
-                <div className="bg-white border border-gray-200 rounded-2xl p-4 flex flex-col gap-3">
-                  <p className="text-sm font-semibold text-gray-800">Carica il nuovo QR check-in</p>
+                <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-2xl p-4 flex flex-col gap-3">
+                  <p className="text-sm font-semibold text-gray-800 dark:text-gray-200">Carica il nuovo QR check-in</p>
 
                   {/* Upload file */}
-                  <label className="flex flex-col items-center justify-center gap-2 border-2 border-dashed border-gray-300 rounded-xl p-4 cursor-pointer hover:border-trenord-green transition-colors">
+                  <label className="flex flex-col items-center justify-center gap-2 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-xl p-4 cursor-pointer hover:border-trenord-green transition-colors">
                     {nuovoQrPreview ? (
                       <img src={nuovoQrPreview} alt="Preview QR" className="w-40 rounded-lg" />
                     ) : (
@@ -589,7 +591,7 @@ export default function HotelSheet({ hotel, onClose }: Props) {
                       type="date"
                       value={nuovoQrScadenza}
                       onChange={(e) => setNuovoQrScadenza(e.target.value)}
-                      className="mt-1 border border-gray-200 rounded-xl px-3 py-2 w-full text-base"
+                      className="mt-1 border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2 w-full text-base bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
                     />
                   </div>
 
@@ -614,7 +616,7 @@ export default function HotelSheet({ hotel, onClose }: Props) {
               <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide">
                 Verifica delle informazioni
               </p>
-              <p className="text-sm text-gray-600">Hai soggiornato in questo hotel?</p>
+              <p className="text-sm text-gray-600 dark:text-gray-300">Hai soggiornato in questo hotel?</p>
               <div className="flex gap-2">
                 <button type="button" onClick={confermaCorretto}
                   className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl bg-emerald-600 text-white text-sm font-medium hover:opacity-90">
@@ -646,7 +648,7 @@ export default function HotelSheet({ hotel, onClose }: Props) {
           className="fixed inset-0 bg-black/60 z-[10000] flex items-center justify-center p-4"
           onClick={(e) => { if (e.target === e.currentTarget) setShowQrModal(false); }}
         >
-          <div className="bg-white rounded-3xl w-full max-w-sm flex flex-col gap-5 p-6 max-h-[80vh] overflow-y-auto">
+          <div className="bg-white dark:bg-gray-900 rounded-3xl w-full max-w-sm flex flex-col gap-5 p-6 max-h-[80dvh] overflow-y-auto">
 
             <div className="flex items-start justify-between">
               <div className="flex items-center gap-3">
@@ -654,7 +656,7 @@ export default function HotelSheet({ hotel, onClose }: Props) {
                   <KeyRound className="w-5 h-5 text-white" />
                 </div>
                 <div>
-                  <h2 className="font-bold text-gray-900">QR Check-in</h2>
+                  <h2 className="font-bold text-gray-900 dark:text-gray-100">QR Check-in</h2>
                   <p className="text-xs text-gray-400 mt-0.5">Inserisci il codice dall'Authenticator</p>
                 </div>
               </div>
@@ -698,7 +700,7 @@ export default function HotelSheet({ hotel, onClose }: Props) {
                 }}
                 placeholder="000000"
                 className={`mt-1 border rounded-xl px-4 py-3 w-full text-2xl font-mono tracking-widest text-center focus:outline-none focus:ring-2 focus:ring-gray-900/20 ${
-                  qrTokenError ? 'border-red-400' : 'border-gray-200'
+                  qrTokenError ? 'border-red-400' : 'border-gray-200 dark:border-gray-700'
                 }`}
               />
               {qrTokenError && (
@@ -717,6 +719,7 @@ export default function HotelSheet({ hotel, onClose }: Props) {
           </div>
         </div>
       )}
-    </>
+    </>,
+    document.body
   );
 }
