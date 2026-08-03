@@ -1,5 +1,5 @@
 import React, { useRef, useState, useEffect, useMemo } from 'react';
-import { Settings } from 'lucide-react';
+import { Settings, Sun, Moon } from 'lucide-react';
 
 import type { Tab } from '../types';
 import type { HomeStationData } from '../hooks/useHomeStation';
@@ -44,6 +44,9 @@ interface HomeScreenProps {
 
   /** Incrementato da App.tsx a ogni pull-to-refresh: ricarica il feed "Da sapere". */
   refreshKey?: number;
+
+  theme: 'light' | 'dark';
+  onToggleTheme: () => void;
 }
 
 // ---------------------------------------------------------------------------
@@ -64,6 +67,8 @@ const HomeScreen: React.FC<HomeScreenProps> = ({
   onOpenStazione,
   onOpenSegnalazione,
   refreshKey,
+  theme,
+  onToggleTheme,
 }) => {
   const { favoriteStations, loading: favLoading } = useHomeFavorites(activeStationId);
 
@@ -164,16 +169,16 @@ const HomeScreen: React.FC<HomeScreenProps> = ({
   return (
     <div
       ref={scrollRef}
-      className="flex flex-col h-full min-h-0 bg-gray-50 overflow-y-auto scrollbar-hide"
+      className="flex flex-col h-full min-h-0 bg-gray-50 dark:bg-gray-950 overflow-y-auto scrollbar-hide"
     >
       {/* ── HEADER ────────────────────────────────────────────────────────── */}
-      <div className="sticky top-0 z-10 bg-white border-b border-gray-100">
+      <div className="sticky top-0 z-10 bg-white dark:bg-gray-900 border-b border-gray-100 dark:border-gray-800">
         <div
           className="flex items-center justify-between px-4 py-3"
           style={{ paddingTop: 'max(12px, env(safe-area-inset-top))' }}
         >
           <div>
-            <h1 className="text-lg font-bold text-gray-900">Supremi Advisor</h1>
+            <h1 className="text-lg font-bold text-gray-900 dark:text-gray-100">Supremi Advisor</h1>
             {stationData ? (
               <p className="text-xs text-gray-400">{stationData.stazione.nome}</p>
             ) : (
@@ -190,12 +195,19 @@ const HomeScreen: React.FC<HomeScreenProps> = ({
               </span>
             )}
             <button
+              onClick={onToggleTheme}
+              aria-label={theme === 'dark' ? 'Passa al tema chiaro' : 'Passa al tema scuro'}
+              className="flex items-center justify-center h-9 w-9 rounded-xl bg-gray-50 dark:bg-gray-800 text-gray-500 dark:text-gray-300 active:bg-gray-100 dark:active:bg-gray-700 transition-colors"
+            >
+              {theme === 'dark' ? <Sun className="w-[17px] h-[17px]" /> : <Moon className="w-[17px] h-[17px]" />}
+            </button>
+            <button
               onClick={onAdminAccess}
               className={[
                 'flex items-center gap-1.5 h-9 px-3 rounded-xl transition-colors',
                 adminMode
                   ? 'bg-trenord-green text-white'
-                  : 'bg-gray-50 text-gray-500 active:bg-gray-100',
+                  : 'bg-gray-50 dark:bg-gray-800 text-gray-500 dark:text-gray-300 active:bg-gray-100 dark:active:bg-gray-700',
               ].join(' ')}
             >
               <Settings className="w-[17px] h-[17px]" />
