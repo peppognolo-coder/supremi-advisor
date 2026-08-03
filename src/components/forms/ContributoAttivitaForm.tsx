@@ -335,7 +335,7 @@ export default function ContributoAttivitaForm({
       <button
         type="button"
         onClick={onBack}
-        className="self-start px-3 py-2 rounded-xl bg-white border border-gray-200 text-sm"
+        className="self-start px-3 py-2 rounded-xl bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 text-sm"
       >
 
         <div className="flex items-center gap-2">
@@ -351,7 +351,7 @@ export default function ContributoAttivitaForm({
       {/* TITLE */}
       <div>
 
-        <h1 className="text-2xl font-bold text-gray-900">
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
 
           Contributo Attività
 
@@ -360,7 +360,7 @@ export default function ContributoAttivitaForm({
       </div>
 
       {/* FORM */}
-      <div className="bg-white rounded-2xl border border-gray-100 p-4 flex flex-col gap-4">
+      <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 p-4 flex flex-col gap-4">
 
         {/* STAZIONE */}
         <select
@@ -373,7 +373,7 @@ export default function ContributoAttivitaForm({
           disabled={
             !!stazionePredefinitaId
           }
-          className="border border-gray-200 rounded-xl px-3 py-2 text-base"
+          className="border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2 text-base bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
         >
 
           <option value="">
@@ -405,7 +405,7 @@ export default function ContributoAttivitaForm({
             setNome(e.target.value)
           }
           placeholder="Nome attività"
-          className="border border-gray-200 rounded-xl px-3 py-2 text-base"
+          className="border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2 text-base bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
         />
 
         {/* CATEGORIA */}
@@ -414,7 +414,7 @@ export default function ContributoAttivitaForm({
           onChange={(e) =>
             setCategoria(e.target.value)
           }
-          className="border border-gray-200 rounded-xl px-3 py-2 text-base"
+          className="border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2 text-base bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
         >
 
           {CATEGORIE_ATTIVITA.map(
@@ -437,7 +437,7 @@ export default function ContributoAttivitaForm({
             setIndirizzo(e.target.value)
           }
           placeholder="Indirizzo"
-          className="border border-gray-200 rounded-xl px-3 py-2 text-base"
+          className="border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2 text-base bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
         />
 
         {/* DISTANZA DALLA STAZIONE */}
@@ -448,7 +448,7 @@ export default function ContributoAttivitaForm({
               e.target.value
             )
           }
-          className="border border-gray-200 rounded-xl px-3 py-2 text-base"
+          className="border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2 text-base bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
         >
 
           <option value="">
@@ -472,7 +472,7 @@ export default function ContributoAttivitaForm({
             setUbicazione(e.target.value)
           }
           placeholder="Ubicazione"
-          className="border border-gray-200 rounded-xl px-3 py-2 text-base"
+          className="border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2 text-base bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
         />
 
         {/* CONVENZIONATO */}
@@ -501,7 +501,7 @@ export default function ContributoAttivitaForm({
 
           <div className="flex items-center justify-between">
 
-            <h3 className="font-semibold text-gray-900">
+            <h3 className="font-semibold text-gray-900 dark:text-gray-100">
 
               Fasce orarie
 
@@ -526,12 +526,12 @@ export default function ContributoAttivitaForm({
 
               <div
                 key={index}
-                className="border border-gray-200 rounded-2xl p-4 flex flex-col gap-4"
+                className="border border-gray-200 dark:border-gray-700 rounded-2xl p-4 flex flex-col gap-4"
               >
 
                 <div className="flex items-center justify-between">
 
-                  <h4 className="font-medium text-gray-800">
+                  <h4 className="font-medium text-gray-800 dark:text-gray-200">
 
                     Fascia {index + 1}
 
@@ -577,7 +577,7 @@ export default function ContributoAttivitaForm({
                           className={`rounded-xl border py-2 text-sm font-medium transition-colors ${
                             active
                               ? 'bg-trenord-green text-white border-trenord-green'
-                              : 'bg-white border-gray-200 text-gray-700'
+                              : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300'
                           }`}
                         >
 
@@ -602,7 +602,7 @@ export default function ContributoAttivitaForm({
                         e.target.value
                       )
                     }
-                    className="border border-gray-200 rounded-xl px-3 py-2 text-base"
+                    className="border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2 text-base bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
                   />
 
                   <input
@@ -615,7 +615,7 @@ export default function ContributoAttivitaForm({
                         e.target.value
                       )
                     }
-                    className="border border-gray-200 rounded-xl px-3 py-2 text-base"
+                    className="border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2 text-base bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
                   />
 
                 </div>
@@ -646,7 +646,7 @@ export default function ContributoAttivitaForm({
             setNote(e.target.value)
           }
           placeholder="Note"
-          className="border border-gray-200 rounded-xl px-3 py-2 min-h-[120px] text-base"
+          className="border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2 min-h-[120px] text-base bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
         />
 
         {/* SUBMIT */}
