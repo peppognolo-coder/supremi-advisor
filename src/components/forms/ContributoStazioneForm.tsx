@@ -9,6 +9,8 @@ import {
 import toast from 'react-hot-toast';
 
 import { supabase } from '../../lib/supabase';
+import { getDeviceId } from '../../lib/device';
+import { messaggioErroreInvio } from '../../lib/rateLimitError';
 
 interface Props {
 
@@ -102,6 +104,8 @@ export default function ContributoStazioneForm({
             dati: payload,
 
             stato: 'pending',
+
+            device_id: getDeviceId(),
           });
 
       // =====================
@@ -113,7 +117,7 @@ export default function ContributoStazioneForm({
         console.error(error);
 
         toast.error(
-          'Errore invio contributo'
+          messaggioErroreInvio(error)
         );
 
         setLoading(false);
