@@ -9,6 +9,8 @@ import {
 import toast from 'react-hot-toast';
 
 import { supabase } from '../lib/supabase';
+import { getDeviceId } from '../lib/device';
+import { messaggioErroreInvio } from '../lib/rateLimitError';
 import { useScrollLock } from '../lib/useScrollLock';
 import { useSwipeDown } from '../lib/useSwipeDown';
 import type { AttivitaRow, HotelDatiExtra } from '../lib/adminApi';
@@ -240,6 +242,7 @@ export default function HotelSheet({ hotel, onClose }: Props) {
       const { error } = await supabase.from('contributi').insert({
         tipo: 'hotel_qr',
         stato: 'pending',
+        device_id: getDeviceId(),
         dati: {
           attivita_id: hotel.id,
           hotel_nome:  hotel.nome,
@@ -254,8 +257,8 @@ export default function HotelSheet({ hotel, onClose }: Props) {
       setNuovoQrFile(null);
       setNuovoQrPreview(null);
       setNuovoQrScadenza('');
-    } catch {
-      toast.error('Errore invio. Riprova.');
+    } catch (error: any) {
+      toast.error(messaggioErroreInvio(error));
     } finally {
       setNuovoQrLoading(false);
     }
