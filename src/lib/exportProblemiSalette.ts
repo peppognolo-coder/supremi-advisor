@@ -33,7 +33,7 @@ export async function exportProblemiSalette(
 
   const righe = problemi.map((p) => ({
     'Stazione': p.salette?.stazione ?? '—',
-    'Sezione': getSezione(p.salette?.tipo).label,
+    'Sezione': getSezione(p.sezione ?? p.salette?.tipo).label,
     'Tipo problema': p.tipo_problema,
     'Stato': STATO_LABEL[p.stato] ?? p.stato,
     'N. segnalazioni': p.segnalazioni_count,
