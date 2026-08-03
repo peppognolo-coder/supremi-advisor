@@ -14,6 +14,8 @@ import {
 import toast from 'react-hot-toast';
 
 import { supabase } from '../../lib/supabase';
+import { getDeviceId } from '../../lib/device';
+import { messaggioErroreInvio } from '../../lib/rateLimitError';
 import type { FasciaOraria } from '../../lib/getStatoApertura';
 import {
   SEZIONI_LOCALITA as areeLocalita,
@@ -192,11 +194,11 @@ export default function ContributoSalettaForm({
 
       const { error } = await supabase
         .from('contributi')
-        .insert({ tipo: 'saletta', dati: payload, stato: 'pending' });
+        .insert({ tipo: 'saletta', dati: payload, stato: 'pending', device_id: getDeviceId() });
 
       if (error) {
         console.error(error);
-        toast.error('Errore invio contributo');
+        toast.error(messaggioErroreInvio(error));
         setLoading(false);
         return;
       }
