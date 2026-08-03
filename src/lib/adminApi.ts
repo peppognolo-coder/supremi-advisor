@@ -375,6 +375,9 @@ export interface SalettaProblema {
   note: string | null;
   stato: 'aperta' | 'in_carico' | 'risolta' | 'archiviata';
   segnalazioni_count: number;
+  /** Sezione segnalata dall'utente al momento della segnalazione — può
+      differire dal tipo della saletta collegata (vedi migration 021). */
+  sezione: string | null;
   created_at: string;
   updated_at: string;
   salette?: {
