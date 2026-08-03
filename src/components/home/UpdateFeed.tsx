@@ -56,11 +56,11 @@ export const UpdateFeed: React.FC<UpdateFeedProps> = ({ items, loading = false, 
       {loading ? (
         <div className="flex flex-col gap-2">
           {[1, 2].map((i) => (
-            <div key={i} className="bg-white rounded-2xl border border-gray-100 px-4 py-3.5 h-[72px] animate-pulse" />
+            <div key={i} className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 px-4 py-3.5 h-[72px] animate-pulse" />
           ))}
         </div>
       ) : items.length === 0 ? (
-        <div className="bg-white rounded-2xl border border-gray-100 px-4 py-6 text-center">
+        <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 px-4 py-6 text-center">
           <Bell className="w-6 h-6 text-gray-300 mx-auto mb-2" />
           <p className="text-sm text-gray-400 font-medium">Nessun aggiornamento</p>
           <p className="text-xs text-gray-400 mt-1">
@@ -77,8 +77,8 @@ export const UpdateFeed: React.FC<UpdateFeedProps> = ({ items, loading = false, 
               <div
                 key={item.id}
                 onClick={clickable ? () => onItemClick!(item) : undefined}
-                className={`bg-white rounded-2xl border border-gray-100 shadow-sm px-4 py-3.5 flex items-start gap-3 ${
-                  clickable ? 'cursor-pointer hover:border-gray-200 active:bg-gray-50 transition-colors' : ''
+                className={`bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 shadow-sm px-4 py-3.5 flex items-start gap-3 ${
+                  clickable ? 'cursor-pointer hover:border-gray-200 dark:hover:border-gray-700 active:bg-gray-50 dark:active:bg-gray-800 transition-colors' : ''
                 }`}
               >
                 {/* Icona tipo */}
@@ -89,7 +89,7 @@ export const UpdateFeed: React.FC<UpdateFeedProps> = ({ items, loading = false, 
                 {/* Contenuto */}
                 <div className="flex-1 min-w-0">
                   <div className="flex items-start justify-between gap-2">
-                    <p className="text-sm font-semibold text-gray-800 leading-snug">
+                    <p className="text-sm font-semibold text-gray-800 dark:text-gray-100 leading-snug">
                       {item.titolo}
                     </p>
                     <span className="text-[10px] text-gray-400 flex-shrink-0 mt-0.5 whitespace-nowrap">
