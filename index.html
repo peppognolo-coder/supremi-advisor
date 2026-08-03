@@ -2,6 +2,19 @@
 <html lang="it">
   <head>
     <meta charset="UTF-8" />
+    <script>
+      // Applica subito il tema salvato (o la preferenza di sistema) prima che
+      // React monti, per evitare un lampo del tema sbagliato al caricamento.
+      // Stessa logica di src/hooks/useTheme.ts — duplicata qui perché deve
+      // girare come script inline, non come modulo importato.
+      (function () {
+        try {
+          var stored = localStorage.getItem('trenord_theme');
+          var dark = stored === 'dark' || (!stored && window.matchMedia('(prefers-color-scheme: dark)').matches);
+          if (dark) document.documentElement.classList.add('dark');
+        } catch (e) {}
+      })();
+    </script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Supremi Advisor</title>
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
