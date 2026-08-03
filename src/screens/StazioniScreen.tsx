@@ -655,10 +655,10 @@ export default function StazioniScreen({
 
       <div
         key={stazione.id}
-        className={`bg-white rounded-3xl border shadow-sm overflow-hidden ${
+        className={`bg-white dark:bg-gray-900 rounded-3xl border shadow-sm overflow-hidden ${
           isNearest
             ? 'border-trenord-green ring-2 ring-trenord-green/20'
-            : 'border-gray-100'
+            : 'border-gray-100 dark:border-gray-800'
         }`}
       >
 
@@ -676,7 +676,7 @@ export default function StazioniScreen({
 
             <div>
 
-              <h2 className="text-xl font-bold text-gray-900">
+              <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">
 
                 {stazione.nome}
 
@@ -712,7 +712,7 @@ export default function StazioniScreen({
 
             </div>
 
-            <div className="w-10 h-10 rounded-2xl bg-gray-50 border border-gray-100 flex items-center justify-center">
+            <div className="w-10 h-10 rounded-2xl bg-gray-50 dark:bg-gray-800 border border-gray-100 dark:border-gray-700 flex items-center justify-center">
 
               {expanded ? (
 
@@ -793,7 +793,7 @@ export default function StazioniScreen({
         {/* EXPANDED */}
         {expanded && (
 
-          <div className="border-t border-gray-100 p-5 flex flex-col gap-4 bg-gray-50">
+          <div className="border-t border-gray-100 dark:border-gray-800 p-5 flex flex-col gap-4 bg-gray-50 dark:bg-gray-950">
 
             {/* ADD */}
             <button
@@ -802,7 +802,7 @@ export default function StazioniScreen({
                   stazione.id
                 )
               }
-              className="px-3 h-10 rounded-2xl bg-white border border-gray-200 text-gray-700 flex items-center gap-2 text-sm font-medium shadow-sm w-fit"
+              className="px-3 h-10 rounded-2xl bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 flex items-center gap-2 text-sm font-medium shadow-sm w-fit"
             >
 
               <Plus className="w-4 h-4" />
@@ -849,7 +849,7 @@ export default function StazioniScreen({
                               stazione.id
                             ) === opt.mode
                               ? 'bg-trenord-green text-white border-trenord-green'
-                              : 'bg-white text-gray-900 border-gray-300 hover:border-trenord-green hover:text-trenord-green'
+                              : 'bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 border-gray-300 dark:border-gray-700 hover:border-trenord-green hover:text-trenord-green'
                           }
                         `}
                       >
@@ -911,7 +911,7 @@ export default function StazioniScreen({
                             ${
                               getCategoriaFilter(stazione.id) === cat
                                 ? 'bg-gray-800 text-white border-gray-800'
-                                : 'bg-white text-gray-900 border-gray-300 hover:border-gray-600 hover:text-gray-900'
+                                : 'bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 border-gray-300 dark:border-gray-700 hover:border-gray-600 dark:hover:border-gray-400 hover:text-gray-900 dark:hover:text-gray-100'
                             }
                           `}
                         >
@@ -958,12 +958,12 @@ export default function StazioniScreen({
                         }}
                         className="
                           w-full
-                          bg-white
+                          bg-white dark:bg-gray-900
                           rounded-xl
                           p-4
                           border
                           text-left
-                          hover:bg-gray-50
+                          hover:bg-gray-50 dark:hover:bg-gray-800
                           transition
                         "
                       >
@@ -972,7 +972,7 @@ export default function StazioniScreen({
 
                           <div>
 
-                            <h3 className="font-semibold text-gray-900">
+                            <h3 className="font-semibold text-gray-900 dark:text-gray-100">
 
                               {attivita.nome}
 
@@ -1110,7 +1110,7 @@ export default function StazioniScreen({
                       </button>
 
                       {/* VERIFICA ATTIVITA */}
-                      <div className="px-4 pb-3 bg-white rounded-b-2xl border border-t-0 border-gray-200 -mt-2">
+                      <div className="px-4 pb-3 bg-white dark:bg-gray-900 rounded-b-2xl border border-t-0 border-gray-200 dark:border-gray-700 -mt-2">
 
                         <AttivitaVerifica
                           attivitaId={attivita.id}
@@ -1154,7 +1154,7 @@ export default function StazioniScreen({
         <div
           ref={panelRef}
           style={dragStyle}
-          className="bg-white w-full rounded-t-3xl flex flex-col max-h-[85vh] overflow-hidden"
+          className="bg-white dark:bg-gray-900 w-full rounded-t-3xl flex flex-col max-h-[85dvh] overflow-hidden"
           onClick={(e) => e.stopPropagation()}
         >
           {/* DRAG HANDLE */}
@@ -1166,14 +1166,14 @@ export default function StazioniScreen({
               <div className="w-10 h-1 rounded-full bg-gray-200" />
             </div>
             {/* HEADER con X */}
-            <div className="flex items-center justify-between px-6 pt-4 pb-3 border-b border-gray-100">
-              <h2 className="text-lg font-bold text-gray-900 truncate pr-4">
+            <div className="flex items-center justify-between px-6 pt-4 pb-3 border-b border-gray-100 dark:border-gray-800">
+              <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100 truncate pr-4">
                 {selectedAttivita?.nome}
               </h2>
               <button
                 type="button"
                 onClick={onClose}
-                className="flex-shrink-0 w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center hover:bg-gray-200"
+                className="flex-shrink-0 w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center hover:bg-gray-200 dark:hover:bg-gray-700"
               >
                 <X className="w-4 h-4 text-gray-500" />
               </button>
@@ -1208,7 +1208,7 @@ export default function StazioniScreen({
             onChange={(e) =>
               setSearch(e.target.value)
             }
-            className="w-full bg-white border border-gray-200 rounded-2xl pl-10 pr-9 py-3 text-base"
+            className="w-full bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-2xl pl-10 pr-9 py-3 text-base"
           />
 
           {search.length > 0 && (
@@ -1251,12 +1251,12 @@ export default function StazioniScreen({
 
           <div className="flex flex-col items-center justify-center py-16 px-6 gap-4 text-center">
 
-            <div className="w-14 h-14 rounded-2xl bg-gray-100 flex items-center justify-center">
+            <div className="w-14 h-14 rounded-2xl bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
               <Search className="w-7 h-7 text-gray-400" />
             </div>
 
             <div>
-              <p className="font-semibold text-gray-700">
+              <p className="font-semibold text-gray-700 dark:text-gray-300">
 
                 Nessuna stazione trovata
 
@@ -1271,7 +1271,7 @@ export default function StazioniScreen({
 
             <button
               onClick={() => setSearch('')}
-              className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gray-100 text-gray-700 text-sm font-medium hover:bg-gray-200 transition-colors"
+              className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 text-sm font-medium hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
             >
 
               <X className="w-4 h-4" />
@@ -1405,7 +1405,7 @@ export default function StazioniScreen({
 
               return (
 
-                <div className="flex items-center gap-2 mb-4 px-3 py-2 rounded-xl bg-gray-50 w-fit">
+                <div className="flex items-center gap-2 mb-4 px-3 py-2 rounded-xl bg-gray-50 dark:bg-gray-800 w-fit">
 
                   <span
                     className={`w-2.5 h-2.5 rounded-full flex-shrink-0 ${
@@ -1441,7 +1441,7 @@ export default function StazioniScreen({
 
             {selectedAttivita.distanza_piedi && (
 
-              <div className="flex items-center gap-2 text-gray-600 mb-4">
+              <div className="flex items-center gap-2 text-gray-600 dark:text-gray-300 mb-4">
 
                 <span>🚶</span>
 
@@ -1663,7 +1663,7 @@ export default function StazioniScreen({
 
                       <div
                         key={index}
-                        className="bg-gray-50 rounded-xl px-3 py-2 text-sm text-gray-700"
+                        className="bg-gray-50 dark:bg-gray-800 rounded-xl px-3 py-2 text-sm text-gray-700 dark:text-gray-300"
                       >
 
                         <div className="font-medium">
