@@ -35,7 +35,7 @@ function Switch({ label, value, onChange }: { label: string; value: boolean; onC
   return (
     <button type="button" onClick={() => onChange(!value)}
       className={`flex items-center justify-between rounded-xl border px-4 py-3 transition-colors ${
-        value ? 'bg-trenord-green text-white border-trenord-green' : 'bg-white border-gray-200 text-gray-700'
+        value ? 'bg-trenord-green text-white border-trenord-green' : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300'
       }`}>
       <span className="text-base font-medium">{label}</span>
       <span className="text-sm">{value ? 'SÌ' : 'NO'}</span>
@@ -179,13 +179,13 @@ export default function AddAttivitaModal({ stazioneId, onClose, onSuccess, direc
       <div
         ref={panelRef}
         style={dragStyle}
-        className="bg-white w-full md:max-w-2xl lg:max-w-3xl rounded-t-3xl md:rounded-3xl flex flex-col max-h-[92dvh] md:max-h-[80dvh] overflow-hidden shadow-2xl"
+        className="bg-white dark:bg-gray-900 w-full md:max-w-2xl lg:max-w-3xl rounded-t-3xl md:rounded-3xl flex flex-col max-h-[92dvh] md:max-h-[80dvh] overflow-hidden shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
 
         {/* DRAG HANDLE + HEADER FISSO */}
         <div onTouchStart={handleDragStart}
-          className="flex-shrink-0 cursor-grab active:cursor-grabbing border-b border-gray-100">
+          className="flex-shrink-0 cursor-grab active:cursor-grabbing border-b border-gray-100 dark:border-gray-800">
           <div className="flex justify-center pt-3 pb-1">
             <div className="w-10 h-1 rounded-full bg-gray-200" />
           </div>
@@ -195,14 +195,14 @@ export default function AddAttivitaModal({ stazioneId, onClose, onSuccess, direc
                 <Store className="w-5 h-5 text-trenord-green" />
               </div>
               <div>
-                <h2 className="font-bold text-gray-900">Aggiungi attività</h2>
+                <h2 className="font-bold text-gray-900 dark:text-gray-100">Aggiungi attività</h2>
                 <p className="text-xs text-gray-400">
                   {direct ? 'Verrà pubblicata subito' : "La proposta verrà revisionata dall'admin"}
                 </p>
               </div>
             </div>
             <button onClick={onClose}
-              className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center">
+              className="w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
               <X className="w-4 h-4 text-gray-500" />
             </button>
           </div>
@@ -216,14 +216,14 @@ export default function AddAttivitaModal({ stazioneId, onClose, onSuccess, direc
             <label className="text-xs font-semibold text-gray-400 uppercase tracking-wide">Nome *</label>
             <input value={nome} onChange={(e) => setNome(e.target.value)}
               placeholder="es.  Caffè Napoli"
-              className="border border-gray-200 rounded-xl px-3 py-2.5 text-base" />
+              className="border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2.5 text-base bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100" />
           </div>
 
           {/* CATEGORIA */}
           <div className="flex flex-col gap-1">
             <label className="text-xs font-semibold text-gray-400 uppercase tracking-wide">Categoria attività *</label>
             <select value={categoria} onChange={(e) => setCategoria(e.target.value)}
-              className="border border-gray-200 rounded-xl px-3 py-2.5 text-base">
+              className="border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2.5 text-base bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100">
               <option value="">Seleziona categoria</option>
               {CATEGORIE_ATTIVITA.map((c) => <option key={c} value={c}>{c}</option>)}
             </select>
@@ -253,14 +253,14 @@ export default function AddAttivitaModal({ stazioneId, onClose, onSuccess, direc
             <label className="text-xs font-semibold text-gray-400 uppercase tracking-wide">Indirizzo</label>
             <input value={indirizzo} onChange={(e) => setIndirizzo(e.target.value)}
               placeholder="Via Roma 1, Milano"
-              className="border border-gray-200 rounded-xl px-3 py-2.5 text-base" />
+              className="border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2.5 text-base bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100" />
           </div>
 
           {/* DISTANZA */}
           <div className="flex flex-col gap-1">
             <label className="text-xs font-semibold text-gray-400 uppercase tracking-wide">Distanza dalla stazione</label>
             <select value={distanzaPiedi} onChange={(e) => setDistanzaPiedi(e.target.value)}
-              className="border border-gray-200 rounded-xl px-3 py-2.5 text-base">
+              className="border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2.5 text-base bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100">
               <option value="">Seleziona distanza</option>
               {DISTANZE_ATTIVITA.map((d) => <option key={d} value={d}>{d}</option>)}
             </select>
@@ -271,7 +271,7 @@ export default function AddAttivitaModal({ stazioneId, onClose, onSuccess, direc
             <label className="text-xs font-semibold text-gray-400 uppercase tracking-wide">Ubicazione</label>
             <input value={ubicazione} onChange={(e) => setUbicazione(e.target.value)}
               placeholder="es. Di fronte all'uscita nord"
-              className="border border-gray-200 rounded-xl px-3 py-2.5 text-base" />
+              className="border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2.5 text-base bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100" />
           </div>
 
          {/* MAPS QUERY */}
@@ -284,7 +284,7 @@ export default function AddAttivitaModal({ stazioneId, onClose, onSuccess, direc
     value={mapsQuery}
     onChange={(e) => setMapsQuery(e.target.value)}
     placeholder="es. Bar Napoli Milano Centrale"
-    className="border border-gray-200 rounded-xl px-3 py-2.5 text-base"
+    className="border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2.5 text-base bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
   />
 
   <p className="text-xs text-gray-500 mt-1">
@@ -298,7 +298,7 @@ export default function AddAttivitaModal({ stazioneId, onClose, onSuccess, direc
               <label className="text-xs font-semibold text-gray-400 uppercase tracking-wide">Note</label>
               <textarea value={note} onChange={(e) => setNote(e.target.value)}
                 rows={2} placeholder="Informazioni aggiuntive..."
-                className="border border-gray-200 rounded-xl px-3 py-2.5 text-base resize-none" />
+                className="border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2.5 text-base bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 resize-none" />
             </div>
           )}
 
@@ -313,9 +313,9 @@ export default function AddAttivitaModal({ stazioneId, onClose, onSuccess, direc
                 </button>
               </div>
               {fasceOrarie.map((fascia, idx) => (
-                <div key={idx} className="border border-gray-200 rounded-2xl p-3 flex flex-col gap-3">
+                <div key={idx} className="border border-gray-200 dark:border-gray-700 rounded-2xl p-3 flex flex-col gap-3">
                   <div className="flex items-center justify-between">
-                    <span className="text-sm font-medium text-gray-700">Fascia {idx + 1}</span>
+                    <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Fascia {idx + 1}</span>
                     {fasceOrarie.length > 1 && (
                       <button type="button" onClick={() => removeFascia(idx)}
                         className="text-red-500"><Trash2 className="w-4 h-4" /></button>
@@ -325,7 +325,7 @@ export default function AddAttivitaModal({ stazioneId, onClose, onSuccess, direc
                     {GIORNI.map((g) => (
                       <button key={g} type="button" onClick={() => toggleGiorno(idx, g)}
                         className={`rounded-lg py-1.5 text-xs font-medium border transition-colors ${
-                          fascia.giorni.includes(g) ? 'bg-trenord-green text-white border-trenord-green' : 'bg-white text-gray-600 border-gray-200'
+                          fascia.giorni.includes(g) ? 'bg-trenord-green text-white border-trenord-green' : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 border-gray-200 dark:border-gray-700'
                         }`}>{g}</button>
                     ))}
                   </div>
@@ -334,13 +334,13 @@ export default function AddAttivitaModal({ stazioneId, onClose, onSuccess, direc
                       <label className="text-xs text-gray-400">Apertura</label>
                       <input type="time" value={fascia.apertura}
                         onChange={(e) => updateFascia(idx, 'apertura', e.target.value)}
-                        className="border border-gray-200 rounded-xl px-3 py-2 text-base" />
+                        className="border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2 text-base bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100" />
                     </div>
                     <div className="flex flex-col gap-1">
                       <label className="text-xs text-gray-400">Chiusura</label>
                       <input type="time" value={fascia.chiusura}
                         onChange={(e) => updateFascia(idx, 'chiusura', e.target.value)}
-                        className="border border-gray-200 rounded-xl px-3 py-2 text-base" />
+                        className="border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2 text-base bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100" />
                     </div>
                   </div>
                 </div>
@@ -353,9 +353,9 @@ export default function AddAttivitaModal({ stazioneId, onClose, onSuccess, direc
         </div>
 
         {/* FOOTER FISSO CON PULSANTE */}
-        <div className="flex-shrink-0 px-5 pt-4 border-t border-gray-100 bg-white flex gap-2" style={{ paddingBottom: 'max(1rem, env(safe-area-inset-bottom))' }}>
+        <div className="flex-shrink-0 px-5 pt-4 border-t border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 flex gap-2" style={{ paddingBottom: 'max(1rem, env(safe-area-inset-bottom))' }}>
           <button type="button" onClick={onClose} disabled={loading}
-            className="flex-1 py-3.5 rounded-xl border border-gray-200 text-gray-600 font-medium text-base hover:bg-gray-50 disabled:opacity-50 transition-colors">
+            className="flex-1 py-3.5 rounded-xl border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300 font-medium text-base hover:bg-gray-50 dark:hover:bg-gray-800 disabled:opacity-50 transition-colors">
             Annulla
           </button>
           <button type="button" onClick={submit} disabled={loading || !nome.trim() || !categoria}
