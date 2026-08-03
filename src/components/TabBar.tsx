@@ -45,7 +45,7 @@ export default function TabBar({
   return (
     <div className="fixed bottom-0 left-0 right-0 z-50 px-3 pb-[max(6px,env(safe-area-inset-bottom))]">
       <div className="max-w-2xl mx-auto">
-        <div className="bg-white/95 backdrop-blur-xl border border-gray-200 shadow-lg rounded-2xl px-2 py-1.5 flex items-center justify-around">
+        <div className="bg-white/95 dark:bg-gray-900/95 backdrop-blur-xl border border-gray-200 dark:border-gray-700 shadow-lg rounded-2xl px-2 py-1.5 flex items-center justify-around">
           {tabs.map((tab) => {
             const Icon = tab.icon;
             const isActive = activeTab === tab.id;
@@ -56,7 +56,7 @@ export default function TabBar({
                 className={`flex flex-col items-center justify-center gap-1 px-3 py-2 rounded-2xl transition-all min-w-[60px] ${
                   isActive
                     ? 'bg-trenord-green text-white shadow-sm'
-                    : 'text-gray-500 hover:bg-gray-100'
+                    : 'text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800'
                 }`}
               >
                 <Icon className="w-5 h-5" />
