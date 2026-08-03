@@ -7,6 +7,8 @@ import { X, AlertTriangle } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 import { supabase } from '../lib/supabase';
+import { getDeviceId } from '../lib/device';
+import { messaggioErroreInvio } from '../lib/rateLimitError';
 
 import { useSwipeDown } from '../lib/useSwipeDown';
 
@@ -165,6 +167,7 @@ export default function SegnalaProblemaFisicoModal({
               note:               note.trim() || null,
               stato:              'aperta',
               segnalazioni_count: 1,
+              device_id:          getDeviceId(),
             });
 
           if (error) throw error;
@@ -180,7 +183,7 @@ export default function SegnalaProblemaFisicoModal({
       onClose();
     } catch (err) {
       console.error(err);
-      toast.error('Errore durante la segnalazione. Riprova.');
+      toast.error(messaggioErroreInvio(err as any));
     } finally {
       setLoading(false);
     }
