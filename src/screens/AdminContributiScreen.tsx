@@ -78,6 +78,9 @@ export default function AdminContributiScreen({ adminPin }: Props) {
   // id delle attività di cui è stata verificata l'esistenza, per i contributi
   // tipo 'modifica_attivita' — badge "attività non più esistente" altrimenti.
   const [attivitaEsistentiIds, setAttivitaEsistentiIds] = useState<Set<string>>(new Set());
+  // Lookup id saletta -> stazione/tipo/etichetta, per mostrare un nome
+  // leggibile nei contributi 'segnalazione_saletta' invece del solo id.
+  const [saletteInfo, setSaletteInfo] = useState<Map<string, { stazione: string; tipo: string; etichetta: string | null }>>(new Map());
   const firstInputRef = useRef<HTMLInputElement>(null);
 
   // =========================
@@ -113,6 +116,27 @@ export default function AdminContributiScreen({ adminPin }: Props) {
       setAttivitaEsistentiIds(new Set((data ?? []).map((r) => r.id)));
     } else {
       setAttivitaEsistentiIds(new Set());
+    }
+
+    // Le segnalazioni saletta (dati.saletta_id) mostravano solo l'id grezzo
+    // in revisione — qui recuperiamo in un'unica query stazione/tipo/
+    // etichetta di ogni saletta coinvolta, per mostrare un nome leggibile
+    // invece dell'id, sia in lista sia nel dettaglio.
+    const salettaIdsDaVerificare = [...new Set(
+      contributiCaricati
+        .filter((c) => c.tipo === 'segnalazione_saletta' && c.dati?.saletta_id)
+        .map((c) => c.dati.saletta_id as string)
+    )];
+    if (salettaIdsDaVerificare.length > 0) {
+      const { data } = await supabase
+        .from('salette')
+        .select('id, stazione, tipo, etichetta')
+        .in('id', salettaIdsDaVerificare);
+      const map = new Map<string, { stazione: string; tipo: string; etichetta: string | null }>();
+      (data ?? []).forEach((s) => map.set(s.id, { stazione: s.stazione, tipo: s.tipo, etichetta: s.etichetta }));
+      setSaletteInfo(map);
+    } else {
+      setSaletteInfo(new Map());
     }
   }
 
@@ -298,6 +322,16 @@ export default function AdminContributiScreen({ adminPin }: Props) {
                       </span>
                     )}
                   </div>
+                  {c.tipo === 'segnalazione_saletta' && (c.dati as any)?.saletta_id && (() => {
+                    const info = saletteInfo.get((c.dati as any).saletta_id);
+                    return (
+                      <p className="text-xs text-gray-600 font-medium mt-1">
+                        {info
+                          ? `${info.stazione} — ${getSezione(info.tipo).label}${info.etichetta ? ' (' + info.etichetta + ')' : ''}`
+                          : '⚠️ Saletta non trovata'}
+                      </p>
+                    );
+                  })()}
                   <p className="text-xs text-gray-400 mt-1">ID: {c.id}</p>
                 </div>
                 <div className={`px-3 py-1 rounded-full text-xs font-semibold ${
@@ -425,8 +459,23 @@ export default function AdminContributiScreen({ adminPin }: Props) {
                 ? [{ tipo: editingContributo.dati.tipo, valore: editingContributo.dati.valore }]
                 : [];
 
+              const salettaId = editingContributo.dati?.saletta_id;
+              const infoSaletta = salettaId ? saletteInfo.get(salettaId) : undefined;
+
               return (
                 <div className="flex flex-col gap-4">
+                  <div className="bg-blue-50 border border-blue-200 rounded-xl px-4 py-3">
+                    <p className="text-xs font-semibold text-blue-700 uppercase tracking-wide mb-1">Saletta</p>
+                    {infoSaletta ? (
+                      <p className="font-semibold text-gray-900">
+                        {infoSaletta.stazione} — {getSezione(infoSaletta.tipo).label}
+                        {infoSaletta.etichetta && <span className="text-gray-400 font-normal"> ({infoSaletta.etichetta})</span>}
+                      </p>
+                    ) : (
+                      <p className="text-sm text-red-700">⚠️ Saletta non trovata (potrebbe essere stata eliminata)</p>
+                    )}
+                  </div>
+
                   <div className="bg-amber-50 border border-amber-200 rounded-xl p-3">
                     <p className="text-xs font-semibold text-amber-700 uppercase tracking-wide mb-2">
                       Segnalazione saletta {selezioni.length > 1 ? `(${selezioni.length} campi)` : ''}
