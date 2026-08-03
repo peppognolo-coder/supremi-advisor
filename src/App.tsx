@@ -20,6 +20,7 @@ import toast from 'react-hot-toast';
 import { RefreshCw } from 'lucide-react';
 
 import AdminPinModal from './components/AdminPinModal';
+import { useTheme } from './hooks/useTheme';
 
 const screenTitles: Record<Tab, string> = {
   home: 'Home',
@@ -31,6 +32,7 @@ const screenTitles: Record<Tab, string> = {
 };
 
 export default function App() {
+  const { theme, toggleTheme } = useTheme();
   const [activeTab, setActiveTab] = useState<Tab>('home');
 
   const [searchOpen, setSearchOpen] = useState(false);
@@ -234,11 +236,11 @@ export default function App() {
   const isHomeTab = activeTab === 'home';
 
   return (
-    <div className="h-dvh bg-gray-100 flex flex-col">
+    <div className="h-dvh bg-gray-100 dark:bg-gray-950 flex flex-col">
 
       {/* PULL REFRESH INDICATOR */}
       <div className={`fixed top-[72px] left-1/2 -translate-x-1/2 z-[100] pointer-events-none transition-all duration-300 ${refreshing ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-4'}`}>
-        <div className="bg-white shadow-lg border border-gray-200 rounded-full px-4 py-2 flex items-center gap-2">
+        <div className="bg-white dark:bg-gray-800 shadow-lg border border-gray-200 dark:border-gray-700 rounded-full px-4 py-2 flex items-center gap-2">
           <RefreshCw className="w-4 h-4 animate-spin text-trenord-green" />
           <span className="text-xs font-medium text-gray-700">Aggiornamento...</span>
         </div>
@@ -250,23 +252,25 @@ export default function App() {
           title={adminMode ? 'Supremi Advisor • ADMIN' : 'Supremi Advisor'}
           onAdminAccess={handleAdminAccess}
           onLogoClick={() => handleTabChange('home')}
+          theme={theme}
+          onToggleTheme={toggleTheme}
         />
       )}
 
       {/* TITLE BAR */}
       {!isHomeTab && (
-        <div className="fixed top-14 left-0 right-0 z-40 bg-white border-b border-gray-100 shadow-sm">
+        <div className="fixed top-14 left-0 right-0 z-40 bg-white dark:bg-gray-900 border-b border-gray-100 dark:border-gray-800 shadow-sm">
           <div className="max-w-2xl mx-auto px-4 py-3 flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <h1 className="text-lg font-bold text-gray-900">{screenTitles[activeTab]}</h1>
+              <h1 className="text-lg font-bold text-gray-900 dark:text-gray-100">{screenTitles[activeTab]}</h1>
               {adminMode && (
                 <div className="px-2 py-1 rounded-full bg-trenord-green text-white text-[10px] font-bold tracking-wide shadow-sm">
                   ADMIN
                 </div>
               )}
             </div>
-            <button onClick={refreshApp} className="w-10 h-10 rounded-2xl bg-gray-100 border border-gray-200 flex items-center justify-center hover:bg-gray-200 transition-colors">
-              <RefreshCw className={`w-4 h-4 text-gray-600 ${refreshing ? 'animate-spin' : ''}`} />
+            <button onClick={refreshApp} className="w-10 h-10 rounded-2xl bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 flex items-center justify-center hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
+              <RefreshCw className={`w-4 h-4 text-gray-600 dark:text-gray-300 ${refreshing ? 'animate-spin' : ''}`} />
             </button>
           </div>
         </div>
@@ -290,6 +294,8 @@ export default function App() {
             onOpenStazione={handleOpenStazione}
             onOpenSegnalazione={handleOpenSegnalazione}
             refreshKey={refreshKey}
+            theme={theme}
+            onToggleTheme={toggleTheme}
           />
         )}
 
