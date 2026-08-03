@@ -55,7 +55,7 @@ const STATO_CONFIG: Record<string, {
   aperta:     { label: 'Aperto',    bg: 'bg-red-100',     text: 'text-red-700',     icon: <AlertTriangle className="w-4 h-4" /> },
   in_carico:  { label: 'In carico', bg: 'bg-amber-100',   text: 'text-amber-700',   icon: <Wrench className="w-4 h-4" /> },
   risolta:    { label: 'Risolto',   bg: 'bg-emerald-100', text: 'text-emerald-700', icon: <CheckCircle className="w-4 h-4" /> },
-  archiviata: { label: 'Archiviato',bg: 'bg-gray-100',    text: 'text-gray-600',    icon: <Archive className="w-4 h-4" /> },
+  archiviata: { label: 'Archiviato',bg: 'bg-gray-100 dark:bg-gray-800',    text: 'text-gray-600 dark:text-gray-300',    icon: <Archive className="w-4 h-4" /> },
 };
 
 // =========================
@@ -184,7 +184,7 @@ export default function AdminProblemiSaletteScreen({ adminPin }: Props) {
         {/* TITOLO */}
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">Problemi Salette</h1>
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Problemi Salette</h1>
             <p className="text-sm text-gray-500 mt-1">
               Segnalazioni fisiche del personale
             </p>
@@ -205,13 +205,13 @@ export default function AdminProblemiSaletteScreen({ adminPin }: Props) {
         {/* STATISTICHE RAPIDE */}
         {!loading && (
           <div className="grid grid-cols-2 gap-3">
-            <div className={`rounded-2xl border p-3 shadow-sm text-center ${contatori.aperta > 0 ? 'border-red-100 bg-red-50' : 'border-gray-100 bg-white'}`}>
+            <div className={`rounded-2xl border p-3 shadow-sm text-center ${contatori.aperta > 0 ? 'border-red-100 dark:border-red-900 bg-red-50 dark:bg-red-950' : 'border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900'}`}>
               <div className={`text-2xl font-bold ${contatori.aperta > 0 ? 'text-red-600' : 'text-gray-400'}`}>
                 {contatori.aperta}
               </div>
               <div className="text-xs text-gray-500 mt-1 uppercase tracking-wide">Aperti</div>
             </div>
-            <div className={`rounded-2xl border p-3 shadow-sm text-center ${contatori.in_carico > 0 ? 'border-amber-100 bg-amber-50' : 'border-gray-100 bg-white'}`}>
+            <div className={`rounded-2xl border p-3 shadow-sm text-center ${contatori.in_carico > 0 ? 'border-amber-100 dark:border-amber-900 bg-amber-50 dark:bg-amber-950' : 'border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900'}`}>
               <div className={`text-2xl font-bold ${contatori.in_carico > 0 ? 'text-amber-600' : 'text-gray-400'}`}>
                 {contatori.in_carico}
               </div>
@@ -221,7 +221,7 @@ export default function AdminProblemiSaletteScreen({ adminPin }: Props) {
               <div className="text-2xl font-bold text-emerald-600">{contatori.risolta}</div>
               <div className="text-xs text-gray-500 mt-1 uppercase tracking-wide">Risolti</div>
             </div>
-            <div className="rounded-2xl border border-gray-100 bg-white p-3 shadow-sm text-center">
+            <div className="rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 p-3 shadow-sm text-center">
               <div className="text-2xl font-bold text-gray-400">{contatori.archiviata}</div>
               <div className="text-xs text-gray-500 mt-1 uppercase tracking-wide">Archiviati</div>
             </div>
@@ -239,12 +239,12 @@ export default function AdminProblemiSaletteScreen({ adminPin }: Props) {
                 className={`px-3 py-1.5 rounded-xl text-sm font-medium border transition-colors ${
                   filtro === f.mode
                     ? 'bg-trenord-green text-white border-trenord-green'
-                    : 'bg-white text-gray-600 border-gray-200 hover:border-trenord-green hover:text-trenord-green'
+                    : 'bg-white dark:bg-gray-900 text-gray-600 dark:text-gray-300 border-gray-200 dark:border-gray-700 hover:border-trenord-green hover:text-trenord-green'
                 }`}
               >
                 {f.label}
                 <span className={`ml-1.5 text-xs px-1.5 py-0.5 rounded-full ${
-                  filtro === f.mode ? 'bg-white/20' : 'bg-gray-100 text-gray-500'
+                  filtro === f.mode ? 'bg-white/20' : 'bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400'
                 }`}>
                   {contatori[f.mode]}
                 </span>
@@ -258,7 +258,7 @@ export default function AdminProblemiSaletteScreen({ adminPin }: Props) {
 
         {/* EMPTY */}
         {!loading && filtrati.length === 0 && (
-          <div className="bg-white rounded-2xl border border-gray-100 p-6 text-sm text-gray-500 text-center">
+          <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 p-6 text-sm text-gray-500 dark:text-gray-400 text-center">
             {filtro === 'aperta'
               ? '✅ Nessun problema aperto. Ottimo!'
               : 'Nessun problema in questa categoria.'}
@@ -275,7 +275,7 @@ export default function AdminProblemiSaletteScreen({ adminPin }: Props) {
               return (
                 <div
                   key={prob.id}
-                  className="bg-white rounded-2xl border border-gray-100 p-4 shadow-sm flex flex-col gap-3"
+                  className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 p-4 shadow-sm flex flex-col gap-3"
                 >
 
                   {/* TOP */}
@@ -283,7 +283,7 @@ export default function AdminProblemiSaletteScreen({ adminPin }: Props) {
                     <div className={`flex-shrink-0 w-10 h-10 rounded-2xl flex items-center justify-center ${
                       prob.stato === 'aperta' ? 'bg-red-100' :
                       prob.stato === 'in_carico' ? 'bg-amber-100' :
-                      prob.stato === 'risolta' ? 'bg-emerald-100' : 'bg-gray-100'
+                      prob.stato === 'risolta' ? 'bg-emerald-100 dark:bg-emerald-950' : 'bg-gray-100 dark:bg-gray-800'
                     }`}>
                       {prob.stato === 'aperta'    && <AlertTriangle className="w-5 h-5 text-red-600" />}
                       {prob.stato === 'in_carico' && <Wrench className="w-5 h-5 text-amber-600" />}
@@ -293,9 +293,9 @@ export default function AdminProblemiSaletteScreen({ adminPin }: Props) {
 
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
-                        <h3 className="font-semibold text-gray-900 text-sm">{prob.tipo_problema}</h3>
+                        <h3 className="font-semibold text-gray-900 dark:text-gray-100 text-sm">{prob.tipo_problema}</h3>
                         {prob.sezione && (
-                          <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-600">
+                          <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300">
                             {getSezione(prob.sezione).label}
                           </span>
                         )}
@@ -311,7 +311,7 @@ export default function AdminProblemiSaletteScreen({ adminPin }: Props) {
 
                       {/* SALETTA */}
                       {prob.salette && (
-                        <p className="text-sm text-gray-700 font-medium mt-0.5">
+                        <p className="text-sm text-gray-700 dark:text-gray-300 font-medium mt-0.5">
                           {prob.salette.stazione}
                           {prob.salette.tipo && ` — ${prob.salette.tipo}`}
                         </p>
@@ -330,7 +330,7 @@ export default function AdminProblemiSaletteScreen({ adminPin }: Props) {
 
                       {/* NOTE */}
                       {prob.note && (
-                        <p className="text-xs text-gray-500 italic mt-1 bg-gray-50 rounded-lg px-2 py-1">
+                        <p className="text-xs text-gray-500 dark:text-gray-400 italic mt-1 bg-gray-50 dark:bg-gray-800 rounded-lg px-2 py-1">
                           {prob.note}
                         </p>
                       )}
@@ -340,7 +340,7 @@ export default function AdminProblemiSaletteScreen({ adminPin }: Props) {
                     <button
                       type="button"
                       onClick={() => setDettaglio(prob)}
-                      className="text-xs text-gray-400 hover:text-gray-600 underline flex-shrink-0"
+                      className="text-xs text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 underline flex-shrink-0"
                     >
                       Dettaglio
                     </button>
@@ -382,7 +382,7 @@ export default function AdminProblemiSaletteScreen({ adminPin }: Props) {
                         type="button"
                         onClick={() => cambiaStato(prob.id, 'archiviata')}
                         disabled={isProcessing}
-                        className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-gray-200 text-gray-700 text-xs font-medium hover:opacity-90 disabled:opacity-50"
+                        className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200 text-xs font-medium hover:opacity-90 disabled:opacity-50"
                       >
                         <Archive className="w-3.5 h-3.5" />
                         Archivia
@@ -394,7 +394,7 @@ export default function AdminProblemiSaletteScreen({ adminPin }: Props) {
                         type="button"
                         onClick={() => cambiaStato(prob.id, 'aperta')}
                         disabled={isProcessing}
-                        className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-gray-100 text-gray-600 text-xs font-medium hover:opacity-90 disabled:opacity-50"
+                        className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 text-xs font-medium hover:opacity-90 disabled:opacity-50"
                       >
                         Riapri
                       </button>
@@ -416,10 +416,10 @@ export default function AdminProblemiSaletteScreen({ adminPin }: Props) {
           className="fixed inset-0 bg-black/40 z-[9999] flex items-end sm:items-center justify-center p-0 sm:p-4"
           onClick={(e) => { if (e.target === e.currentTarget) setDettaglio(null); }}
         >
-          <div className="bg-white rounded-t-3xl sm:rounded-3xl w-full sm:max-w-md p-5 flex flex-col gap-4">
+          <div className="bg-white dark:bg-gray-900 rounded-t-3xl sm:rounded-3xl w-full sm:max-w-md p-5 flex flex-col gap-4">
 
             <div className="flex items-center justify-between">
-              <h2 className="text-lg font-bold text-gray-900">Dettaglio problema</h2>
+              <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100">Dettaglio problema</h2>
               <button onClick={() => setDettaglio(null)}>
                 <X className="w-5 h-5 text-gray-400" />
               </button>
@@ -438,7 +438,7 @@ export default function AdminProblemiSaletteScreen({ adminPin }: Props) {
               ].map(({ label, value }) => (
                 <div key={label} className="flex justify-between gap-4 border-b border-gray-50 pb-2">
                   <span className="text-gray-500 font-medium flex-shrink-0">{label}</span>
-                  <span className="text-gray-900 text-right">{value}</span>
+                  <span className="text-gray-900 dark:text-gray-100 text-right">{value}</span>
                 </div>
               ))}
             </div>
@@ -459,7 +459,7 @@ export default function AdminProblemiSaletteScreen({ adminPin }: Props) {
               )}
               {dettaglio.stato !== 'archiviata' && (
                 <button onClick={() => cambiaStato(dettaglio.id, 'archiviata')}
-                  className="flex-1 py-2 rounded-xl bg-gray-200 text-gray-700 text-sm font-medium hover:opacity-90">
+                  className="flex-1 py-2 rounded-xl bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200 text-sm font-medium hover:opacity-90">
                   Archivia
                 </button>
               )}
