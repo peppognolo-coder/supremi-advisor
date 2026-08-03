@@ -263,7 +263,7 @@ export default function SaletteScreen({
             placeholder="Cerca stazione o tipo..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full bg-white border border-gray-200 rounded-xl pl-9 pr-9 py-2.5 text-base"
+            className="w-full bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl pl-9 pr-9 py-2.5 text-base"
           />
           {search.length > 0 && (
             <button
@@ -293,18 +293,18 @@ export default function SaletteScreen({
           {/* EMPTY */}
           {!loading && filtered.length === 0 && (
             <div className="flex flex-col items-center justify-center py-16 px-6 gap-4 text-center">
-              <div className="w-14 h-14 rounded-2xl bg-gray-100 flex items-center justify-center">
+              <div className="w-14 h-14 rounded-2xl bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
                 <DoorOpen className="w-7 h-7 text-gray-400" />
               </div>
               <div>
-                <p className="font-semibold text-gray-700">Nessuna saletta trovata</p>
+                <p className="font-semibold text-gray-700 dark:text-gray-300">Nessuna saletta trovata</p>
                 <p className="text-sm text-gray-400 mt-1 max-w-xs leading-relaxed">
                   Nessun risultato per "{search}". La saletta non è ancora in elenco?
                 </p>
               </div>
               <button
                 onClick={() => setSearch('')}
-                className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gray-100 text-gray-700 text-sm font-medium hover:bg-gray-200 transition-colors"
+                className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 text-sm font-medium hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
               >
                 <X className="w-4 h-4" />
                 Cancella ricerca
