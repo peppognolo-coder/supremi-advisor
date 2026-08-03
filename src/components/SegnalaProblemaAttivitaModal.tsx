@@ -142,7 +142,7 @@ export default function SegnalaProblemaAttivitaModal({
 
     <div className="fixed inset-0 z-[9999] bg-black/40 flex items-end justify-center p-4">
 
-      <div ref={panelRef} style={{ ...dragStyle, paddingBottom: 'max(1.25rem, env(safe-area-inset-bottom))' }} onTouchStart={handleDragStart} className="bg-white rounded-3xl w-full max-w-md flex flex-col gap-4 px-5 pt-5 shadow-2xl animate-in slide-in-from-bottom duration-200">
+      <div ref={panelRef} style={{ ...dragStyle, paddingBottom: 'max(1.25rem, env(safe-area-inset-bottom))' }} onTouchStart={handleDragStart} className="bg-white dark:bg-gray-900 rounded-3xl w-full max-w-md flex flex-col gap-4 px-5 pt-5 shadow-2xl animate-in slide-in-from-bottom duration-200">
           {/* DRAG INDICATOR */}
           <div className="flex justify-center pt-3 pb-1 cursor-grab active:cursor-grabbing flex-shrink-0">
             <div className="w-10 h-1 rounded-full bg-gray-200" />
@@ -161,7 +161,7 @@ export default function SegnalaProblemaAttivitaModal({
 
             <div>
 
-              <h2 className="text-base font-semibold text-gray-900">
+              <h2 className="text-base font-semibold text-gray-900 dark:text-gray-100">
 
                 Segnala un problema
 
@@ -179,7 +179,7 @@ export default function SegnalaProblemaAttivitaModal({
 
           <button
             onClick={onClose}
-            className="w-8 h-8 rounded-full hover:bg-gray-100 flex items-center justify-center transition-colors"
+            className="w-8 h-8 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 flex items-center justify-center transition-colors"
           >
 
             <X className="w-4 h-4 text-gray-400" />
@@ -198,7 +198,7 @@ export default function SegnalaProblemaAttivitaModal({
               className={`flex items-center gap-3 px-4 py-3 rounded-xl border cursor-pointer transition-colors ${
                 tipoProblema === tipo.value
                   ? 'bg-amber-50 border-amber-200 text-amber-900'
-                  : 'bg-white border-gray-200 text-gray-700 hover:border-gray-300'
+                  : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:border-gray-300 dark:hover:border-gray-600'
               }`}
             >
 
@@ -239,7 +239,7 @@ export default function SegnalaProblemaAttivitaModal({
               setNota(e.target.value)
             }
             placeholder="Descrivi il problema con più dettagli..."
-            className="mt-1 w-full border border-gray-200 rounded-xl px-3 py-2 text-base min-h-[80px] resize-none focus:outline-none focus:ring-2 focus:ring-amber-300 focus:border-amber-300"
+            className="mt-1 w-full border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2 text-base min-h-[80px] resize-none focus:outline-none focus:ring-2 focus:ring-amber-300 focus:border-amber-300 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
           />
 
         </div>
