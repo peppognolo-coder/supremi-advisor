@@ -35,13 +35,13 @@ export const FavoriteStations: React.FC<FavoriteStationsProps> = ({
           {[1, 2, 3].map((i) => (
             <div
               key={i}
-              className="flex-shrink-0 w-32 h-16 rounded-2xl bg-gray-100 animate-pulse"
+              className="flex-shrink-0 w-32 h-16 rounded-2xl bg-gray-100 dark:bg-gray-800 animate-pulse"
             />
           ))}
         </div>
       ) : stations.length === 0 ? (
-        <div className="mx-4 bg-white rounded-2xl border border-gray-100 px-4 py-5 text-center">
-          <Star className="w-6 h-6 text-gray-300 mx-auto mb-2" />
+        <div className="mx-4 bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 px-4 py-5 text-center">
+          <Star className="w-6 h-6 text-gray-300 dark:text-gray-600 mx-auto mb-2" />
           <p className="text-sm text-gray-400 font-medium">Nessuna stazione preferita</p>
           <p className="text-xs text-gray-400 mt-1">
             Aggiungi le stazioni che usi più spesso dalla schermata Stazioni
@@ -59,7 +59,7 @@ export const FavoriteStations: React.FC<FavoriteStationsProps> = ({
                   'flex-shrink-0 flex flex-col gap-1 px-4 py-3 rounded-2xl border transition-all duration-150 active:scale-95',
                   isActive
                     ? 'bg-trenord-green border-trenord-green text-white shadow-md'
-                    : 'bg-white border-gray-100 text-gray-800 shadow-sm',
+                    : 'bg-white dark:bg-gray-900 border-gray-100 dark:border-gray-800 text-gray-800 dark:text-gray-100 shadow-sm',
                 ].join(' ')}
               >
                 <div className="flex items-center gap-1.5">
