@@ -22,6 +22,7 @@ import {
 } from '../lib/adminApi';
 
 import { exportProblemiSalette } from '../lib/exportProblemiSalette';
+import { getSezione } from '../lib/localitaSezioni';
 
 // =========================
 // PROPS
@@ -293,6 +294,11 @@ export default function AdminProblemiSaletteScreen({ adminPin }: Props) {
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
                         <h3 className="font-semibold text-gray-900 text-sm">{prob.tipo_problema}</h3>
+                        {prob.sezione && (
+                          <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-600">
+                            {getSezione(prob.sezione).label}
+                          </span>
+                        )}
                         <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${cfg.bg} ${cfg.text}`}>
                           {cfg.label}
                         </span>
