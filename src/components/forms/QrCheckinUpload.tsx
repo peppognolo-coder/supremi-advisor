@@ -53,10 +53,10 @@ export default function QrCheckinUpload({ onChange }: Props) {
   }
 
   return (
-    <div className="border border-gray-200 rounded-2xl p-4 flex flex-col gap-3">
+    <div className="border border-gray-200 dark:border-gray-700 rounded-2xl p-4 flex flex-col gap-3">
       <div className="flex items-center gap-2">
         <QrCode className="w-4 h-4 text-gray-500" />
-        <h3 className="font-semibold text-gray-900 text-sm">QR check-in (facoltativo)</h3>
+        <h3 className="font-semibold text-gray-900 dark:text-gray-100 text-sm">QR check-in (facoltativo)</h3>
       </div>
       <p className="text-xs text-gray-400 -mt-2">
         Puoi caricarlo ora oppure aggiungerlo in seguito.
@@ -89,7 +89,7 @@ export default function QrCheckinUpload({ onChange }: Props) {
             type="date"
             value={scadenza}
             onChange={(e) => handleScadenzaChange(e.target.value)}
-            className="mt-1 border border-gray-200 rounded-xl px-3 py-2 w-full text-base"
+            className="mt-1 border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2 w-full text-base bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
           />
         </div>
       )}
