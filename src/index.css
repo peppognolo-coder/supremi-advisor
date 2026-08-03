@@ -179,6 +179,11 @@ body::before {
   z-index: 999;
 }
 
+.dark body::before {
+
+  background: #030712; /* gray-950, stesso colore dello sfondo principale in dark mode */
+}
+
 /* =========================
    SMOOTH SCROLL
 ========================= */
