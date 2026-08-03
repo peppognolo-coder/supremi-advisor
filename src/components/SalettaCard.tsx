@@ -477,7 +477,7 @@ export default function SalettaCard({
                       setTokenError('');
                     }}
                     placeholder="000000"
-                    className={`mt-1 border rounded-xl px-4 py-3 w-full text-2xl font-mono tracking-widest text-center focus:outline-none focus:ring-2 focus:ring-gray-900/20 ${
+                    className={`mt-1 border rounded-xl px-4 py-3 w-full text-2xl font-mono tracking-widest text-center focus:outline-none focus:ring-2 focus:ring-gray-900/20 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 ${
                       tokenError ? 'border-red-400' : 'border-gray-200 dark:border-gray-700'
                     }`}
                   />
