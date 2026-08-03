@@ -4,6 +4,8 @@ import { useScrollLock } from '../lib/useScrollLock';
 import { X, Store, Plus, Trash2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { supabase } from '../lib/supabase';
+import { getDeviceId } from '../lib/device';
+import { messaggioErroreInvio } from '../lib/rateLimitError';
 import { useSwipeDown } from '../lib/useSwipeDown';
 import { CATEGORIE_ATTIVITA, DISTANZE_ATTIVITA, CATEGORIE_ALIMENTARI, addAttivita, uploadQrHotel } from '../lib/adminApi';
 import type { HotelDatiExtra } from '../lib/adminApi';
@@ -147,9 +149,10 @@ export default function AddAttivitaModal({ stazioneId, onClose, onSuccess, direc
         tipo:  'attivita',
         dati:  payload,
         stato: 'pending',
+        device_id: getDeviceId(),
       });
       ok = !error;
-      errorMsg = error?.message ?? null;
+      errorMsg = error ? messaggioErroreInvio(error) : null;
     }
 
     setLoading(false);
