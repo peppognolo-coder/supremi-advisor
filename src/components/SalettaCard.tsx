@@ -168,7 +168,7 @@ export default function SalettaCard({
 
   return (
     <>
-      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+      <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 shadow-sm overflow-hidden">
 
         {/* HEADER */}
         <button
@@ -176,7 +176,7 @@ export default function SalettaCard({
           className="w-full text-left p-4 flex items-center justify-between"
         >
           <div>
-            <h2 className="text-xl font-bold text-gray-900">
+            <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">
               {formatTitle(stazioneName)}
             </h2>
             <p className="text-sm text-gray-500 mt-1">
@@ -192,23 +192,23 @@ export default function SalettaCard({
 
         {/* CONTENUTO */}
         {expanded && (
-          <div className="border-t border-gray-100 p-4 flex flex-col gap-4 bg-gray-50">
+          <div className="border-t border-gray-100 dark:border-gray-800 p-4 flex flex-col gap-4 bg-gray-50 dark:bg-gray-950">
             {salette.map((saletta) => (
               <div
                 key={saletta.id}
-                className="bg-white rounded-xl border border-gray-100 p-4 flex flex-col gap-4"
+                className="bg-white dark:bg-gray-900 rounded-xl border border-gray-100 dark:border-gray-800 p-4 flex flex-col gap-4"
               >
                 {/* TIPO / SEZIONE */}
                 <div className="flex items-center justify-between">
                   <div>
-                    <h3 className="font-semibold text-gray-900 text-lg">
+                    <h3 className="font-semibold text-gray-900 dark:text-gray-100 text-lg">
                       {getSezione(saletta.tipo).label}
                       {saletta.etichetta && (
                         <span className="text-gray-400 font-normal"> — {formatTitle(saletta.etichetta)}</span>
                       )}
                     </h3>
                     {saletta.ubicazione && (
-                      <div className="flex items-center gap-2 text-sm text-gray-500 mt-1">
+                      <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400 mt-1">
                         <MapPin className="w-4 h-4" />
                         <span>{formatTitle(saletta.ubicazione)}</span>
                       </div>
@@ -225,7 +225,7 @@ export default function SalettaCard({
 
                 {/* MODALITÀ / TIPOLOGIA DI ACCESSO — bagni, cancelletto */}
                 {(saletta.modalita_accesso || saletta.tipologia_accesso) && (
-                  <div className="flex items-center gap-2 text-sm text-gray-600 bg-gray-50 border border-gray-100 rounded-xl px-3 py-2">
+                  <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-300 bg-gray-50 dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-xl px-3 py-2">
                     <KeyRound className="w-4 h-4 flex-shrink-0" />
                     <span>Accesso: {saletta.modalita_accesso ?? saletta.tipologia_accesso}</span>
                   </div>
@@ -234,19 +234,19 @@ export default function SalettaCard({
                 {/* DOTAZIONI — solo per la sala equipaggi, dove hanno senso */}
                 {getSezione(saletta.tipo).id === 'equipaggi' && (
                   <div className="grid grid-cols-2 gap-2">
-                    <div className={`flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-medium transition-colors ${saletta.microonde ? 'bg-emerald-50 text-emerald-700 border border-emerald-100' : 'bg-gray-50 text-gray-400 border border-gray-100'}`}>
+                    <div className={`flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-medium transition-colors ${saletta.microonde ? 'bg-emerald-50 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-400 border border-emerald-100 dark:border-emerald-900' : 'bg-gray-50 dark:bg-gray-800 text-gray-400 dark:text-gray-500 border border-gray-100 dark:border-gray-700'}`}>
                       <Microwave className={`w-4 h-4 flex-shrink-0 ${saletta.microonde ? 'text-emerald-600' : 'text-gray-300'}`} />
                       <span>Microonde</span>
                     </div>
-                    <div className={`flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-medium transition-colors ${saletta.distributori ? 'bg-emerald-50 text-emerald-700 border border-emerald-100' : 'bg-gray-50 text-gray-400 border border-gray-100'}`}>
+                    <div className={`flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-medium transition-colors ${saletta.distributori ? 'bg-emerald-50 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-400 border border-emerald-100 dark:border-emerald-900' : 'bg-gray-50 dark:bg-gray-800 text-gray-400 dark:text-gray-500 border border-gray-100 dark:border-gray-700'}`}>
                       <Coffee className={`w-4 h-4 flex-shrink-0 ${saletta.distributori ? 'text-emerald-600' : 'text-gray-300'}`} />
                       <span>Distributori</span>
                     </div>
-                    <div className={`flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-medium transition-colors ${saletta.acqua ? 'bg-emerald-50 text-emerald-700 border border-emerald-100' : 'bg-gray-50 text-gray-400 border border-gray-100'}`}>
+                    <div className={`flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-medium transition-colors ${saletta.acqua ? 'bg-emerald-50 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-400 border border-emerald-100 dark:border-emerald-900' : 'bg-gray-50 dark:bg-gray-800 text-gray-400 dark:text-gray-500 border border-gray-100 dark:border-gray-700'}`}>
                       <Droplets className={`w-4 h-4 flex-shrink-0 ${saletta.acqua ? 'text-emerald-600' : 'text-gray-300'}`} />
                       <span>Acqua</span>
                     </div>
-                    <div className={`flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-medium transition-colors ${saletta.climatizzata ? 'bg-emerald-50 text-emerald-700 border border-emerald-100' : 'bg-gray-50 text-gray-400 border border-gray-100'}`}>
+                    <div className={`flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-medium transition-colors ${saletta.climatizzata ? 'bg-emerald-50 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-400 border border-emerald-100 dark:border-emerald-900' : 'bg-gray-50 dark:bg-gray-800 text-gray-400 dark:text-gray-500 border border-gray-100 dark:border-gray-700'}`}>
                       <Snowflake className={`w-4 h-4 flex-shrink-0 ${saletta.climatizzata ? 'text-emerald-600' : 'text-gray-300'}`} />
                       <span>Climatizzata</span>
                     </div>
@@ -256,11 +256,11 @@ export default function SalettaCard({
                 {/* DOCCE / ARMADIETTI — solo spogliatoi */}
                 {getSezione(saletta.tipo).id === 'spogliatoi' && (
                   <div className="grid grid-cols-2 gap-2">
-                    <div className={`flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-medium transition-colors ${saletta.docce ? 'bg-emerald-50 text-emerald-700 border border-emerald-100' : 'bg-gray-50 text-gray-400 border border-gray-100'}`}>
+                    <div className={`flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-medium transition-colors ${saletta.docce ? 'bg-emerald-50 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-400 border border-emerald-100 dark:border-emerald-900' : 'bg-gray-50 dark:bg-gray-800 text-gray-400 dark:text-gray-500 border border-gray-100 dark:border-gray-700'}`}>
                       <Droplets className={`w-4 h-4 flex-shrink-0 ${saletta.docce ? 'text-emerald-600' : 'text-gray-300'}`} />
                       <span>Docce</span>
                     </div>
-                    <div className={`flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-medium transition-colors ${saletta.armadietti ? 'bg-emerald-50 text-emerald-700 border border-emerald-100' : 'bg-gray-50 text-gray-400 border border-gray-100'}`}>
+                    <div className={`flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-medium transition-colors ${saletta.armadietti ? 'bg-emerald-50 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-400 border border-emerald-100 dark:border-emerald-900' : 'bg-gray-50 dark:bg-gray-800 text-gray-400 dark:text-gray-500 border border-gray-100 dark:border-gray-700'}`}>
                       <Shirt className={`w-4 h-4 flex-shrink-0 ${saletta.armadietti ? 'text-emerald-600' : 'text-gray-300'}`} />
                       <span>Armadietti</span>
                     </div>
@@ -274,14 +274,14 @@ export default function SalettaCard({
                     return (
                       <div className="flex flex-col gap-2">
                         <div className={`inline-flex self-start items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium ${
-                          stato.aperto ? 'bg-emerald-100 text-emerald-700' : 'bg-gray-100 text-gray-500'
+                          stato.aperto ? 'bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-400' : 'bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400'
                         }`}>
                           <Clock className="w-3.5 h-3.5" />
                           {stato.testo}
                         </div>
                         <div className="flex flex-col gap-1">
                           {saletta.fasce_orarie.map((f, i) => (
-                            <div key={i} className="text-xs text-gray-500">
+                            <div key={i} className="text-xs text-gray-500 dark:text-gray-400">
                               {f.giorni.join(', ') || '—'}: {f.apertura || '—'}–{f.chiusura || '—'}
                             </div>
                           ))}
@@ -295,7 +295,7 @@ export default function SalettaCard({
 
                 {/* NOTE */}
                 {saletta.note && (
-                  <div className="bg-gray-50 border border-gray-100 rounded-xl p-3 text-sm text-gray-600">
+                  <div className="bg-gray-50 dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-xl p-3 text-sm text-gray-600 dark:text-gray-300">
                     {formatTitle(saletta.note)}
                   </div>
                 )}
@@ -379,7 +379,7 @@ export default function SalettaCard({
           style={{ overscrollBehavior: 'contain' }}
           onClick={(e) => { if (e.target === e.currentTarget) chiudiModalCodice(); }}
         >
-          <div className="bg-white rounded-3xl w-full max-w-sm flex flex-col gap-5 p-6 max-h-[80vh] overflow-y-auto">
+          <div className="bg-white dark:bg-gray-900 rounded-3xl w-full max-w-sm flex flex-col gap-5 p-6 max-h-[80dvh] overflow-y-auto">
 
             {/* HEADER */}
             <div className="flex items-start justify-between">
@@ -388,7 +388,7 @@ export default function SalettaCard({
                   <KeyRound className="w-5 h-5 text-white" />
                 </div>
                 <div>
-                  <h2 className="font-bold text-gray-900">Codice di accesso</h2>
+                  <h2 className="font-bold text-gray-900 dark:text-gray-100">Codice di accesso</h2>
                   <p className="text-xs text-gray-400 mt-0.5">Inserisci il codice dall'Authenticator</p>
                 </div>
               </div>
@@ -402,9 +402,9 @@ export default function SalettaCard({
               <div className="flex flex-col gap-4">
 
                 {/* COUNTDOWN */}
-                <div className="flex items-center justify-between bg-gray-50 rounded-xl px-4 py-2">
-                  <span className="text-xs text-gray-500">Il codice si nasconde tra</span>
-                  <span className={`font-mono font-bold text-sm ${secondiRimasti <= 60 ? 'text-red-600' : 'text-gray-800'}`}>
+                <div className="flex items-center justify-between bg-gray-50 dark:bg-gray-800 rounded-xl px-4 py-2">
+                  <span className="text-xs text-gray-500 dark:text-gray-400">Il codice si nasconde tra</span>
+                  <span className={`font-mono font-bold text-sm ${secondiRimasti <= 60 ? 'text-red-600 dark:text-red-400' : 'text-gray-800 dark:text-gray-200'}`}>
                     {formatCountdown(secondiRimasti)}
                   </span>
                 </div>
@@ -478,7 +478,7 @@ export default function SalettaCard({
                     }}
                     placeholder="000000"
                     className={`mt-1 border rounded-xl px-4 py-3 w-full text-2xl font-mono tracking-widest text-center focus:outline-none focus:ring-2 focus:ring-gray-900/20 ${
-                      tokenError ? 'border-red-400' : 'border-gray-200'
+                      tokenError ? 'border-red-400' : 'border-gray-200 dark:border-gray-700'
                     }`}
                   />
                   {tokenError && (
