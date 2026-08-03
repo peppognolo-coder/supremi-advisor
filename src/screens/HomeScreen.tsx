@@ -6,6 +6,7 @@ import type { HomeStationData } from '../hooks/useHomeStation';
 
 import { useHomeFavorites } from '../hooks/useHomeFavorites';
 import { getHomeFeed } from '../lib/homeFeed';
+import SceltaSegnalazioneModal from '../components/SceltaSegnalazioneModal';
 
 import {
   StazioneCard,
@@ -124,13 +125,18 @@ const HomeScreen: React.FC<HomeScreenProps> = ({
     }
   }
 
+  const [showSceltaSegnalazione, setShowSceltaSegnalazione] = useState(false);
+
   function handleNuovoContributo() { onNavigate('contributi'); }
 
   function handleSegnalaProblema() {
     if (stationData?.stazione.nome) {
       onOpenSegnalazione(stationData.stazione.nome);
     } else {
-      onNavigate('salette');
+      // Nessuna stazione selezionata: invece di un tab generico non
+      // filtrato, chiediamo subito "cosa vuoi segnalare" e portiamo
+      // l'utente al posto giusto in un tap.
+      setShowSceltaSegnalazione(true);
     }
   }
 
@@ -219,7 +225,6 @@ const HomeScreen: React.FC<HomeScreenProps> = ({
         />
 
         <QuickActions
-          stazioneId={activeStationId ?? undefined}
           onNuovoContributo={handleNuovoContributo}
           onSegnalaProblema={handleSegnalaProblema}
         />
@@ -235,6 +240,14 @@ const HomeScreen: React.FC<HomeScreenProps> = ({
 
         <UpdateFeed items={feedItemsOrdinati} loading={feedLoading} onItemClick={handleFeedItemClick} />
       </div>
+
+      {showSceltaSegnalazione && (
+        <SceltaSegnalazioneModal
+          onClose={() => setShowSceltaSegnalazione(false)}
+          onScegliSaletta={() => { setShowSceltaSegnalazione(false); onNavigate('salette'); }}
+          onScegliAttivita={() => { setShowSceltaSegnalazione(false); onNavigate('stazioni'); }}
+        />
+      )}
     </div>
   );
 };
