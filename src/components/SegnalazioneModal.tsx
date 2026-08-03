@@ -10,6 +10,8 @@ import {
 import toast from 'react-hot-toast';
 
 import { supabase } from '../lib/supabase';
+import { getDeviceId } from '../lib/device';
+import { messaggioErroreInvio } from '../lib/rateLimitError';
 
 import { useSwipeDown } from '../lib/useSwipeDown';
 
@@ -204,13 +206,14 @@ export default function SegnalazioneModal({
           nota: nota.trim() || null,
         },
         stato: 'pending',
+        device_id: getDeviceId(),
       });
 
     setLoading(false);
 
     if (error) {
       console.error(error);
-      toast.error('Errore invio segnalazione');
+      toast.error(messaggioErroreInvio(error));
       return;
     }
 
