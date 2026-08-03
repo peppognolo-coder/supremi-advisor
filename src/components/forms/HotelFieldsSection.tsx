@@ -4,7 +4,7 @@ function Switch({ label, value, onChange }: { label: string; value: boolean; onC
   return (
     <button type="button" onClick={() => onChange(!value)}
       className={`flex items-center justify-between rounded-xl border px-4 py-3 transition-colors ${
-        value ? 'bg-trenord-green text-white border-trenord-green' : 'bg-white border-gray-200 text-gray-700'
+        value ? 'bg-trenord-green text-white border-trenord-green' : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300'
       }`}>
       <span className="text-base font-medium">{label}</span>
       <span className="text-sm">{value ? 'SÌ' : 'NO'}</span>
@@ -39,7 +39,7 @@ export default function HotelFieldsSection({ value, onChange }: Props) {
           onChange={(e) => set('telefono', e.target.value)}
           placeholder="+39 02 1234567"
           type="tel"
-          className="border border-gray-200 rounded-xl px-3 py-2.5 text-base bg-white"
+          className="border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2.5 text-base bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
         />
       </div>
 
@@ -63,7 +63,7 @@ export default function HotelFieldsSection({ value, onChange }: Props) {
           onChange={(e) => set('note_equipaggi', e.target.value)}
           rows={3}
           placeholder="es. colazione dalle 6:00, navetta ogni 30 min, check-in anticipato possibile..."
-          className="border border-gray-200 rounded-xl px-3 py-2.5 text-base resize-none bg-white"
+          className="border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2.5 text-base resize-none bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
         />
       </div>
     </div>
