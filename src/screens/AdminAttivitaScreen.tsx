@@ -74,11 +74,11 @@ function ConfirmModal({
 }) {
   return (
     <div className="fixed inset-0 bg-black/40 z-[9999] flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl w-full max-w-sm p-6 flex flex-col gap-4">
-        <p className="text-sm text-gray-700">{message}</p>
+      <div className="bg-white dark:bg-gray-900 rounded-2xl w-full max-w-sm p-6 flex flex-col gap-4">
+        <p className="text-sm text-gray-700 dark:text-gray-300">{message}</p>
         <div className="flex gap-2">
           <button onClick={onCancel} disabled={loading}
-            className="flex-1 px-4 py-2 rounded-xl border border-gray-200 text-sm text-gray-600 hover:bg-gray-50 disabled:opacity-50">
+            className="flex-1 px-4 py-2 rounded-xl border border-gray-200 dark:border-gray-700 text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 disabled:opacity-50">
             Annulla
           </button>
           <button onClick={onConfirm} disabled={loading}
@@ -104,14 +104,14 @@ function PickStazioneModal({
   const [stazioneId, setStazioneId] = useState(stazioni[0]?.id ?? '');
   return (
     <div className="fixed inset-0 bg-black/40 z-[9999] flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl w-full max-w-sm p-6 flex flex-col gap-4">
-        <h2 className="text-lg font-bold text-gray-900">Aggiungi attività</h2>
+      <div className="bg-white dark:bg-gray-900 rounded-2xl w-full max-w-sm p-6 flex flex-col gap-4">
+        <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100">Aggiungi attività</h2>
         <div className="flex flex-col gap-1">
           <label className="text-xs font-semibold text-gray-400 uppercase">Stazione *</label>
           <select
             value={stazioneId}
             onChange={(e) => setStazioneId(e.target.value)}
-            className="border border-gray-200 rounded-xl px-3 py-2 text-base"
+            className="border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2 text-base bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
             autoFocus
           >
             {stazioni.length === 0 && <option value="">Nessuna stazione disponibile</option>}
@@ -122,7 +122,7 @@ function PickStazioneModal({
         </div>
         <div className="flex gap-2">
           <button onClick={onCancel}
-            className="flex-1 px-4 py-2 rounded-xl border border-gray-200 text-sm text-gray-600 hover:bg-gray-50">
+            className="flex-1 px-4 py-2 rounded-xl border border-gray-200 dark:border-gray-700 text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800">
             Annulla
           </button>
           <button
@@ -365,7 +365,7 @@ export default function AdminAttivitaScreen({ adminPin, initialEditId }: Props) 
         {/* TITLE */}
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">Gestione Attività</h1>
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Gestione Attività</h1>
             <p className="text-sm text-gray-500 mt-1">Visualizza e gestisci le attività delle stazioni</p>
           </div>
           <button
@@ -382,15 +382,15 @@ export default function AdminAttivitaScreen({ adminPin, initialEditId }: Props) 
         {/* CONTATORI */}
         {!loading && (
           <div className="grid grid-cols-3 gap-3">
-            <div className="bg-white rounded-2xl border border-gray-100 p-3 shadow-sm text-center">
-              <div className="text-2xl font-bold text-gray-900">{attivita.length}</div>
+            <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 p-3 shadow-sm text-center">
+              <div className="text-2xl font-bold text-gray-900 dark:text-gray-100">{attivita.length}</div>
               <div className="text-xs text-gray-500 mt-1 uppercase tracking-wide">Totali</div>
             </div>
-            <div className="bg-white rounded-2xl border border-emerald-100 p-3 shadow-sm text-center">
+            <div className="bg-white dark:bg-gray-900 rounded-2xl border border-emerald-100 dark:border-emerald-900 p-3 shadow-sm text-center">
               <div className="text-2xl font-bold text-emerald-600">{conteggioAttive}</div>
               <div className="text-xs text-gray-500 mt-1 uppercase tracking-wide">Attive</div>
             </div>
-            <div className="bg-white rounded-2xl border border-red-100 p-3 shadow-sm text-center">
+            <div className="bg-white dark:bg-gray-900 rounded-2xl border border-red-100 dark:border-red-900 p-3 shadow-sm text-center">
               <div className="text-2xl font-bold text-red-500">{conteggioEliminate}</div>
               <div className="text-xs text-gray-500 mt-1 uppercase tracking-wide">Eliminate</div>
             </div>
@@ -405,16 +405,16 @@ export default function AdminAttivitaScreen({ adminPin, initialEditId }: Props) 
                 className={`px-4 py-2 rounded-xl text-sm font-medium border transition-colors ${
                   filtro === opt.mode
                     ? 'bg-trenord-green text-white border-trenord-green'
-                    : 'bg-white text-gray-600 border-gray-200 hover:border-trenord-green hover:text-trenord-green'
+                    : 'bg-white dark:bg-gray-900 text-gray-600 dark:text-gray-300 border-gray-200 dark:border-gray-700 hover:border-trenord-green hover:text-trenord-green'
                 }`}>
                 {opt.label}
                 {opt.mode === 'attive' && (
-                  <span className={`ml-1.5 text-xs px-1.5 py-0.5 rounded-full ${filtro === 'attive' ? 'bg-white/20' : 'bg-emerald-100 text-emerald-700'}`}>
+                  <span className={`ml-1.5 text-xs px-1.5 py-0.5 rounded-full ${filtro === 'attive' ? 'bg-white/20' : 'bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-400'}`}>
                     {conteggioAttive}
                   </span>
                 )}
                 {opt.mode === 'eliminate' && (
-                  <span className={`ml-1.5 text-xs px-1.5 py-0.5 rounded-full ${filtro === 'eliminate' ? 'bg-white/20' : 'bg-red-100 text-red-600'}`}>
+                  <span className={`ml-1.5 text-xs px-1.5 py-0.5 rounded-full ${filtro === 'eliminate' ? 'bg-white/20' : 'bg-red-100 dark:bg-red-950 text-red-600 dark:text-red-400'}`}>
                     {conteggioEliminate}
                   </span>
                 )}
@@ -425,7 +425,7 @@ export default function AdminAttivitaScreen({ adminPin, initialEditId }: Props) 
 
         {/* EMPTY */}
         {!loading && attivitaFiltrate.length === 0 && (
-          <div className="bg-white rounded-2xl border border-gray-100 p-6 text-sm text-gray-500 text-center">
+          <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 p-6 text-sm text-gray-500 dark:text-gray-400 text-center">
             {filtro === 'eliminate' ? 'Nessuna attività eliminata'
               : filtro === 'attive' ? 'Nessuna attività attiva'
               : 'Nessuna attività presente'}
@@ -441,7 +441,7 @@ export default function AdminAttivitaScreen({ adminPin, initialEditId }: Props) 
 
               return (
                 <div key={a.id}
-                  className={`bg-white rounded-2xl border p-4 shadow-sm flex flex-col gap-3 transition-opacity ${isActive ? 'border-gray-100' : 'border-red-100 opacity-70'}`}>
+                  className={`bg-white dark:bg-gray-900 rounded-2xl border p-4 shadow-sm flex flex-col gap-3 transition-opacity ${isActive ? 'border-gray-100 dark:border-gray-800' : 'border-red-100 dark:border-red-900 opacity-70'}`}>
 
                   {/* TOP */}
                   <div className="flex items-start gap-3">
@@ -450,7 +450,7 @@ export default function AdminAttivitaScreen({ adminPin, initialEditId }: Props) 
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
-                        <h3 className="font-semibold text-gray-900">{a.nome}</h3>
+                        <h3 className="font-semibold text-gray-900 dark:text-gray-100">{a.nome}</h3>
                         <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${isActive ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-600'}`}>
                           {isActive ? '🟢 Attiva' : '🔴 Eliminata'}
                         </span>
@@ -510,7 +510,7 @@ export default function AdminAttivitaScreen({ adminPin, initialEditId }: Props) 
       {editingAttivita && (
         <div className="fixed inset-0 bg-black/40 z-[9999] flex items-center justify-center p-4"
           onClick={(e) => { if (e.target === e.currentTarget) setEditingAttivita(null); }}>
-          <div className="bg-white rounded-3xl w-full max-w-2xl p-6 pb-24 flex flex-col gap-4 max-h-[90dvh] overflow-y-auto">
+          <div className="bg-white dark:bg-gray-900 rounded-3xl w-full max-w-2xl p-6 pb-24 flex flex-col gap-4 max-h-[90dvh] overflow-y-auto">
 
             <div className="flex items-center justify-between">
               <h2 className="text-xl font-bold">Modifica attività</h2>
@@ -523,7 +523,7 @@ export default function AdminAttivitaScreen({ adminPin, initialEditId }: Props) 
             <div className="flex flex-col gap-1">
               <label className="text-xs text-gray-500">Stazione</label>
               <input value={getNomeStazione(editingAttivita.stazione_id)} disabled
-                className="border rounded-xl px-3 py-2 bg-gray-100 text-gray-500 text-base" />
+                className="border dark:border-gray-700 rounded-xl px-3 py-2 bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 text-base" />
             </div>
 
             {/* NOME */}
@@ -776,7 +776,7 @@ export default function AdminAttivitaScreen({ adminPin, initialEditId }: Props) 
                             className={`rounded-xl border py-2 text-sm ${
                               giorni.includes(giorno)
                                 ? 'bg-trenord-green text-white border-trenord-green'
-                                : 'bg-white text-gray-700 border-gray-200'
+                                : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-700'
                             }`}
                           >
                             {giorno}
