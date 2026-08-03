@@ -36,6 +36,13 @@
     color: #111827;
   }
 
+  .dark body {
+
+    background-color: #030712; /* gray-950, stesso colore dello sfondo principale in dark mode */
+
+    color: #f3f4f6;
+  }
+
   button,
   a,
   input,
