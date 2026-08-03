@@ -46,7 +46,7 @@ export default function ContributiScreen() {
           {/* TITLE */}
           <div>
 
-            <h1 className="text-2xl font-bold text-gray-900">
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
 
               Contributi
 
@@ -63,7 +63,7 @@ export default function ContributiScreen() {
           {/* LOCALITÀ OPERATIVA */}
           <button
             onClick={() => setTipo('saletta')}
-            className="bg-white rounded-2xl border border-gray-100 p-5 shadow-sm flex items-center gap-4 hover:border-trenord-green transition-colors"
+            className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 p-5 shadow-sm flex items-center gap-4 hover:border-trenord-green transition-colors"
           >
 
             <div className="w-12 h-12 rounded-xl bg-trenord-green/10 flex items-center justify-center">
@@ -74,7 +74,7 @@ export default function ContributiScreen() {
 
             <div className="text-left">
 
-              <h2 className="font-semibold text-gray-900">
+              <h2 className="font-semibold text-gray-900 dark:text-gray-100">
 
                 Località operativa
 
@@ -93,7 +93,7 @@ export default function ContributiScreen() {
           {/* ATTIVITA */}
           <button
             onClick={() => setTipo('attivita')}
-            className="bg-white rounded-2xl border border-gray-100 p-5 shadow-sm flex items-center gap-4 hover:border-trenord-green transition-colors"
+            className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 p-5 shadow-sm flex items-center gap-4 hover:border-trenord-green transition-colors"
           >
 
             <div className="w-12 h-12 rounded-xl bg-blue-100 flex items-center justify-center">
@@ -104,7 +104,7 @@ export default function ContributiScreen() {
 
             <div className="text-left">
 
-              <h2 className="font-semibold text-gray-900">
+              <h2 className="font-semibold text-gray-900 dark:text-gray-100">
 
                 Attività convenzionata
 
@@ -123,7 +123,7 @@ export default function ContributiScreen() {
           {/* STAZIONE */}
           <button
             onClick={() => setTipo('stazione')}
-            className="bg-white rounded-2xl border border-gray-100 p-5 shadow-sm flex items-center gap-4 hover:border-trenord-green transition-colors"
+            className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 p-5 shadow-sm flex items-center gap-4 hover:border-trenord-green transition-colors"
           >
 
             <div className="w-12 h-12 rounded-xl bg-orange-100 flex items-center justify-center">
@@ -134,7 +134,7 @@ export default function ContributiScreen() {
 
             <div className="text-left">
 
-              <h2 className="font-semibold text-gray-900">
+              <h2 className="font-semibold text-gray-900 dark:text-gray-100">
 
                 Nuova stazione
 
