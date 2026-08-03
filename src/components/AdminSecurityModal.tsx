@@ -101,20 +101,20 @@ export default function AdminSecurityModal({ adminPin, onClose, onPinChanged }: 
       className="fixed inset-0 z-[9999] bg-black/40 flex items-end md:items-center justify-center p-0 md:p-4"
       onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
     >
-      <div className="bg-white w-full md:max-w-md rounded-t-3xl md:rounded-3xl flex flex-col max-h-[92dvh] md:max-h-[85dvh] overflow-hidden shadow-2xl">
+      <div className="bg-white dark:bg-gray-900 w-full md:max-w-md rounded-t-3xl md:rounded-3xl flex flex-col max-h-[92dvh] md:max-h-[85dvh] overflow-hidden shadow-2xl">
 
         {/* HEADER */}
-        <div className="flex-shrink-0 flex items-center justify-between px-5 py-4 border-b border-gray-100">
+        <div className="flex-shrink-0 flex items-center justify-between px-5 py-4 border-b border-gray-100 dark:border-gray-800">
           <div className="flex items-center gap-3">
             <div className="w-9 h-9 rounded-xl bg-trenord-green/10 flex items-center justify-center">
               <Shield className="w-5 h-5 text-trenord-green" />
             </div>
             <div>
-              <h2 className="font-bold text-gray-900">Sicurezza Admin</h2>
+              <h2 className="font-bold text-gray-900 dark:text-gray-100">Sicurezza Admin</h2>
               <p className="text-xs text-gray-400">PIN e autenticatore dedicato</p>
             </div>
           </div>
-          <button onClick={onClose} className="w-8 h-8 rounded-full hover:bg-gray-100 flex items-center justify-center">
+          <button onClick={onClose} className="w-8 h-8 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 flex items-center justify-center">
             <X className="w-4 h-4 text-gray-400" />
           </button>
         </div>
@@ -130,22 +130,22 @@ export default function AdminSecurityModal({ adminPin, onClose, onPinChanged }: 
 
               <button
                 onClick={() => { setSezione('totp'); if (!totpQr) caricaQrTotpAdmin(); }}
-                className="flex items-center gap-3 p-4 rounded-2xl border border-gray-200 hover:bg-gray-50 transition-colors text-left"
+                className="flex items-center gap-3 p-4 rounded-2xl border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors text-left"
               >
                 <Smartphone className="w-5 h-5 text-gray-500 flex-shrink-0" />
                 <div>
-                  <p className="font-medium text-gray-900 text-sm">Configura autenticatore admin</p>
+                  <p className="font-medium text-gray-900 dark:text-gray-100 text-sm">Configura autenticatore admin</p>
                   <p className="text-xs text-gray-400">QR dedicato, da scansionare una volta</p>
                 </div>
               </button>
 
               <button
                 onClick={() => setSezione('pin')}
-                className="flex items-center gap-3 p-4 rounded-2xl border border-gray-200 hover:bg-gray-50 transition-colors text-left"
+                className="flex items-center gap-3 p-4 rounded-2xl border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors text-left"
               >
                 <KeyRound className="w-5 h-5 text-gray-500 flex-shrink-0" />
                 <div>
-                  <p className="font-medium text-gray-900 text-sm">Cambia PIN</p>
+                  <p className="font-medium text-gray-900 dark:text-gray-100 text-sm">Cambia PIN</p>
                   <p className="text-xs text-gray-400">Richiede PIN attuale + autenticatore admin</p>
                 </div>
               </button>
@@ -161,14 +161,14 @@ export default function AdminSecurityModal({ adminPin, onClose, onPinChanged }: 
 
               {totpQr && !totpLoading && (
                 <>
-                  <p className="text-sm text-gray-600">
+                  <p className="text-sm text-gray-600 dark:text-gray-300">
                     Scansiona con Google Authenticator, Authy o app equivalente — usa un'app <strong>diversa da quella del personale</strong>, o la stessa app ma come voce separata (comparirà come "Supremi Advisor (Admin)").
                   </p>
-                  <img src={totpQr} alt="QR autenticatore admin" className="w-48 h-48 mx-auto rounded-xl border border-gray-200" />
+                  <img src={totpQr} alt="QR autenticatore admin" className="w-48 h-48 mx-auto rounded-xl border border-gray-200 dark:border-gray-700" />
                   {totpSecret && (
-                    <div className="bg-gray-50 border border-gray-200 rounded-xl p-3">
+                    <div className="bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-3">
                       <p className="text-xs text-gray-400 mb-1">Codice manuale (se non riesci a scansionare)</p>
-                      <p className="font-mono text-sm text-gray-700 break-all">{totpSecret}</p>
+                      <p className="font-mono text-sm text-gray-700 dark:text-gray-300 break-all">{totpSecret}</p>
                     </div>
                   )}
                 </>
@@ -189,7 +189,7 @@ export default function AdminSecurityModal({ adminPin, onClose, onPinChanged }: 
                     maxLength={4}
                     value={pinAttuale}
                     onChange={(e) => setPinAttuale(e.target.value.replace(/\D/g, ''))}
-                    className="border border-gray-200 rounded-xl px-3 py-2.5 w-full text-base pr-10"
+                    className="border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2.5 w-full text-base pr-10 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
                   />
                   <button type="button" onClick={() => setMostraPin((v) => !v)} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400">
                     {mostraPin ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
@@ -205,7 +205,7 @@ export default function AdminSecurityModal({ adminPin, onClose, onPinChanged }: 
                   maxLength={4}
                   value={nuovoPin}
                   onChange={(e) => setNuovoPin(e.target.value.replace(/\D/g, ''))}
-                  className="border border-gray-200 rounded-xl px-3 py-2.5 w-full text-base"
+                  className="border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2.5 w-full text-base bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
                 />
               </div>
 
@@ -217,7 +217,7 @@ export default function AdminSecurityModal({ adminPin, onClose, onPinChanged }: 
                   maxLength={4}
                   value={confermaPin}
                   onChange={(e) => setConfermaPin(e.target.value.replace(/\D/g, ''))}
-                  className="border border-gray-200 rounded-xl px-3 py-2.5 w-full text-base"
+                  className="border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2.5 w-full text-base bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
                 />
               </div>
 
@@ -230,7 +230,7 @@ export default function AdminSecurityModal({ adminPin, onClose, onPinChanged }: 
                   value={totpToken}
                   onChange={(e) => setTotpToken(e.target.value.replace(/\D/g, ''))}
                   placeholder="000000"
-                  className="border border-gray-200 rounded-xl px-3 py-2.5 w-full text-base font-mono tracking-widest"
+                  className="border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2.5 w-full text-base font-mono tracking-widest bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
                 />
                 <p className="text-xs text-gray-400">Non configurato? Torna indietro e scansiona prima il QR.</p>
               </div>
@@ -250,12 +250,12 @@ export default function AdminSecurityModal({ adminPin, onClose, onPinChanged }: 
 
         {/* FOOTER */}
         <div
-          className="flex-shrink-0 px-5 pt-4 border-t border-gray-100 bg-white"
+          className="flex-shrink-0 px-5 pt-4 border-t border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900"
           style={{ paddingBottom: 'max(1rem, env(safe-area-inset-bottom))' }}
         >
           <button
             onClick={onClose}
-            className="w-full py-3 rounded-xl border border-gray-200 text-gray-600 font-medium text-sm hover:bg-gray-50 transition-colors"
+            className="w-full py-3 rounded-xl border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300 font-medium text-sm hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
           >
             Chiudi
           </button>
