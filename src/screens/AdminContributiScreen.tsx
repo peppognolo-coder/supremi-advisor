@@ -289,28 +289,28 @@ export default function AdminContributiScreen({ adminPin }: Props) {
       <div className="flex flex-col gap-4">
 
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Moderazione Contributi</h1>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Moderazione Contributi</h1>
           <p className="text-sm text-gray-500 mt-1">Gestisci contributi inviati dagli utenti</p>
         </div>
 
         {loading && <div className="text-sm text-gray-500">Caricamento...</div>}
 
         {!loading && contributi.length === 0 && (
-          <div className="bg-white rounded-2xl border border-gray-100 p-6 text-sm text-gray-500 text-center">
+          <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 p-6 text-sm text-gray-500 dark:text-gray-400 text-center">
             Nessun contributo presente
           </div>
         )}
 
         <div className="flex flex-col gap-4">
           {contributi.map((c) => (
-            <div key={c.id} className="bg-white rounded-2xl border border-gray-100 p-4 shadow-sm flex flex-col gap-4">
+            <div key={c.id} className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 p-4 shadow-sm flex flex-col gap-4">
 
               {/* TOP */}
               <div className="flex items-start justify-between gap-3">
                 <div>
                   <div className="flex items-center gap-2">
                     <FileJson className="w-5 h-5 text-trenord-green" />
-                    <h2 className="font-bold text-gray-900 capitalize">{c.tipo}</h2>
+                    <h2 className="font-bold text-gray-900 dark:text-gray-100 capitalize">{c.tipo}</h2>
                     {c.tipo === 'saletta' && !c.dati?.stazione_id && (
                       <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-amber-100 text-amber-700">
                         ⚠️ Stazione da verificare
@@ -325,7 +325,7 @@ export default function AdminContributiScreen({ adminPin }: Props) {
                   {c.tipo === 'segnalazione_saletta' && (c.dati as any)?.saletta_id && (() => {
                     const info = saletteInfo.get((c.dati as any).saletta_id);
                     return (
-                      <p className="text-xs text-gray-600 font-medium mt-1">
+                      <p className="text-xs text-gray-600 dark:text-gray-300 font-medium mt-1">
                         {info
                           ? `${info.stazione} — ${getSezione(info.tipo).label}${info.etichetta ? ' (' + info.etichetta + ')' : ''}`
                           : '⚠️ Saletta non trovata'}
@@ -343,11 +343,11 @@ export default function AdminContributiScreen({ adminPin }: Props) {
               </div>
 
               {/* DATI */}
-              <div className="bg-gray-50 rounded-xl border border-gray-100 p-4 flex flex-col gap-3">
+              <div className="bg-gray-50 dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700 p-4 flex flex-col gap-3">
                 {Object.entries(c.dati || {}).map(([key, value]) => (
                   <div key={key} className="flex justify-between gap-4 text-sm">
                     <span className="font-medium text-gray-500">{key}</span>
-                    <span className="text-gray-900 text-right break-all">{renderValore(key, value)}</span>
+                    <span className="text-gray-900 dark:text-gray-100 text-right break-all">{renderValore(key, value)}</span>
                   </div>
                 ))}
               </div>
@@ -387,7 +387,7 @@ export default function AdminContributiScreen({ adminPin }: Props) {
       {editingContributo && (
         <div className="fixed inset-0 bg-black/40 z-[9999] flex items-center justify-center p-4"
           onClick={(e) => { if (e.target === e.currentTarget) setEditingContributo(null); }}>
-          <div className="bg-white rounded-3xl w-full max-w-2xl p-6 pb-24 flex flex-col gap-4 max-h-[90dvh] overflow-y-auto">
+          <div className="bg-white dark:bg-gray-900 rounded-3xl w-full max-w-2xl p-6 pb-24 flex flex-col gap-4 max-h-[90dvh] overflow-y-auto">
 
             <div className="flex items-center justify-between">
               <h2 className="text-xl font-bold">Modifica contributo</h2>
@@ -420,7 +420,7 @@ export default function AdminContributiScreen({ adminPin }: Props) {
                     <img
                       src={editingContributo.dati.imageBase64}
                       alt="QR check-in"
-                      className="w-52 h-52 object-contain rounded-2xl border border-gray-200"
+                      className="w-52 h-52 object-contain rounded-2xl border border-gray-200 dark:border-gray-700"
                     />
                   </div>
                 )}
@@ -437,7 +437,7 @@ export default function AdminContributiScreen({ adminPin }: Props) {
                       ...editingContributo,
                       dati: { ...editingContributo.dati, scadenza: e.target.value }
                     })}
-                    className="mt-1 border border-gray-200 rounded-xl px-3 py-2 w-full text-base"
+                    className="mt-1 border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2 w-full text-base bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
                   />
                 </div>
 
@@ -467,7 +467,7 @@ export default function AdminContributiScreen({ adminPin }: Props) {
                   <div className="bg-blue-50 border border-blue-200 rounded-xl px-4 py-3">
                     <p className="text-xs font-semibold text-blue-700 uppercase tracking-wide mb-1">Saletta</p>
                     {infoSaletta ? (
-                      <p className="font-semibold text-gray-900">
+                      <p className="font-semibold text-gray-900 dark:text-gray-100">
                         {infoSaletta.stazione} — {getSezione(infoSaletta.tipo).label}
                         {infoSaletta.etichetta && <span className="text-gray-400 font-normal"> ({infoSaletta.etichetta})</span>}
                       </p>
@@ -484,13 +484,13 @@ export default function AdminContributiScreen({ adminPin }: Props) {
                       {selezioni.map((sel: { tipo: string; valore?: string | null }, i: number) => (
                         <div key={i} className="flex justify-between gap-3 border-b border-amber-100 last:border-0 pb-2 last:pb-0">
                           <span className="text-gray-500 capitalize">{sel.tipo?.replace(/_/g, ' ')}</span>
-                          {sel.valore && <span className="font-medium text-gray-900 text-right">{sel.valore}</span>}
+                          {sel.valore && <span className="font-medium text-gray-900 dark:text-gray-100 text-right">{sel.valore}</span>}
                         </div>
                       ))}
                       {editingContributo.dati?.nota && (
                         <div className="flex flex-col gap-1 pt-1">
                           <span className="text-gray-500">Note</span>
-                          <span className="text-gray-900 bg-white rounded-lg p-2 border border-amber-100">{editingContributo.dati.nota}</span>
+                          <span className="text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-800 rounded-lg p-2 border border-amber-100 dark:border-amber-900">{editingContributo.dati.nota}</span>
                         </div>
                       )}
                     </div>
@@ -520,7 +520,7 @@ export default function AdminContributiScreen({ adminPin }: Props) {
                     <label className="text-xs font-semibold text-gray-400 uppercase">Sezione</label>
                     <select value={editingContributo.dati?.tipo ?? sezione.id}
                       onChange={(e) => upd('tipo', e.target.value)}
-                      className="mt-1 border border-gray-200 rounded-xl px-3 py-2 w-full text-base">
+                      className="mt-1 border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2 w-full text-base bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100">
                       {SEZIONI_LOCALITA.map((s) => (
                         <option key={s.id} value={s.id}>{s.label}</option>
                       ))}
@@ -536,7 +536,7 @@ export default function AdminContributiScreen({ adminPin }: Props) {
                     <input value={editingContributo.dati?.etichetta || ''}
                       onChange={(e) => upd('etichetta', e.target.value)}
                       placeholder="Es. Trenord, Trenitalia, Accesso saletta..."
-                      className="mt-1 border border-gray-200 rounded-xl px-3 py-2 w-full text-base" />
+                      className="mt-1 border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2 w-full text-base bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100" />
                   </div>
 
                   {/* STAZIONE — editabile: l'admin può collegare/correggere
@@ -558,7 +558,7 @@ export default function AdminContributiScreen({ adminPin }: Props) {
                           dati: { ...editingContributo.dati, stazione_id: e.target.value || null, stazione: st?.nome ?? editingContributo.dati?.stazione },
                         });
                       }}
-                      className="mt-1 border border-gray-200 rounded-xl px-3 py-2 w-full text-base"
+                      className="mt-1 border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2 w-full text-base bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
                     >
                       <option value="">
                         {editingContributo.dati?.stazione_id ? 'Seleziona stazione' : `Non collegata (testo: "${editingContributo.dati?.stazione || ''}")`}
@@ -576,7 +576,7 @@ export default function AdminContributiScreen({ adminPin }: Props) {
                       <input value={editingContributo.dati?.codice_accesso || ''}
                         onChange={(e) => upd('codice_accesso', e.target.value)}
                         placeholder="Es. 14579B"
-                        className="mt-1 border border-gray-200 rounded-xl px-3 py-2 w-full text-base" />
+                        className="mt-1 border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2 w-full text-base bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100" />
                     </div>
                   )}
 
@@ -587,7 +587,7 @@ export default function AdminContributiScreen({ adminPin }: Props) {
                       <input value={editingContributo.dati?.ubicazione || ''}
                         onChange={(e) => upd('ubicazione', e.target.value)}
                         placeholder="Es. Binario 1 lato Milano"
-                        className="mt-1 border border-gray-200 rounded-xl px-3 py-2 w-full text-base" />
+                        className="mt-1 border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2 w-full text-base bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100" />
                     </div>
                   )}
 
@@ -597,7 +597,7 @@ export default function AdminContributiScreen({ adminPin }: Props) {
                       <label className="text-xs font-semibold text-gray-400 uppercase">Stato</label>
                       <select value={editingContributo.dati?.stato || sezione.stati[0]}
                         onChange={(e) => upd('stato', e.target.value)}
-                        className="mt-1 border border-gray-200 rounded-xl px-3 py-2 w-full text-base">
+                        className="mt-1 border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2 w-full text-base bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100">
                         {sezione.stati.map((s) => <option key={s} value={s}>{s}</option>)}
                       </select>
                     </div>
@@ -609,7 +609,7 @@ export default function AdminContributiScreen({ adminPin }: Props) {
                       <label className="text-xs font-semibold text-gray-400 uppercase">Modalità di accesso</label>
                       <select value={editingContributo.dati?.modalita_accesso || MODALITA_ACCESSO[0]}
                         onChange={(e) => upd('modalita_accesso', e.target.value)}
-                        className="mt-1 border border-gray-200 rounded-xl px-3 py-2 w-full text-base">
+                        className="mt-1 border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2 w-full text-base bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100">
                         {MODALITA_ACCESSO.map((v) => <option key={v} value={v}>{v}</option>)}
                       </select>
                     </div>
@@ -621,7 +621,7 @@ export default function AdminContributiScreen({ adminPin }: Props) {
                       <label className="text-xs font-semibold text-gray-400 uppercase">Tipologia di accesso</label>
                       <select value={editingContributo.dati?.tipologia_accesso || TIPOLOGIA_ACCESSO[0]}
                         onChange={(e) => upd('tipologia_accesso', e.target.value)}
-                        className="mt-1 border border-gray-200 rounded-xl px-3 py-2 w-full text-base">
+                        className="mt-1 border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2 w-full text-base bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100">
                         {TIPOLOGIA_ACCESSO.map((v) => <option key={v} value={v}>{v}</option>)}
                       </select>
                     </div>
@@ -647,7 +647,7 @@ export default function AdminContributiScreen({ adminPin }: Props) {
                               setEditingContributo({ ...editingContributo, dati: { ...editingContributo.dati, servizi } });
                             }}
                             className={`flex items-center justify-between rounded-xl border px-4 py-3 transition-colors ${
-                              val ? 'bg-trenord-green text-white border-trenord-green' : 'bg-white border-gray-200 text-gray-700'}`}>
+                              val ? 'bg-trenord-green text-white border-trenord-green' : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300'}`}>
                             <div className="flex items-center gap-3">{icon}{label}</div>
                             <span>{val ? 'SI' : 'NO'}</span>
                           </button>
@@ -666,7 +666,7 @@ export default function AdminContributiScreen({ adminPin }: Props) {
                           setEditingContributo({ ...editingContributo, dati: { ...editingContributo.dati, servizi } });
                         }}
                         className={`flex items-center justify-between rounded-xl border px-4 py-3 transition-colors ${
-                          val ? 'bg-trenord-green text-white border-trenord-green' : 'bg-white border-gray-200 text-gray-700'}`}>
+                          val ? 'bg-trenord-green text-white border-trenord-green' : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300'}`}>
                         <div className="flex items-center gap-3"><Droplets className="w-5 h-5" />Docce disponibili</div>
                         <span>{val ? 'SI' : 'NO'}</span>
                       </button>
@@ -683,7 +683,7 @@ export default function AdminContributiScreen({ adminPin }: Props) {
                           setEditingContributo({ ...editingContributo, dati: { ...editingContributo.dati, servizi } });
                         }}
                         className={`flex items-center justify-between rounded-xl border px-4 py-3 transition-colors ${
-                          val ? 'bg-trenord-green text-white border-trenord-green' : 'bg-white border-gray-200 text-gray-700'}`}>
+                          val ? 'bg-trenord-green text-white border-trenord-green' : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300'}`}>
                         <div className="flex items-center gap-3"><Snowflake className="w-5 h-5" />Armadietti disponibili</div>
                         <span>{val ? 'SI' : 'NO'}</span>
                       </button>
@@ -712,7 +712,7 @@ export default function AdminContributiScreen({ adminPin }: Props) {
                             <div className="grid grid-cols-4 gap-2">
                               {GIORNI_SETTIMANA.map((giorno) => (
                                 <button key={giorno} type="button" onClick={() => toggleGiornoAdmin(index, giorno)}
-                                  className={`rounded-xl border py-2 text-sm ${giorniAttuali.includes(giorno) ? 'bg-trenord-green text-white' : 'bg-white'}`}>
+                                  className={`rounded-xl border py-2 text-sm ${giorniAttuali.includes(giorno) ? 'bg-trenord-green text-white' : 'bg-white dark:bg-gray-800 dark:text-gray-300'}`}>
                                   {giorno}
                                 </button>
                               ))}
@@ -744,7 +744,7 @@ export default function AdminContributiScreen({ adminPin }: Props) {
                       <textarea value={editingContributo.dati?.note || ''}
                         onChange={(e) => upd('note', e.target.value)}
                         placeholder="Eventuali informazioni aggiuntive..."
-                        className="mt-1 border border-gray-200 rounded-xl px-3 py-2 w-full min-h-[100px] text-base" />
+                        className="mt-1 border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2 w-full min-h-[100px] text-base bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100" />
                     </div>
                   )}
 
@@ -759,7 +759,7 @@ export default function AdminContributiScreen({ adminPin }: Props) {
                   <div className="flex flex-col gap-1">
                     <label className="text-xs text-gray-500">Stazione</label>
                     <input value={stazioni.find((s) => s.id === editingContributo.dati?.stazione_id)?.nome || ''} disabled
-                      className="border rounded-xl px-3 py-2 bg-gray-100 text-base" />
+                      className="border dark:border-gray-700 rounded-xl px-3 py-2 bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-base" />
                   </div>
                   {[
                     { key: 'nome',       label: 'Nome' },
@@ -825,7 +825,7 @@ export default function AdminContributiScreen({ adminPin }: Props) {
                           <div className="grid grid-cols-4 gap-2">
                             {GIORNI_SETTIMANA.map((giorno) => (
                               <button key={giorno} type="button" onClick={() => toggleGiornoAdmin(index, giorno)}
-                                className={`rounded-xl border py-2 text-sm ${giorniAttuali.includes(giorno) ? 'bg-trenord-green text-white' : 'bg-white'}`}>
+                                className={`rounded-xl border py-2 text-sm ${giorniAttuali.includes(giorno) ? 'bg-trenord-green text-white' : 'bg-white dark:bg-gray-800 dark:text-gray-300'}`}>
                                 {giorno}
                               </button>
                             ))}
@@ -866,14 +866,14 @@ export default function AdminContributiScreen({ adminPin }: Props) {
 
                     {/* QR CHECK-IN — facoltativo, presente solo se caricato dall'utente in Contributi */}
                     {editingContributo.dati?.qr_checkin_new?.imageBase64 && (
-                      <div className="bg-white border border-blue-200 rounded-xl p-3 flex flex-col items-center gap-2">
+                      <div className="bg-white dark:bg-gray-800 border border-blue-200 dark:border-blue-800 rounded-xl p-3 flex flex-col items-center gap-2">
                         <p className="text-xs font-semibold text-gray-400 uppercase self-start">
                           QR check-in allegato
                         </p>
                         <img
                           src={editingContributo.dati.qr_checkin_new.imageBase64}
                           alt="QR check-in"
-                          className="w-40 h-40 object-contain rounded-lg border border-gray-200"
+                          className="w-40 h-40 object-contain rounded-lg border border-gray-200 dark:border-gray-700"
                         />
                         <div className="w-full">
                           <label className="text-xs font-semibold text-gray-400 uppercase">
@@ -889,7 +889,7 @@ export default function AdminContributiScreen({ adminPin }: Props) {
                                 qr_checkin_new: { ...editingContributo.dati.qr_checkin_new, scadenza: e.target.value },
                               },
                             })}
-                            className="mt-1 border border-gray-200 rounded-xl px-3 py-2 w-full text-base"
+                            className="mt-1 border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2 w-full text-base bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
                           />
                         </div>
                       </div>
@@ -984,14 +984,14 @@ export default function AdminContributiScreen({ adminPin }: Props) {
 
                   <div className="flex flex-col gap-2">
                     {Object.entries(modifiche).map(([campo, diff]) => (
-                      <div key={campo} className="border border-gray-200 rounded-xl p-3">
+                      <div key={campo} className="border border-gray-200 dark:border-gray-700 rounded-xl p-3">
                         <p className="text-xs font-semibold text-gray-500 mb-1.5">{LABEL[campo] ?? campo}</p>
                         <div className="flex items-center gap-2 text-sm">
                           <span className="text-gray-400 line-through flex-1 truncate">
                             {fmt((diff as any).prima)}
                           </span>
                           <span className="text-gray-300">→</span>
-                          <span className="text-gray-900 font-medium flex-1 truncate">
+                          <span className="text-gray-900 dark:text-gray-100 font-medium flex-1 truncate">
                             {fmt((diff as any).dopo)}
                           </span>
                         </div>
@@ -1000,7 +1000,7 @@ export default function AdminContributiScreen({ adminPin }: Props) {
                   </div>
 
                   {editingContributo.dati?.nota_utente && (
-                    <div className="text-sm text-gray-600 bg-gray-50 border border-gray-200 rounded-xl p-3">
+                    <div className="text-sm text-gray-600 dark:text-gray-300 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-3">
                       <p className="text-xs font-semibold text-gray-400 uppercase mb-1">Nota dell'utente</p>
                       {editingContributo.dati.nota_utente}
                     </div>
@@ -1019,7 +1019,7 @@ export default function AdminContributiScreen({ adminPin }: Props) {
                     ref={firstInputRef}
                     value={editingContributo.dati?.nome || ''}
                     onChange={(e) => setEditingContributo({ ...editingContributo, dati: { ...editingContributo.dati, nome: e.target.value } })}
-                    className="mt-1 border border-gray-200 rounded-xl px-3 py-2 w-full text-base"
+                    className="mt-1 border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2 w-full text-base bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
                   />
                 </div>
 
@@ -1028,7 +1028,7 @@ export default function AdminContributiScreen({ adminPin }: Props) {
                   <input
                     value={editingContributo.dati?.codice || ''}
                     onChange={(e) => setEditingContributo({ ...editingContributo, dati: { ...editingContributo.dati, codice: e.target.value } })}
-                    className="mt-1 border border-gray-200 rounded-xl px-3 py-2 w-full text-base"
+                    className="mt-1 border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2 w-full text-base bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
                   />
                 </div>
 
@@ -1037,7 +1037,7 @@ export default function AdminContributiScreen({ adminPin }: Props) {
                   <input
                     value={editingContributo.dati?.regione || ''}
                     onChange={(e) => setEditingContributo({ ...editingContributo, dati: { ...editingContributo.dati, regione: e.target.value } })}
-                    className="mt-1 border border-gray-200 rounded-xl px-3 py-2 w-full text-base"
+                    className="mt-1 border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2 w-full text-base bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
                   />
                 </div>
 
@@ -1046,7 +1046,7 @@ export default function AdminContributiScreen({ adminPin }: Props) {
                   <input
                     value={editingContributo.dati?.provincia || ''}
                     onChange={(e) => setEditingContributo({ ...editingContributo, dati: { ...editingContributo.dati, provincia: e.target.value } })}
-                    className="mt-1 border border-gray-200 rounded-xl px-3 py-2 w-full text-base"
+                    className="mt-1 border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2 w-full text-base bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
                   />
                 </div>
 
@@ -1055,7 +1055,7 @@ export default function AdminContributiScreen({ adminPin }: Props) {
                   <input
                     value={editingContributo.dati?.indirizzo || ''}
                     onChange={(e) => setEditingContributo({ ...editingContributo, dati: { ...editingContributo.dati, indirizzo: e.target.value } })}
-                    className="mt-1 border border-gray-200 rounded-xl px-3 py-2 w-full text-base"
+                    className="mt-1 border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2 w-full text-base bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
                   />
                 </div>
 
@@ -1064,7 +1064,7 @@ export default function AdminContributiScreen({ adminPin }: Props) {
                   <input
                     value={editingContributo.dati?.maps_query || ''}
                     onChange={(e) => setEditingContributo({ ...editingContributo, dati: { ...editingContributo.dati, maps_query: e.target.value } })}
-                    className="mt-1 border border-gray-200 rounded-xl px-3 py-2 w-full text-base"
+                    className="mt-1 border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2 w-full text-base bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
                   />
                 </div>
 
@@ -1073,7 +1073,7 @@ export default function AdminContributiScreen({ adminPin }: Props) {
                   <input
                     value={editingContributo.dati?.plus_code || ''}
                     onChange={(e) => setEditingContributo({ ...editingContributo, dati: { ...editingContributo.dati, plus_code: e.target.value } })}
-                    className="mt-1 border border-gray-200 rounded-xl px-3 py-2 w-full text-base"
+                    className="mt-1 border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2 w-full text-base bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
                   />
                 </div>
 
@@ -1084,7 +1084,7 @@ export default function AdminContributiScreen({ adminPin }: Props) {
                       type="number" step="any"
                       value={editingContributo.dati?.lat ?? ''}
                       onChange={(e) => setEditingContributo({ ...editingContributo, dati: { ...editingContributo.dati, lat: e.target.value } })}
-                      className="mt-1 border border-gray-200 rounded-xl px-3 py-2 w-full text-base"
+                      className="mt-1 border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2 w-full text-base bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
                     />
                   </div>
                   <div>
@@ -1093,7 +1093,7 @@ export default function AdminContributiScreen({ adminPin }: Props) {
                       type="number" step="any"
                       value={editingContributo.dati?.lng ?? ''}
                       onChange={(e) => setEditingContributo({ ...editingContributo, dati: { ...editingContributo.dati, lng: e.target.value } })}
-                      className="mt-1 border border-gray-200 rounded-xl px-3 py-2 w-full text-base"
+                      className="mt-1 border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2 w-full text-base bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
                     />
                   </div>
                 </div>
@@ -1103,7 +1103,7 @@ export default function AdminContributiScreen({ adminPin }: Props) {
                   <textarea
                     value={editingContributo.dati?.note || ''}
                     onChange={(e) => setEditingContributo({ ...editingContributo, dati: { ...editingContributo.dati, note: e.target.value } })}
-                    className="mt-1 border border-gray-200 rounded-xl px-3 py-2 w-full min-h-[120px] text-base"
+                    className="mt-1 border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2 w-full min-h-[120px] text-base bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
                   />
                 </div>
 
