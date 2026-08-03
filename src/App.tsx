@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 
 import type { Tab } from './types';
 
@@ -82,19 +82,10 @@ export default function App() {
   // casi fa uscire dall'app. Qui si registra una voce di history a ogni
   // cambio tab, così indietro (tasto fisico Android, gesto edge-swipe,
   // bottone del browser) torna al tab precedente invece di uscire.
-  //
-  // isPopNavigation distingue "sto navigando io" (serve pushState) da "sto
-  // reagendo a un indietro già avvenuto" (NON risommare un'altra voce, o il
-  // tasto indietro finirebbe per non tornare mai davvero indietro).
   // =========================
 
-  const isPopNavigation = useRef(false);
-
   function pushTabHistory(tab: Tab) {
-    if (!isPopNavigation.current) {
-      window.history.pushState({ tab }, '');
-    }
-    isPopNavigation.current = false;
+    window.history.pushState({ tab }, '');
   }
 
   useEffect(() => {
@@ -103,7 +94,6 @@ export default function App() {
 
     function onPopState(event: PopStateEvent) {
       const tab = (event.state?.tab as Tab | undefined) ?? 'home';
-      isPopNavigation.current = true;
       setActiveTab(tab);
     }
 
