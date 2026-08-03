@@ -4,6 +4,8 @@ import { useScrollLock } from '../lib/useScrollLock';
 import { X, Pencil, Plus, Trash2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { supabase } from '../lib/supabase';
+import { getDeviceId } from '../lib/device';
+import { messaggioErroreInvio } from '../lib/rateLimitError';
 import { useSwipeDown } from '../lib/useSwipeDown';
 import {
   CATEGORIE_ATTIVITA,
@@ -148,10 +150,11 @@ export default function ProponiModificaAttivitaModal({ attivita, onClose, onSucc
         nota_utente: notaUtente.trim() || null,
       },
       stato: 'pending',
+      device_id: getDeviceId(),
     });
 
     setLoading(false);
-    if (error) { toast.error("Errore durante l'invio"); return; }
+    if (error) { toast.error(messaggioErroreInvio(error)); return; }
     toast.success('Proposta inviata! Verrà revisionata da un admin.');
     onSuccess?.();
     onClose();
