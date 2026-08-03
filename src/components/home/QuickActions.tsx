@@ -7,8 +7,6 @@ import { PlusCircle, AlertTriangle } from 'lucide-react';
 interface QuickActionsProps {
   onNuovoContributo: () => void;
   onSegnalaProblema: () => void;
-  /** Se undefined, i pulsanti sono disabilitati (nessuna stazione selezionata) */
-  stazioneId?: string;
 }
 
 interface ActionButton {
@@ -22,10 +20,7 @@ interface ActionButton {
 export const QuickActions: React.FC<QuickActionsProps> = ({
   onNuovoContributo,
   onSegnalaProblema,
-  stazioneId,
 }) => {
-  const disabled = !stazioneId;
-
   const actions: ActionButton[] = [
     {
       label: 'Nuovo contributo',
@@ -51,11 +46,9 @@ export const QuickActions: React.FC<QuickActionsProps> = ({
           <button
             key={action.label}
             onClick={action.onClick}
-            disabled={disabled}
             className={[
               'flex flex-col items-center gap-2 p-4 rounded-2xl bg-white border border-gray-100 shadow-sm',
-              'active:scale-95 transition-all duration-150',
-              disabled ? 'opacity-40 cursor-not-allowed' : 'hover:border-gray-200 hover:shadow',
+              'active:scale-95 transition-all duration-150 hover:border-gray-200 hover:shadow',
             ].join(' ')}
           >
             <div className={`${action.iconBg} ${action.color} p-2 rounded-xl`}>
