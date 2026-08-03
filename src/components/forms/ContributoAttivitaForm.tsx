@@ -9,6 +9,8 @@ import {
 import toast from 'react-hot-toast';
 
 import { supabase } from '../../lib/supabase';
+import { getDeviceId } from '../../lib/device';
+import { messaggioErroreInvio } from '../../lib/rateLimitError';
 import { DISTANZE_ATTIVITA, CATEGORIE_ATTIVITA, CATEGORIE_ALIMENTARI, type HotelDatiExtra } from '../../lib/adminApi';
 import HotelFieldsSection from './HotelFieldsSection';
 import QrCheckinUpload, { type QrCheckinData } from './QrCheckinUpload';
@@ -289,6 +291,7 @@ export default function ContributoAttivitaForm({
             tipo: 'attivita',
             dati: payload,
             stato: 'pending',
+            device_id: getDeviceId(),
           });
 
       if (error) {
@@ -296,7 +299,7 @@ export default function ContributoAttivitaForm({
         console.error(error);
 
         toast.error(
-          'Errore invio contributo'
+          messaggioErroreInvio(error)
         );
 
         setLoading(false);
