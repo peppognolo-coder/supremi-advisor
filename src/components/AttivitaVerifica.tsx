@@ -367,7 +367,7 @@ export default function AttivitaVerifica({
 
     <>
 
-      <div className="border-t border-gray-100 pt-3 flex flex-col gap-3 mt-1">
+      <div className="border-t border-gray-100 dark:border-gray-800 pt-3 flex flex-col gap-3 mt-1">
 
         {/* BADGE STATO */}
         {renderStatoBadge()}
@@ -390,7 +390,7 @@ export default function AttivitaVerifica({
             className={`w-full flex items-center justify-center gap-1.5 px-2 py-2 rounded-xl text-xs font-medium transition-colors ${
               puoFareVerifica
                 ? 'bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100'
-                : 'bg-gray-50 text-gray-400 border border-gray-200 cursor-not-allowed'
+                : 'bg-gray-50 dark:bg-gray-800 text-gray-400 dark:text-gray-500 border border-gray-200 dark:border-gray-700 cursor-not-allowed'
             }`}
           >
 
