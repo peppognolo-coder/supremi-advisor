@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 
 import type { Tab } from './types';
 
@@ -73,16 +73,56 @@ export default function App() {
   const [pendingSaletteStationName, setPendingSaletteStationName] = useState<string | null>(null);
   const [pendingStationName, setPendingStationName] = useState<string | null>(null);
 
+  // =========================
+  // NAVIGAZIONE ↔ HISTORY API DEL BROWSER
+  //
+  // L'app non usa URL/routing: il cambio tab è solo stato React, quindi il
+  // browser non sa mai "sei entrato in una nuova schermata" — il tasto/gesto
+  // indietro del telefono non ha nulla su cui tornare e nel peggiore dei
+  // casi fa uscire dall'app. Qui si registra una voce di history a ogni
+  // cambio tab, così indietro (tasto fisico Android, gesto edge-swipe,
+  // bottone del browser) torna al tab precedente invece di uscire.
+  //
+  // isPopNavigation distingue "sto navigando io" (serve pushState) da "sto
+  // reagendo a un indietro già avvenuto" (NON risommare un'altra voce, o il
+  // tasto indietro finirebbe per non tornare mai davvero indietro).
+  // =========================
+
+  const isPopNavigation = useRef(false);
+
+  function pushTabHistory(tab: Tab) {
+    if (!isPopNavigation.current) {
+      window.history.pushState({ tab }, '');
+    }
+    isPopNavigation.current = false;
+  }
+
+  useEffect(() => {
+    // Voce iniziale, senza aggiungerne una nuova (replaceState, non pushState).
+    window.history.replaceState({ tab: 'home' }, '');
+
+    function onPopState(event: PopStateEvent) {
+      const tab = (event.state?.tab as Tab | undefined) ?? 'home';
+      isPopNavigation.current = true;
+      setActiveTab(tab);
+    }
+
+    window.addEventListener('popstate', onPopState);
+    return () => window.removeEventListener('popstate', onPopState);
+  }, []);
+
   function handleOpenStazione(stationId: string, stationName?: string, categoriaFilter?: string) {
     setPendingExpandId(stationId);
     setPendingStationName(stationName ?? null);
     setPendingCategoriaFilter(categoriaFilter ?? null);
     setActiveTab('stazioni');
+    pushTabHistory('stazioni');
   }
 
   function handleOpenSegnalazione(stationName: string) {
     setPendingSaletteStationName(stationName);
     setActiveTab('salette');
+    pushTabHistory('salette');
   }
 
   function handleTabChange(tab: Tab) {
@@ -92,6 +132,7 @@ export default function App() {
     setPendingSaletteStationName(null);
     window.scrollTo(0, 0);
     setActiveTab(tab);
+    pushTabHistory(tab);
   }
 
   // =========================
@@ -194,6 +235,7 @@ export default function App() {
       setAdminPinState(null);
       setAdminMode(false);
       setActiveTab('home');
+      pushTabHistory('home');
       toast.success('Modalità admin disattivata');
       setShowPinModal(null);
     }
