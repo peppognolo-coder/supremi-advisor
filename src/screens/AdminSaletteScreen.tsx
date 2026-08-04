@@ -28,8 +28,11 @@ import {
   updateSaletta,
   deleteSaletta,
   ripristinaSaletta,
+  hardDeleteSaletta,
   toggleAttivaSaletta,
 } from '../lib/adminApi';
+
+import ConfirmHardDeleteModal from '../components/ConfirmHardDeleteModal';
 
 import {
   SEZIONI_LOCALITA,
@@ -303,6 +306,12 @@ export default function AdminSaletteScreen({
     loading: boolean;
   } | null>(null);
 
+  const [confirmHardDelete, setConfirmHardDelete] = useState<{
+    id: string;
+    nome: string;
+    loading: boolean;
+  } | null>(null);
+
   const [confirmToggle, setConfirmToggle] = useState<{
     id: string;
     nome: string;
@@ -492,6 +501,31 @@ export default function AdminSaletteScreen({
       prev.map((s) => (s.id === confirmRipristina.id ? { ...s, deleted_at: null } : s))
     );
     setConfirmRipristina(null);
+  }
+
+  // =========================
+  // ELIMINA DEFINITIVAMENTE
+  // =========================
+
+  function richiediHardDelete(s: Saletta) {
+    setConfirmHardDelete({ id: s.id, nome: `${s.stazione} — ${getSezione(s.tipo).label}`, loading: false });
+  }
+
+  async function confermaHardDelete() {
+    if (!confirmHardDelete) return;
+    setConfirmHardDelete((prev) => prev ? { ...prev, loading: true } : null);
+
+    const res = await hardDeleteSaletta(adminPin, confirmHardDelete.id);
+
+    if (!res.ok) {
+      toast.error(res.error?.message ?? 'Errore eliminazione definitiva');
+      setConfirmHardDelete((prev) => prev ? { ...prev, loading: false } : null);
+      return;
+    }
+
+    toast.success('Eliminata definitivamente');
+    setSalette((prev) => prev.filter((s) => s.id !== confirmHardDelete.id));
+    setConfirmHardDelete(null);
   }
 
   // =========================
@@ -691,14 +725,24 @@ export default function AdminSaletteScreen({
                       <p className="text-xs text-red-400 mt-1">Eliminata il {formatDeletedAt(s.deleted_at)}</p>
                     )}
                   </div>
-                  <button
-                    type="button"
-                    onClick={() => richiediRipristina(s)}
-                    className="flex-shrink-0 flex items-center gap-2 px-4 py-2 rounded-xl bg-emerald-600 text-white text-sm font-medium hover:opacity-90"
-                  >
-                    <RotateCcw className="w-4 h-4" />
-                    Ripristina
-                  </button>
+                  <div className="flex-shrink-0 flex flex-col gap-2">
+                    <button
+                      type="button"
+                      onClick={() => richiediRipristina(s)}
+                      className="flex items-center gap-2 px-4 py-2 rounded-xl bg-emerald-600 text-white text-sm font-medium hover:opacity-90"
+                    >
+                      <RotateCcw className="w-4 h-4" />
+                      Ripristina
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => richiediHardDelete(s)}
+                      className="flex items-center gap-2 px-4 py-2 rounded-xl border border-red-200 dark:border-red-900 text-red-600 text-sm font-medium hover:bg-red-50 dark:hover:bg-red-950"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                      Elimina definitivamente
+                    </button>
+                  </div>
                 </div>
               );
             }
@@ -979,6 +1023,16 @@ export default function AdminSaletteScreen({
           confirmLabel="Ripristina"
           loadingLabel="Ripristino..."
           variant="primary"
+        />
+      )}
+
+      {confirmHardDelete && (
+        <ConfirmHardDeleteModal
+          nome={confirmHardDelete.nome}
+          entityLabel="la saletta"
+          onConfirm={confermaHardDelete}
+          onCancel={() => setConfirmHardDelete(null)}
+          loading={confirmHardDelete.loading}
         />
       )}
 
