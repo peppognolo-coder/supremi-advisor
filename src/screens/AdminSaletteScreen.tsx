@@ -13,6 +13,8 @@ import {
   Shirt,
   Power,
   PowerOff,
+  RotateCcw,
+  MapPin,
 } from 'lucide-react';
 
 import toast from 'react-hot-toast';
@@ -25,6 +27,7 @@ import {
   addSaletta,
   updateSaletta,
   deleteSaletta,
+  ripristinaSaletta,
   toggleAttivaSaletta,
 } from '../lib/adminApi';
 
@@ -43,6 +46,24 @@ import {
 interface Props {
   adminPin: string;
   initialFiltroQualita?: string;
+}
+
+// =========================
+// FILTRO STATO
+// =========================
+
+type FiltroStato = 'attive' | 'eliminate' | 'tutte';
+
+const FILTRO_STATO_OPTIONS: { mode: FiltroStato; label: string }[] = [
+  { mode: 'attive',    label: 'Attive' },
+  { mode: 'eliminate', label: 'Eliminate' },
+  { mode: 'tutte',     label: 'Tutte' },
+];
+
+function formatDeletedAt(dateStr: string): string {
+  return new Date(dateStr).toLocaleDateString('it-IT', {
+    day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit',
+  });
 }
 
 // =========================
@@ -269,7 +290,14 @@ export default function AdminSaletteScreen({
   const [showAdd, setShowAdd]   = useState(false);
   const [savingId, setSavingId] = useState<string | null>(null);
   const [filtroQualita, setFiltroQualita] = useState<string>(initialFiltroQualita);
+  const [filtroStato, setFiltroStato] = useState<FiltroStato>('attive');
   const [confirmDelete, setConfirmDelete] = useState<{
+    id: string;
+    nome: string;
+    loading: boolean;
+  } | null>(null);
+
+  const [confirmRipristina, setConfirmRipristina] = useState<{
     id: string;
     nome: string;
     loading: boolean;
@@ -315,6 +343,11 @@ export default function AdminSaletteScreen({
   // =========================
 
   const filtered = salette.filter((s) => {
+    // Filtro stato eliminazione (vedi migrazione 016: deleted_at è
+    // indipendente da attiva, che resta la disattivazione temporanea).
+    if (filtroStato === 'attive'    && s.deleted_at) return false;
+    if (filtroStato === 'eliminate' && !s.deleted_at) return false;
+
     // Filtro qualità (proveniente dalla dashboard)
     if (filtroQualita === '__no_ubicazione__' && s.ubicazione?.trim()) return false;
     if (filtroQualita === '__no_codice__' && s.codice_accesso?.trim())  return false;
@@ -328,6 +361,9 @@ export default function AdminSaletteScreen({
       s.etichetta?.toLowerCase().includes(q)
     );
   });
+
+  const conteggioAttive    = salette.filter((s) => !s.deleted_at).length;
+  const conteggioEliminate = salette.filter((s) => !!s.deleted_at).length;
 
   // =========================
   // UPDATE FIELD LOCALE
@@ -424,9 +460,38 @@ export default function AdminSaletteScreen({
       return;
     }
 
-    toast.success('Eliminato');
+    toast.success('Eliminata');
     setConfirmDelete(null);
-    setSalette((prev) => prev.filter((s) => s.id !== confirmDelete.id));
+    setSalette((prev) =>
+      prev.map((s) => (s.id === confirmDelete.id ? { ...s, deleted_at: new Date().toISOString() } : s))
+    );
+  }
+
+  // =========================
+  // RIPRISTINA
+  // =========================
+
+  function richiediRipristina(s: Saletta) {
+    setConfirmRipristina({ id: s.id, nome: `${s.stazione} — ${getSezione(s.tipo).label}`, loading: false });
+  }
+
+  async function confermaRipristina() {
+    if (!confirmRipristina) return;
+    setConfirmRipristina((prev) => prev ? { ...prev, loading: true } : null);
+
+    const res = await ripristinaSaletta(adminPin, confirmRipristina.id);
+
+    if (!res.ok) {
+      toast.error(res.error?.message ?? 'Errore ripristino');
+      setConfirmRipristina((prev) => prev ? { ...prev, loading: false } : null);
+      return;
+    }
+
+    toast.success('Ripristinata');
+    setSalette((prev) =>
+      prev.map((s) => (s.id === confirmRipristina.id ? { ...s, deleted_at: null } : s))
+    );
+    setConfirmRipristina(null);
   }
 
   // =========================
@@ -529,6 +594,54 @@ export default function AdminSaletteScreen({
           </div>
         )}
 
+        {/* CONTATORI */}
+        {!loading && (
+          <div className="grid grid-cols-3 gap-3">
+            <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 p-3 shadow-sm text-center">
+              <div className="text-2xl font-bold text-gray-900 dark:text-gray-100">{salette.length}</div>
+              <div className="text-xs text-gray-500 mt-1 uppercase tracking-wide">Totali</div>
+            </div>
+            <div className="bg-white dark:bg-gray-900 rounded-2xl border border-emerald-100 dark:border-emerald-900 p-3 shadow-sm text-center">
+              <div className="text-2xl font-bold text-emerald-600">{conteggioAttive}</div>
+              <div className="text-xs text-gray-500 mt-1 uppercase tracking-wide">Attive</div>
+            </div>
+            <div className="bg-white dark:bg-gray-900 rounded-2xl border border-red-100 dark:border-red-900 p-3 shadow-sm text-center">
+              <div className="text-2xl font-bold text-red-500">{conteggioEliminate}</div>
+              <div className="text-xs text-gray-500 mt-1 uppercase tracking-wide">Eliminate</div>
+            </div>
+          </div>
+        )}
+
+        {/* FILTRO STATO */}
+        {!loading && (
+          <div className="flex gap-2">
+            {FILTRO_STATO_OPTIONS.map((opt) => (
+              <button
+                key={opt.mode}
+                type="button"
+                onClick={() => setFiltroStato(opt.mode)}
+                className={`px-4 py-2 rounded-xl text-sm font-medium border transition-colors ${
+                  filtroStato === opt.mode
+                    ? 'bg-trenord-green text-white border-trenord-green'
+                    : 'bg-white dark:bg-gray-900 text-gray-600 dark:text-gray-300 border-gray-200 dark:border-gray-700 hover:border-trenord-green hover:text-trenord-green'
+                }`}
+              >
+                {opt.label}
+                {opt.mode === 'attive' && (
+                  <span className={`ml-1.5 text-xs px-1.5 py-0.5 rounded-full ${filtroStato === 'attive' ? 'bg-white/20' : 'bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-400'}`}>
+                    {conteggioAttive}
+                  </span>
+                )}
+                {opt.mode === 'eliminate' && (
+                  <span className={`ml-1.5 text-xs px-1.5 py-0.5 rounded-full ${filtroStato === 'eliminate' ? 'bg-white/20' : 'bg-red-100 dark:bg-red-950 text-red-600 dark:text-red-400'}`}>
+                    {conteggioEliminate}
+                  </span>
+                )}
+              </button>
+            ))}
+          </div>
+        )}
+
         {/* LOADING */}
         {loading && (
           <div className="text-sm text-gray-500">Caricamento...</div>
@@ -539,6 +652,8 @@ export default function AdminSaletteScreen({
           <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 p-8 text-center text-sm text-gray-400">
             {search
               ? `Nessun elemento trovato per "${search}"`
+              : filtroStato === 'eliminate' ? 'Nessuna saletta eliminata'
+              : filtroStato === 'attive' ? 'Nessuna saletta attiva'
               : 'Nessun elemento presente.'}
           </div>
         )}
@@ -549,6 +664,44 @@ export default function AdminSaletteScreen({
             const isSaving = savingId === s.id;
             const sezione = getSezione(s.tipo);
             const mostra = (campo: string) => (sezione.campi as readonly string[]).includes(campo);
+            const isDeleted = !!s.deleted_at;
+
+            // Card compatta di sola lettura per le salette eliminate: niente
+            // form di modifica, solo il necessario per identificarla e
+            // ripristinarla. Vedi conversazione.
+            if (isDeleted) {
+              return (
+                <div
+                  key={s.id}
+                  className="bg-white dark:bg-gray-900 rounded-2xl border border-red-100 dark:border-red-900 p-4 shadow-sm flex items-start gap-3 opacity-70"
+                >
+                  <div className="flex-shrink-0 w-10 h-10 rounded-2xl bg-red-50 dark:bg-red-950 flex items-center justify-center">
+                    <MapPin className="w-5 h-5 text-red-400" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <h3 className="font-semibold text-gray-900 dark:text-gray-100">
+                        {s.stazione} — {sezione.label}{s.etichetta ? ` (${s.etichetta})` : ''}
+                      </h3>
+                      <span className="px-2 py-0.5 rounded-full text-xs font-semibold bg-red-100 text-red-600">
+                        🔴 Eliminata
+                      </span>
+                    </div>
+                    {s.deleted_at && (
+                      <p className="text-xs text-red-400 mt-1">Eliminata il {formatDeletedAt(s.deleted_at)}</p>
+                    )}
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => richiediRipristina(s)}
+                    className="flex-shrink-0 flex items-center gap-2 px-4 py-2 rounded-xl bg-emerald-600 text-white text-sm font-medium hover:opacity-90"
+                  >
+                    <RotateCcw className="w-4 h-4" />
+                    Ripristina
+                  </button>
+                </div>
+              );
+            }
 
             return (
               <div
@@ -810,10 +963,22 @@ export default function AdminSaletteScreen({
 
       {confirmDelete && (
         <ConfirmModal
-          message={`Eliminare "${confirmDelete.nome}"? L'operazione è irreversibile.`}
+          message={`Eliminare "${confirmDelete.nome}"? Verrà nascosta agli utenti ma potrà essere ripristinata dalla sezione "Eliminate".`}
           onConfirm={confermaElimina}
           onCancel={() => setConfirmDelete(null)}
           loading={confirmDelete.loading}
+        />
+      )}
+
+      {confirmRipristina && (
+        <ConfirmModal
+          message={`Ripristinare "${confirmRipristina.nome}"? Tornerà visibile agli utenti.`}
+          onConfirm={confermaRipristina}
+          onCancel={() => setConfirmRipristina(null)}
+          loading={confirmRipristina.loading}
+          confirmLabel="Ripristina"
+          loadingLabel="Ripristino..."
+          variant="primary"
         />
       )}
 
