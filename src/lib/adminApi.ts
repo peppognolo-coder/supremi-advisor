@@ -41,6 +41,8 @@ export interface Saletta {
   armadietti: boolean;
   fasce_orarie: { giorni: string[]; apertura: string; chiusura: string }[] | null;
   attiva: boolean;
+  /** Timestamp di eliminazione (soft delete). NULL = non eliminata. Indipendente da `attiva`. */
+  deleted_at: string | null;
 }
 
 // Variante usata lato utente (SaletteScreen.tsx, SalettaCard.tsx): la query
@@ -203,8 +205,15 @@ export async function updateSaletta(
 export async function deleteSaletta(
   adminPin: string,
   id: string
-): Promise<AdminApiResult<{ deleted: string }>> {
-  return call<{ deleted: string }>('deleteSaletta', adminPin, { id });
+): Promise<AdminApiResult<Saletta>> {
+  return call<Saletta>('deleteSaletta', adminPin, { id });
+}
+
+export async function ripristinaSaletta(
+  adminPin: string,
+  id: string
+): Promise<AdminApiResult<Saletta>> {
+  return call<Saletta>('ripristinaSaletta', adminPin, { id });
 }
 
 export async function toggleAttivaSaletta(
