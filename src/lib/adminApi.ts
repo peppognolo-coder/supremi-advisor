@@ -216,6 +216,13 @@ export async function ripristinaSaletta(
   return call<Saletta>('ripristinaSaletta', adminPin, { id });
 }
 
+export async function hardDeleteSaletta(
+  adminPin: string,
+  id: string
+): Promise<AdminApiResult<{ deleted: string }>> {
+  return call<{ deleted: string }>('hardDeleteSaletta', adminPin, { id });
+}
+
 export async function toggleAttivaSaletta(
   adminPin: string,
   id: string,
@@ -258,6 +265,13 @@ export async function ripristinaAttivita(
   id: string
 ): Promise<AdminApiResult<AttivitaRow>> {
   return call<AttivitaRow>('ripristinaAttivita', adminPin, { id });
+}
+
+export async function hardDeleteAttivita(
+  adminPin: string,
+  id: string
+): Promise<AdminApiResult<{ deleted: string }>> {
+  return call<{ deleted: string }>('hardDeleteAttivita', adminPin, { id });
 }
 
 export async function updateAttivita(
@@ -371,6 +385,13 @@ export async function toggleAttivaStazione(
   attiva: boolean
 ): Promise<AdminApiResult<StazioneCompleta>> {
   return call<StazioneCompleta>('toggleAttivaStazione', adminPin, { id, attiva });
+}
+
+export async function hardDeleteStazione(
+  adminPin: string,
+  id: string
+): Promise<AdminApiResult<{ deleted: string }>> {
+  return call<{ deleted: string }>('hardDeleteStazione', adminPin, { id });
 }
 
 // =============================================================
