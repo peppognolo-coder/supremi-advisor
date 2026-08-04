@@ -12,6 +12,7 @@ type Action =
   | 'addSaletta'
   | 'updateSaletta'
   | 'deleteSaletta'
+  | 'ripristinaSaletta'
   | 'toggleAttivaSaletta'
   // ATTIVITA_STAZIONE
   | 'getAttivita'
@@ -212,11 +213,28 @@ export const handler: Handler = async (event: HandlerEvent) => {
     }
 
     if (action === 'deleteSaletta') {
+      // Soft delete: campo dedicato deleted_at, indipendente da attiva
+      // (che resta per la disattivazione temporanea via toggleAttivaSaletta).
+      // Vedi migrazione 016 e conversazione.
       const { id } = (payload ?? {}) as { id?: string };
       if (!id) return err({ ...ERRORS.MISSING_PAYLOAD, message: 'Campo obbligatorio: id' });
-      const { error } = await supabase.from('salette').delete().eq('id', id);
+      const { data, error } = await supabase
+        .from('salette')
+        .update({ deleted_at: new Date().toISOString() })
+        .eq('id', id).select().single();
       if (error) return dbErr(error.message);
-      return ok({ deleted: id });
+      return ok(data);
+    }
+
+    if (action === 'ripristinaSaletta') {
+      const { id } = (payload ?? {}) as { id?: string };
+      if (!id) return err({ ...ERRORS.MISSING_PAYLOAD, message: 'Campo obbligatorio: id' });
+      const { data, error } = await supabase
+        .from('salette')
+        .update({ deleted_at: null })
+        .eq('id', id).select().single();
+      if (error) return dbErr(error.message);
+      return ok(data);
     }
 
     if (action === 'toggleAttivaSaletta') {
@@ -416,6 +434,11 @@ export const handler: Handler = async (event: HandlerEvent) => {
       // averlo collegato manualmente in fase di revisione prima di approvare;
       // se arriva comunque null si ricade sul vecchio raggruppamento testuale
       // per non perdere il contributo.
+      // salettaId viene catturato per essere salvato in dati.saletta_id
+      // all'approvazione (vedi fondo funzione): serve al feed home per
+      // verificare che la saletta esista/sia attiva ancora quando genera
+      // le voci "Da sapere". Vedi conversazione.
+      let salettaId: string | null = null;
       if (tipo === 'saletta') {
         // FIX: il form (ContributoSalettaForm.tsx) invia i servizi annidati
         // in dati.servizi.{microonde,distributori,acqua,climatizzata,docce,
@@ -459,11 +482,16 @@ export const handler: Handler = async (event: HandlerEvent) => {
             .update({ ...campiComuni, stazione_id: dati.stazione_id ?? existing.stazione_id ?? null })
             .eq('id', existing.id);
           if (error) return dbErr(error.message);
+          salettaId = existing.id;
         } else {
-          const { error } = await supabase.from('salette')
+          const { data: insertedSaletta, error } = await supabase.from('salette')
             .insert({ saletta_group_id: groupId, stazione: dati.stazione, nome: dati.stazione,
-                      tipo: dati.tipo, ...campiComuni, stazione_id: dati.stazione_id ?? null });
+                      tipo: dati.tipo, ...campiComuni, stazione_id: dati.stazione_id ?? null,
+                      deleted_at: null })
+            .select('id')
+            .single();
           if (error) return dbErr(error.message);
+          salettaId = insertedSaletta?.id ?? null;
         }
       }
 
@@ -549,18 +577,40 @@ export const handler: Handler = async (event: HandlerEvent) => {
       }
 
       // ------ STAZIONE ------
+      // stazioneId viene catturato per lo stesso motivo di salettaId/attivitaId
+      // sopra: permette al feed home di verificare che la stazione esista/sia
+      // attiva ancora, invece di fare affidamento solo sul nome. Vedi conversazione.
+      let stazioneId: string | null = null;
       if (tipo === 'stazione') {
-        const { error } = await supabase.from('stazioni')
+        const { data: insertedStazione, error } = await supabase.from('stazioni')
           .insert({ nome: dati.nome, codice: dati.codice, regione: dati.regione, provincia: dati.provincia,
                     maps_query: dati.maps_query, lat: dati.lat ?? null, lng: dati.lng ?? null,
                     note: dati.note, indirizzo: dati.indirizzo ?? null, plus_code: dati.plus_code ?? null,
-                    attiva: true });
+                    attiva: true })
+          .select('id')
+          .single();
         if (error) return dbErr(error.message);
+        stazioneId = insertedStazione?.id ?? null;
       }
 
-      // Aggiorna stato contributo → approved
+      // Salva nei dati del contributo l'id dell'entità creata/toccata da
+      // questa approvazione (attivita_id / saletta_id / stazione_id).
+      // Da qui in poi ogni contributo approvato porta con sé un riferimento
+      // affidabile e verificabile: il feed home lo usa per capire se
+      // l'entità esiste/è ancora attiva quando genera le voci "Da sapere",
+      // invece di doverla ricercare per nome (fragile). Vedi conversazione.
+      const datiAggiornati = {
+        ...dati,
+        ...(attivitaId ? { attivita_id: attivitaId } : {}),
+        ...(salettaId ? { saletta_id: salettaId } : {}),
+        ...(stazioneId ? { stazione_id: stazioneId } : {}),
+      };
+
+      // Aggiorna stato contributo → approved (+ dati aggiornati con l'id dell'entità)
       const { data, error: statoError } = await supabase
-        .from('contributi').update({ stato: 'approved' }).eq('id', contributo.id).select().single();
+        .from('contributi')
+        .update({ stato: 'approved', dati: datiAggiornati })
+        .eq('id', contributo.id).select().single();
       if (statoError) return dbErr(statoError.message);
       return ok(attivitaId ? { ...data, attivita_id: attivitaId } : data);
     }
