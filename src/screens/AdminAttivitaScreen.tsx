@@ -10,6 +10,7 @@ import {
   Pencil,
   X,
   Plus,
+  Search,
 } from 'lucide-react';
 
 import toast from 'react-hot-toast';
@@ -21,6 +22,7 @@ import {
   getAttivita,
   softDeleteAttivita,
   ripristinaAttivita,
+  hardDeleteAttivita,
   updateAttivita,
   CATEGORIE_ATTIVITA,
   CATEGORIE_ALIMENTARI,
@@ -29,6 +31,7 @@ import {
 
 import AddAttivitaModal from '../components/AddAttivitaModal';
 import OpzioniAlimentariSection from '../components/forms/OpzioniAlimentariSection';
+import ConfirmHardDeleteModal from '../components/ConfirmHardDeleteModal';
 
 // =========================
 // PROPS
@@ -148,6 +151,7 @@ export default function AdminAttivitaScreen({ adminPin, initialEditId }: Props) 
   const [attivita, setAttivita]     = useState<AttivitaRow[]>([]);
   const [stazioni, setStazioni]     = useState<StazioneRow[]>([]);
   const [filtro, setFiltro]         = useState<FiltroMode>('attive');
+  const [search, setSearch]         = useState('');
   const [processingId, setProcessingId] = useState<string | null>(null);
   const [editingAttivita, setEditingAttivita] = useState<AttivitaRow | null>(null);
   const [saving, setSaving]         = useState(false);
@@ -158,6 +162,12 @@ export default function AdminAttivitaScreen({ adminPin, initialEditId }: Props) 
   const [confirm, setConfirm] = useState<{
     message: string;
     onConfirm: () => void;
+    loading: boolean;
+  } | null>(null);
+
+  const [confirmHardDelete, setConfirmHardDelete] = useState<{
+    id: string;
+    nome: string;
     loading: boolean;
   } | null>(null);
 
@@ -241,6 +251,31 @@ export default function AdminAttivitaScreen({ adminPin, initialEditId }: Props) 
         ));
       },
     });
+  }
+
+  // =========================
+  // ELIMINA DEFINITIVAMENTE
+  // =========================
+
+  function richiediHardDelete(a: AttivitaRow) {
+    setConfirmHardDelete({ id: a.id, nome: a.nome, loading: false });
+  }
+
+  async function confermaHardDelete() {
+    if (!confirmHardDelete) return;
+    setConfirmHardDelete((prev) => prev ? { ...prev, loading: true } : null);
+
+    const res = await hardDeleteAttivita(adminPin, confirmHardDelete.id);
+
+    if (!res.ok) {
+      toast.error(res.error?.message ?? 'Errore eliminazione definitiva');
+      setConfirmHardDelete((prev) => prev ? { ...prev, loading: false } : null);
+      return;
+    }
+
+    toast.success('Attività eliminata definitivamente');
+    setAttivita((prev) => prev.filter((item) => item.id !== confirmHardDelete.id));
+    setConfirmHardDelete(null);
   }
 
   // =========================
@@ -346,9 +381,18 @@ export default function AdminAttivitaScreen({ adminPin, initialEditId }: Props) 
   // =========================
 
   const attivitaFiltrate = attivita.filter((a) => {
-    if (filtro === 'attive')    return a.is_active === true;
-    if (filtro === 'eliminate') return a.is_active === false;
-    return true;
+    if (filtro === 'attive')    { if (a.is_active !== true)  return false; }
+    if (filtro === 'eliminate') { if (a.is_active !== false) return false; }
+
+    const q = search.trim().toLowerCase();
+    if (!q) return true;
+    return (
+      a.nome?.toLowerCase().includes(q) ||
+      a.categoria?.toLowerCase().includes(q) ||
+      getNomeStazione(a.stazione_id)?.toLowerCase().includes(q) ||
+      a.indirizzo?.toLowerCase().includes(q) ||
+      a.ubicazione?.toLowerCase().includes(q)
+    );
   });
 
   const conteggioAttive    = attivita.filter((a) => a.is_active === true).length;
@@ -378,6 +422,28 @@ export default function AdminAttivitaScreen({ adminPin, initialEditId }: Props) 
         </div>
 
         {loading && <div className="text-sm text-gray-500">Caricamento...</div>}
+
+        {/* SEARCH */}
+        {!loading && (
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+            <input
+              type="text"
+              placeholder="Cerca stazione, attività, categoria..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="w-full bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl pl-9 pr-9 py-2.5 text-base"
+            />
+            {search.length > 0 && (
+              <button
+                onClick={() => setSearch('')}
+                className="absolute right-3 top-1/2 -translate-y-1/2"
+              >
+                <X className="w-4 h-4 text-gray-400" />
+              </button>
+            )}
+          </div>
+        )}
 
         {/* CONTATORI */}
         {!loading && (
@@ -426,7 +492,8 @@ export default function AdminAttivitaScreen({ adminPin, initialEditId }: Props) 
         {/* EMPTY */}
         {!loading && attivitaFiltrate.length === 0 && (
           <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 p-6 text-sm text-gray-500 dark:text-gray-400 text-center">
-            {filtro === 'eliminate' ? 'Nessuna attività eliminata'
+            {search ? `Nessun risultato per "${search}"`
+              : filtro === 'eliminate' ? 'Nessuna attività eliminata'
               : filtro === 'attive' ? 'Nessuna attività attiva'
               : 'Nessuna attività presente'}
           </div>
@@ -494,6 +561,10 @@ export default function AdminAttivitaScreen({ adminPin, initialEditId }: Props) 
                         <button type="button" onClick={() => apriModifica(a)} disabled={isProcessing}
                           className="flex items-center gap-2 px-4 py-2 rounded-xl bg-blue-600 text-white text-sm font-medium hover:opacity-90 disabled:opacity-50">
                           <Pencil className="w-4 h-4" /> Modifica
+                        </button>
+                        <button type="button" onClick={() => richiediHardDelete(a)} disabled={isProcessing}
+                          className="flex items-center gap-2 px-4 py-2 rounded-xl border border-red-200 dark:border-red-900 text-red-600 text-sm font-medium hover:bg-red-50 dark:hover:bg-red-950 disabled:opacity-50">
+                          <Trash2 className="w-4 h-4" /> Elimina definitivamente
                         </button>
                       </>
                     )}
@@ -852,6 +923,16 @@ export default function AdminAttivitaScreen({ adminPin, initialEditId }: Props) 
           onConfirm={confirm.onConfirm}
           onCancel={() => setConfirm(null)}
           loading={confirm.loading}
+        />
+      )}
+
+      {confirmHardDelete && (
+        <ConfirmHardDeleteModal
+          nome={confirmHardDelete.nome}
+          entityLabel="l'attività"
+          onConfirm={confermaHardDelete}
+          onCancel={() => setConfirmHardDelete(null)}
+          loading={confirmHardDelete.loading}
         />
       )}
 
