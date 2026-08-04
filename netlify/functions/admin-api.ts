@@ -13,12 +13,14 @@ type Action =
   | 'updateSaletta'
   | 'deleteSaletta'
   | 'ripristinaSaletta'
+  | 'hardDeleteSaletta'
   | 'toggleAttivaSaletta'
   // ATTIVITA_STAZIONE
   | 'getAttivita'
   | 'addAttivita'
   | 'softDeleteAttivita'
   | 'ripristinaAttivita'
+  | 'hardDeleteAttivita'
   | 'updateAttivita'
   // CONTRIBUTI
   | 'getContributi'
@@ -30,6 +32,7 @@ type Action =
   | 'addStazione'
   | 'updateStazione'
   | 'toggleAttivaStazione'
+  | 'hardDeleteStazione'
   // SALETTA_PROBLEMI
   | 'getProblemiSalette'
   | 'segnalaProblema'
@@ -237,6 +240,30 @@ export const handler: Handler = async (event: HandlerEvent) => {
       return ok(data);
     }
 
+    if (action === 'hardDeleteSaletta') {
+      // Eliminazione definitiva, consentita solo da "Eliminate" (deleted_at
+      // già valorizzato): la saletta deve essere già passata dal soft
+      // delete. Cascade su saletta_problemi, che senza la saletta non ha
+      // più senso di esistere. Vedi conversazione.
+      const { id } = (payload ?? {}) as { id?: string };
+      if (!id) return err({ ...ERRORS.MISSING_PAYLOAD, message: 'Campo obbligatorio: id' });
+
+      const { data: existing, error: getError } = await supabase
+        .from('salette').select('id, deleted_at').eq('id', id).maybeSingle();
+      if (getError) return dbErr(getError.message);
+      if (!existing) return err({ ...ERRORS.MISSING_PAYLOAD, message: 'Saletta non trovata' });
+      if (!existing.deleted_at) {
+        return err({ ...ERRORS.MISSING_PAYLOAD, message: 'Puoi eliminare definitivamente solo una saletta già eliminata' });
+      }
+
+      const { error: probError } = await supabase.from('saletta_problemi').delete().eq('saletta_id', id);
+      if (probError) return dbErr(probError.message);
+
+      const { error } = await supabase.from('salette').delete().eq('id', id);
+      if (error) return dbErr(error.message);
+      return ok({ deleted: id });
+    }
+
     if (action === 'toggleAttivaSaletta') {
       const { id, attiva } = (payload ?? {}) as { id?: string; attiva?: boolean };
       if (!id) return err({ ...ERRORS.MISSING_PAYLOAD, message: 'Campo obbligatorio: id' });
@@ -319,6 +346,41 @@ export const handler: Handler = async (event: HandlerEvent) => {
         .eq('id', id).select().single();
       if (error) return dbErr(error.message);
       return ok(data);
+    }
+
+    if (action === 'hardDeleteAttivita') {
+      // Eliminazione definitiva, consentita solo da "Eliminate"
+      // (is_active già false): l'attività deve essere già passata dal
+      // soft delete. Se è un Hotel, pulisce anche il QR check-in dallo
+      // storage (bucket hotel-qr, filename {id}.{ext} — vedi
+      // upload-hotel-qr.ts) per non lasciare file orfani. L'estensione
+      // non è tracciata in una colonna dedicata: proviamo a rimuovere
+      // tutte le estensioni supportate dall'upload, è un no-op per quelle
+      // che non esistono. Vedi conversazione.
+      const { id } = (payload ?? {}) as { id?: string };
+      if (!id) return err({ ...ERRORS.MISSING_PAYLOAD, message: 'Campo obbligatorio: id' });
+
+      const { data: existing, error: getError } = await supabase
+        .from('attivita_stazione').select('id, categoria, is_active').eq('id', id).maybeSingle();
+      if (getError) return dbErr(getError.message);
+      if (!existing) return err({ ...ERRORS.MISSING_PAYLOAD, message: 'Attività non trovata' });
+      if (existing.is_active !== false) {
+        return err({ ...ERRORS.MISSING_PAYLOAD, message: 'Puoi eliminare definitivamente solo un\'attività già eliminata' });
+      }
+
+      if (existing.categoria === 'Hotel') {
+        const { error: storageError } = await supabase.storage
+          .from('hotel-qr')
+          .remove(['jpeg', 'jpg', 'png', 'webp'].map((ext) => `${id}.${ext}`));
+        // Errore di storage non bloccante: la riga va comunque eliminata,
+        // un file orfano è recuperabile manualmente, un'eliminazione
+        // bloccata per un problema di storage no.
+        if (storageError) console.error('[hardDeleteAttivita] Storage cleanup error:', storageError);
+      }
+
+      const { error } = await supabase.from('attivita_stazione').delete().eq('id', id);
+      if (error) return dbErr(error.message);
+      return ok({ deleted: id });
     }
 
     if (action === 'updateAttivita') {
@@ -702,6 +764,40 @@ export const handler: Handler = async (event: HandlerEvent) => {
         .single();
       if (error) return dbErr(error.message);
       return ok(data);
+    }
+
+    if (action === 'hardDeleteStazione') {
+      // Eliminazione definitiva, consentita solo da "Eliminate" (attiva
+      // già false). Blocco (non cascade) se esistono ancora attività o
+      // salette collegate a questa stazione, anche già soft-eliminate:
+      // altrimenti resterebbero con uno stazione_id orfano. L'admin deve
+      // prima eliminarle definitivamente. Vedi conversazione.
+      const { id } = (payload ?? {}) as { id?: string };
+      if (!id) return err({ ...ERRORS.MISSING_PAYLOAD, message: 'Campo obbligatorio: id' });
+
+      const { data: existing, error: getError } = await supabase
+        .from('stazioni').select('id, attiva').eq('id', id).maybeSingle();
+      if (getError) return dbErr(getError.message);
+      if (!existing) return err({ ...ERRORS.MISSING_PAYLOAD, message: 'Stazione non trovata' });
+      if (existing.attiva !== false) {
+        return err({ ...ERRORS.MISSING_PAYLOAD, message: 'Puoi eliminare definitivamente solo una stazione già disattivata' });
+      }
+
+      const [{ count: countAttivita }, { count: countSalette }] = await Promise.all([
+        supabase.from('attivita_stazione').select('id', { count: 'exact', head: true }).eq('stazione_id', id),
+        supabase.from('salette').select('id', { count: 'exact', head: true }).eq('stazione_id', id),
+      ]);
+
+      if ((countAttivita ?? 0) > 0 || (countSalette ?? 0) > 0) {
+        return err({
+          ...ERRORS.MISSING_PAYLOAD,
+          message: `Impossibile eliminare: ci sono ancora ${countAttivita ?? 0} attività e ${countSalette ?? 0} salette collegate a questa stazione (anche eliminate). Eliminale definitivamente prima di procedere.`,
+        });
+      }
+
+      const { error } = await supabase.from('stazioni').delete().eq('id', id);
+      if (error) return dbErr(error.message);
+      return ok({ deleted: id });
     }
 
 
