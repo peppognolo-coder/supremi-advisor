@@ -88,6 +88,7 @@ export function useHomeStation(refreshKey = 0, enabled = true) {
           .from('salette')
           .select('id', { count: 'exact', head: true })
           .eq('stazione_id', id)
+          .is('deleted_at', null)
           .neq('stato', 'chiusa'),
         supabase
           .from('attivita_stazione')
