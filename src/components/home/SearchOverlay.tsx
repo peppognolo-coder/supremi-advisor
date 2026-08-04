@@ -87,24 +87,24 @@ export const SearchOverlay: React.FC<SearchOverlayProps> = ({
   return (
     // Fullscreen — z-[60] supera TabBar (z-50) e qualsiasi altro fixed element
     <div
-      className="fixed inset-0 z-[60] bg-white flex flex-col"
+      className="fixed inset-0 z-[60] bg-white dark:bg-gray-950 flex flex-col"
       style={{ height: '100dvh' }}
     >
       {/* ── HEADER fisso ────────────────────────────────────────────────────
           Padding top safe area → gestisce notch e Dynamic Island
       ── */}
       <div
-        className="flex-shrink-0 bg-white border-b border-gray-100"
+        className="flex-shrink-0 bg-white dark:bg-gray-900 border-b border-gray-100 dark:border-gray-800"
         style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}
       >
         <div className="flex items-center gap-3 px-4 py-3">
           <button
             onClick={onClose}
-            className="w-9 h-9 flex items-center justify-center rounded-xl text-gray-500 active:bg-gray-100 transition-colors flex-shrink-0"
+            className="w-9 h-9 flex items-center justify-center rounded-xl text-gray-500 dark:text-gray-400 active:bg-gray-100 dark:active:bg-gray-800 transition-colors flex-shrink-0"
           >
             <ArrowLeft className="w-5 h-5" />
           </button>
-          <h2 className="text-base font-bold text-gray-900 flex-1">Cambia stazione</h2>
+          <h2 className="text-base font-bold text-gray-900 dark:text-gray-100 flex-1">Cambia stazione</h2>
         </div>
 
         {/* ── BARRA DI RICERCA fissa ──────────────────────────────────────
@@ -113,7 +113,7 @@ export const SearchOverlay: React.FC<SearchOverlayProps> = ({
             autoComplete/Correct/Capitalize off → niente suggerimenti invasivi
         ── */}
         <div className="px-4 pb-3">
-          <div className="flex items-center gap-3 bg-gray-50 border border-gray-200 rounded-2xl px-3 py-2.5">
+          <div className="flex items-center gap-3 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl px-3 py-2.5">
             <Search className="w-4 h-4 text-gray-400 flex-shrink-0" />
             <input
               ref={inputRef}
@@ -126,7 +126,7 @@ export const SearchOverlay: React.FC<SearchOverlayProps> = ({
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="Cerca per nome o codice…"
-              className="flex-1 bg-transparent text-base placeholder:text-sm text-gray-800 placeholder-gray-400 outline-none min-w-0"
+              className="flex-1 bg-transparent text-base placeholder:text-sm text-gray-800 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 outline-none min-w-0"
             />
             {query ? (
               <button
@@ -134,7 +134,7 @@ export const SearchOverlay: React.FC<SearchOverlayProps> = ({
                 onMouseDown={(e) => e.preventDefault()}
                 onTouchStart={(e) => e.preventDefault()}
                 onClick={() => setQuery('')}
-                className="text-gray-400 active:text-gray-600 p-1 -m-1"
+                className="text-gray-400 active:text-gray-600 dark:active:text-gray-300 p-1 -m-1"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -162,21 +162,21 @@ export const SearchOverlay: React.FC<SearchOverlayProps> = ({
           </div>
         ) : results.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16 px-6 text-center">
-            <div className="w-12 h-12 rounded-2xl bg-gray-100 flex items-center justify-center mb-3">
+            <div className="w-12 h-12 rounded-2xl bg-gray-100 dark:bg-gray-800 flex items-center justify-center mb-3">
               <Search className="w-5 h-5 text-gray-400" />
             </div>
-            <p className="text-sm font-semibold text-gray-500">Nessuna stazione trovata</p>
-            <p className="text-xs text-gray-400 mt-1">Prova con un nome o codice diverso</p>
+            <p className="text-sm font-semibold text-gray-500 dark:text-gray-400">Nessuna stazione trovata</p>
+            <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">Prova con un nome o codice diverso</p>
           </div>
         ) : (
           <div className="px-4 pt-2">
             {!query && (
-              <p className="text-xs font-medium text-gray-400 mb-3 mt-1 uppercase tracking-wide">
+              <p className="text-xs font-medium text-gray-400 dark:text-gray-500 mb-3 mt-1 uppercase tracking-wide">
                 Stazioni disponibili
               </p>
             )}
             {query && (
-              <p className="text-xs font-medium text-gray-400 mb-3 mt-1">
+              <p className="text-xs font-medium text-gray-400 dark:text-gray-500 mb-3 mt-1">
                 {results.length} {results.length === 1 ? 'risultato' : 'risultati'}
               </p>
             )}
@@ -191,12 +191,12 @@ export const SearchOverlay: React.FC<SearchOverlayProps> = ({
                       'w-full flex items-center gap-3 px-3 py-3 rounded-2xl text-left transition-colors',
                       isActive
                         ? 'bg-trenord-green/10 border border-trenord-green/20'
-                        : 'active:bg-gray-100',
+                        : 'active:bg-gray-100 dark:active:bg-gray-800',
                     ].join(' ')}
                   >
                     <div
                       className={`w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 ${
-                        isActive ? 'bg-trenord-green' : 'bg-gray-100'
+                        isActive ? 'bg-trenord-green' : 'bg-gray-100 dark:bg-gray-800'
                       }`}
                     >
                       <MapPin
@@ -206,19 +206,19 @@ export const SearchOverlay: React.FC<SearchOverlayProps> = ({
                     <div className="flex-1 min-w-0">
                       <p
                         className={`text-sm font-semibold truncate ${
-                          isActive ? 'text-trenord-green' : 'text-gray-800'
+                          isActive ? 'text-trenord-green' : 'text-gray-800 dark:text-gray-100'
                         }`}
                       >
                         {station.nome}
                       </p>
-                      <p className="text-xs text-gray-400 font-mono mt-0.5">{station.codice}</p>
+                      <p className="text-xs text-gray-400 dark:text-gray-500 font-mono mt-0.5">{station.codice}</p>
                     </div>
                     {isActive ? (
                       <span className="text-[10px] font-bold text-trenord-green bg-trenord-green/10 px-2 py-1 rounded-full flex-shrink-0 whitespace-nowrap">
                         Attiva
                       </span>
                     ) : (
-                      <ChevronRight className="w-4 h-4 text-gray-300 flex-shrink-0" />
+                      <ChevronRight className="w-4 h-4 text-gray-300 dark:text-gray-600 flex-shrink-0" />
                     )}
                   </button>
                 );
