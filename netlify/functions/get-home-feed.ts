@@ -86,11 +86,11 @@ export const handler: Handler = async (event: HandlerEvent) => {
     const [contributiRes, problemiRes, stazioniRes, attivitaRes, saletteRes] = await Promise.all([
       supabase.from('contributi').select('id, tipo, dati, created_at')
         .eq('stato', 'approved').order('created_at', { ascending: false }).limit(30),
-      supabase.from('saletta_problemi').select('id, tipo_problema, stato, segnalazioni_count, created_at, updated_at, salette(stazione, tipo)')
+      supabase.from('saletta_problemi').select('id, tipo_problema, stato, segnalazioni_count, created_at, updated_at, salette(stazione, tipo, attiva, deleted_at)')
         .in('stato', ['aperta', 'risolta']).order('updated_at', { ascending: false }).limit(20),
       supabase.from('stazioni').select('id, nome').eq('attiva', true),
       supabase.from('attivita_stazione').select('id, nome, stazione_id').eq('is_active', true),
-      supabase.from('salette').select('id, stazione, tipo').eq('attiva', true),
+      supabase.from('salette').select('id, stazione, tipo').eq('attiva', true).is('deleted_at', null),
     ]);
 
     if (contributiRes.error) throw contributiRes.error;
@@ -107,6 +107,23 @@ export const handler: Handler = async (event: HandlerEvent) => {
       const dati = (c.dati ?? {}) as Record<string, any>;
 
       if (c.tipo === 'attivita') {
+        // dati.attivita_id è presente per i contributi approvati dopo
+        // l'introduzione di questo controllo (vedi admin-api.ts). Se
+        // presente, è la verifica affidabile: se l'attività non è più tra
+        // quelle attive (cancellata o disattivata), la voce non deve
+        // comparire nel feed. Per i contributi più vecchi (senza id
+        // salvato) si ricade sul match per nome+stazione come prima, ma
+        // se anche quello fallisce la voce viene comunque nascosta:
+        // meglio una voce in meno che una voce "fantasma" con link rotto.
+        if (dati.attivita_id) {
+          if (!attivitaMap.has(dati.attivita_id)) continue;
+        } else {
+          const esisteAncora = (attivitaRes.data ?? []).some(
+            (a: any) => a.nome === dati.nome && a.stazione_id === dati.stazione_id
+          );
+          if (!esisteAncora) continue;
+        }
+
         const stazioneNome = stazioniMap.get(dati.stazione_id) ?? dati.stazione ?? null;
         items.push({
           id: `contrib-${c.id}`, tipo: 'info', categoria: 'nuova_attivita',
@@ -117,15 +134,26 @@ export const handler: Handler = async (event: HandlerEvent) => {
           link: dati.stazione_id ? { tipo: 'stazione', stazioneId: dati.stazione_id, stazioneNome } : null,
         });
       } else if (c.tipo === 'stazione') {
-        const match = (stazioniRes.data ?? []).find((s: any) => s.nome === dati.nome);
+        // Stessa logica: dati.stazione_id (quando presente) è la verifica
+        // affidabile; altrimenti fallback per nome sulle stazioni attive.
+        const match = dati.stazione_id
+          ? (stazioniRes.data ?? []).find((s: any) => s.id === dati.stazione_id)
+          : (stazioniRes.data ?? []).find((s: any) => s.nome === dati.nome);
+        if (!match) continue;
+
         items.push({
           id: `contrib-${c.id}`, tipo: 'info', categoria: 'nuova_stazione',
           titolo: `Nuova stazione: ${dati.nome ?? ''}`,
           descrizione: [dati.regione, dati.provincia].filter(Boolean).join(' · ') || 'Aggiunta al database',
           tempo: tempoFa(c.created_at), timestamp: c.created_at,
-          link: match ? { tipo: 'stazione', stazioneId: match.id, stazioneNome: match.nome } : null,
+          link: { tipo: 'stazione', stazioneId: match.id, stazioneNome: match.nome },
         });
       } else if (c.tipo === 'saletta') {
+        // Le salette vengono cancellate con hard delete (vedi deleteSaletta
+        // in admin-api.ts): se dati.saletta_id non è più nella mappa delle
+        // salette attive, l'elemento non esiste più — voce nascosta.
+        if (dati.saletta_id && !saletteMap.has(dati.saletta_id)) continue;
+
         items.push({
           id: `contrib-${c.id}`, tipo: 'info', categoria: 'nuovo_elemento',
           titolo: `Nuovo elemento: ${sezioneLabel(dati.tipo)}`,
@@ -135,27 +163,34 @@ export const handler: Handler = async (event: HandlerEvent) => {
           link: dati.stazione ? { tipo: 'salette', stazioneNome: dati.stazione } : null,
         });
       } else if (c.tipo === 'modifica_attivita') {
+        // L'attività modificata deve esistere ancora ed essere attiva,
+        // altrimenti la voce "Info aggiornate" non ha più senso di esistere.
         const attivita = attivitaMap.get(dati.attivita_id);
-        const stazioneNome = attivita ? stazioniMap.get(attivita.stazione_id) : null;
+        if (!attivita) continue;
+
+        const stazioneNome = stazioniMap.get(attivita.stazione_id);
         const nCampi = dati.modifiche ? Object.keys(dati.modifiche).length : 0;
         items.push({
           id: `contrib-${c.id}`, tipo: 'info', categoria: 'modifica_attivita',
-          titolo: `Info aggiornate: ${dati.nome_attivita ?? attivita?.nome ?? 'attività'}`,
+          titolo: `Info aggiornate: ${dati.nome_attivita ?? attivita.nome ?? 'attività'}`,
           descrizione: nCampi > 0 ? `${nCampi} informazion${nCampi === 1 ? 'e' : 'i'} aggiornat${nCampi === 1 ? 'a' : 'e'}` : 'Informazioni aggiornate',
           stazione: stazioneNome ?? undefined,
           tempo: tempoFa(c.created_at), timestamp: c.created_at,
-          link: attivita ? { tipo: 'stazione', stazioneId: attivita.stazione_id, stazioneNome } : null,
+          link: { tipo: 'stazione', stazioneId: attivita.stazione_id, stazioneNome },
         });
       } else if (c.tipo === 'segnalazione_saletta') {
+        // Stesso ragionamento: la saletta segnalata deve esistere ancora.
         const saletta = saletteMap.get(dati.saletta_id);
+        if (!saletta) continue;
+
         const nSel = Array.isArray(dati.selezioni) ? dati.selezioni.length : 0;
         items.push({
           id: `contrib-${c.id}`, tipo: 'info', categoria: 'aggiornamento_saletta',
-          titolo: `Aggiornamento: ${sezioneLabel(saletta?.tipo ?? dati.sezione)}`,
+          titolo: `Aggiornamento: ${sezioneLabel(saletta.tipo ?? dati.sezione)}`,
           descrizione: nSel > 0 ? `${nSel} informazion${nSel === 1 ? 'e' : 'i'} aggiornat${nSel === 1 ? 'a' : 'e'}` : 'Informazioni aggiornate',
-          stazione: saletta?.stazione ?? undefined,
+          stazione: saletta.stazione ?? undefined,
           tempo: tempoFa(c.created_at), timestamp: c.created_at,
-          link: saletta ? { tipo: 'salette', stazioneNome: saletta.stazione } : null,
+          link: { tipo: 'salette', stazioneNome: saletta.stazione },
         });
       }
     }
@@ -163,6 +198,13 @@ export const handler: Handler = async (event: HandlerEvent) => {
     // ── PROBLEMI SALETTE ─────────────────────────────────────────────────
     for (const p of problemiRes.data ?? []) {
       const saletta = (p as any).salette;
+
+      // Se la saletta è stata disattivata (toggleAttivaSaletta) o eliminata
+      // (deleteSaletta, soft delete via deleted_at) o non esiste più, il
+      // problema segnalato non ha più senso di comparire nel feed.
+      // Vedi migrazione 016 e conversazione.
+      if (saletta && (saletta.attiva === false || saletta.deleted_at)) continue;
+
       if (p.stato === 'aperta') {
         items.push({
           id: `prob-${p.id}`, tipo: 'avviso', categoria: 'problema_aperto',
