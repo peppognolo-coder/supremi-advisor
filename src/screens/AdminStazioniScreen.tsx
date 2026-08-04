@@ -15,6 +15,7 @@ import {
   ToggleLeft,
   ToggleRight,
   Plus,
+  Trash2,
 } from 'lucide-react';
 
 import toast from 'react-hot-toast';
@@ -24,9 +25,11 @@ import {
   getStazioni,
   updateStazione,
   toggleAttivaStazione,
+  hardDeleteStazione,
 } from '../lib/adminApi';
 
 import AddStazioneModal from '../components/AddStazioneModal';
+import ConfirmHardDeleteModal from '../components/ConfirmHardDeleteModal';
 
 // =========================
 // PROPS
@@ -118,6 +121,12 @@ export default function AdminStazioniScreen({
   const [confirm, setConfirm]   = useState<{
     message: string;
     onConfirm: () => void;
+    loading: boolean;
+  } | null>(null);
+
+  const [confirmHardDelete, setConfirmHardDelete] = useState<{
+    id: string;
+    nome: string;
     loading: boolean;
   } | null>(null);
 
@@ -217,6 +226,35 @@ export default function AdminStazioniScreen({
         );
       },
     });
+  }
+
+  // =========================
+  // ELIMINA DEFINITIVAMENTE
+  // =========================
+  // Consentita solo su stazioni già disattivate (vedi FILTRO_OPTIONS
+  // 'disattivate'). Il backend blocca comunque l'operazione se esistono
+  // ancora attività o salette collegate — qui ci limitiamo a mostrare
+  // l'errore restituito. Vedi conversazione.
+
+  function richiediHardDelete(s: StazioneCompleta) {
+    setConfirmHardDelete({ id: s.id, nome: s.nome, loading: false });
+  }
+
+  async function confermaHardDelete() {
+    if (!confirmHardDelete) return;
+    setConfirmHardDelete((prev) => prev ? { ...prev, loading: true } : null);
+
+    const res = await hardDeleteStazione(adminPin, confirmHardDelete.id);
+
+    if (!res.ok) {
+      toast.error(res.error?.message ?? 'Errore eliminazione definitiva');
+      setConfirmHardDelete((prev) => prev ? { ...prev, loading: false } : null);
+      return;
+    }
+
+    toast.success('Stazione eliminata definitivamente');
+    setStazioni((prev) => prev.filter((item) => item.id !== confirmHardDelete.id));
+    setConfirmHardDelete(null);
   }
 
   // =========================
@@ -540,6 +578,19 @@ export default function AdminStazioniScreen({
                       {isProcessing ? 'Attendere...' : s.attiva ? 'Disattiva' : 'Attiva'}
                     </button>
 
+                    {/* ELIMINA DEFINITIVAMENTE — solo su stazioni già disattivate */}
+                    {!s.attiva && (
+                      <button
+                        type="button"
+                        onClick={() => richiediHardDelete(s)}
+                        disabled={isProcessing}
+                        className="flex items-center gap-2 px-4 py-2 rounded-xl border border-red-200 dark:border-red-900 text-red-600 text-sm font-medium hover:bg-red-50 dark:hover:bg-red-950 disabled:opacity-50"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                        Elimina definitivamente
+                      </button>
+                    )}
+
                   </div>
 
                 </div>
@@ -735,6 +786,16 @@ export default function AdminStazioniScreen({
           onConfirm={confirm.onConfirm}
           onCancel={() => setConfirm(null)}
           loading={confirm.loading}
+        />
+      )}
+
+      {confirmHardDelete && (
+        <ConfirmHardDeleteModal
+          nome={confirmHardDelete.nome}
+          entityLabel="la stazione"
+          onConfirm={confermaHardDelete}
+          onCancel={() => setConfirmHardDelete(null)}
+          loading={confirmHardDelete.loading}
         />
       )}
 
