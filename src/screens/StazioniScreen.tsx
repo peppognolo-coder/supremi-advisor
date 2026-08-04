@@ -9,6 +9,7 @@ import {
   Plus,
   X,
   MessageSquarePlus,
+  Check,
 } from 'lucide-react';
 
 import toast from 'react-hot-toast';
@@ -908,13 +909,20 @@ export default function StazioniScreen({
                             font-medium
                             border
                             transition-colors
+                            flex
+                            items-center
+                            gap-1
                             ${
                               getCategoriaFilter(stazione.id) === cat
-                                ? 'bg-gray-800 text-white border-gray-800'
+                                ? 'bg-gray-800 dark:bg-gray-100 text-white dark:text-gray-900 border-gray-800 dark:border-gray-100'
                                 : 'bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 border-gray-300 dark:border-gray-700 hover:border-gray-600 dark:hover:border-gray-400 hover:text-gray-900 dark:hover:text-gray-100'
                             }
                           `}
                         >
+
+                          {getCategoriaFilter(stazione.id) === cat && (
+                            <Check className="w-3.5 h-3.5" strokeWidth={3} />
+                          )}
 
                           {cat}
 
