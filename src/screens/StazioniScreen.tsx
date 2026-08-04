@@ -50,9 +50,13 @@ import {
 } from '../lib/getStatoApertura';
 
 import {
-  sortAttivita,
-  SORT_OPTIONS,
-  type SortMode,
+  filtraAttivita,
+  ordinaAttivita,
+  FILTRI_DEFAULT,
+  FILTRI_OPTIONS,
+  ORDINAMENTO_OPTIONS,
+  type FiltriAttivita,
+  type Ordinamento,
 } from '../lib/sortAttivita';
 
 import AttivitaVerifica from '../components/AttivitaVerifica';
@@ -186,10 +190,20 @@ export default function StazioniScreen({
   const [mioVoto, setMioVoto] =
     useState<number>(0);
 
-  // sortMode per stazione: Map<stazioneId, SortMode>
-  const [sortModes, setSortModes] =
+  // filtri booleani (aperte/convenzionate) per stazione: Map<stazioneId, FiltriAttivita>
+  // Combinabili tra loro (logica "e"). Default: nessuno attivo (stato
+  // neutro), lista completa mostrata. Vedi conversazione.
+  const [filtriAttivi, setFiltriAttivi] =
     useState<
-      Record<string, SortMode>
+      Record<string, FiltriAttivita>
+    >({});
+
+  // ordinamento (rating/distanza) per stazione: Map<stazioneId, Ordinamento>
+  // Un solo criterio alla volta, combinabile coi filtri sopra. Default:
+  // null (neutro, ordine alfabetico). Vedi conversazione.
+  const [ordinamenti, setOrdinamenti] =
+    useState<
+      Record<string, Ordinamento>
     >({});
 
   // categoriaFilter per stazione: Map<stazioneId, string | null>
@@ -216,24 +230,53 @@ export default function StazioniScreen({
     }));
   }
 
-  function getSortMode(
+  function getFiltriAttivi(
     stazioneId: string
-  ): SortMode {
+  ): FiltriAttivita {
 
     return (
-      sortModes[stazioneId] ??
-      'aperte'
+      filtriAttivi[stazioneId] ??
+      FILTRI_DEFAULT
     );
   }
 
-  function setSortModeForStazione(
+  function toggleFiltroAttivita(
     stazioneId: string,
-    mode: SortMode
+    key: keyof FiltriAttivita
   ) {
 
-    setSortModes((prev) => ({
+    setFiltriAttivi((prev) => {
+      const attuale = prev[stazioneId] ?? FILTRI_DEFAULT;
+      return {
+        ...prev,
+        [stazioneId]: {
+          ...attuale,
+          [key]: !attuale[key],
+        },
+      };
+    });
+  }
+
+  function getOrdinamento(
+    stazioneId: string
+  ): Ordinamento {
+
+    return (
+      ordinamenti[stazioneId] ??
+      null
+    );
+  }
+
+  function setOrdinamentoForStazione(
+    stazioneId: string,
+    mode: Exclude<Ordinamento, null>
+  ) {
+
+    setOrdinamenti((prev) => ({
       ...prev,
-      [stazioneId]: mode,
+      // Secondo clic sullo stesso criterio → torna neutro (deselezionabile,
+      // come i filtri categoria). Vedi conversazione.
+      [stazioneId]: prev[stazioneId] === mode ? null : mode,
     }));
   }
 
@@ -847,17 +890,63 @@ export default function StazioniScreen({
 
               <div className="flex flex-col gap-3">
 
-                {/* SORT BUTTONS */}
+                {/* FILTRI (aperte/convenzionate — combinabili, nascondono le non corrispondenti) */}
                 <div className="flex gap-2 flex-wrap">
 
-                  {SORT_OPTIONS.map(
+                  {FILTRI_OPTIONS.map(
+                    (opt) => (
+
+                      <button
+                        key={opt.key}
+                        type="button"
+                        onClick={() =>
+                          toggleFiltroAttivita(
+                            stazione.id,
+                            opt.key
+                          )
+                        }
+                        className={`
+                          flex
+                          items-center
+                          gap-1
+                          px-3
+                          py-1.5
+                          rounded-xl
+                          text-xs
+                          font-medium
+                          border
+                          transition-colors
+                          ${
+                            getFiltriAttivi(
+                              stazione.id
+                            )[opt.key]
+                              ? 'bg-trenord-green text-white border-trenord-green'
+                              : 'bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 border-gray-300 dark:border-gray-700 hover:border-trenord-green hover:text-trenord-green'
+                          }
+                        `}
+                      >
+
+                        <span>
+                          {opt.emoji}
+                        </span>
+
+                        <span>
+                          {opt.label}
+                        </span>
+
+                      </button>
+                    )
+                  )}
+
+                  {/* ORDINAMENTO (rating/distanza — riordina soltanto, deselezionabile) */}
+                  {ORDINAMENTO_OPTIONS.map(
                     (opt) => (
 
                       <button
                         key={opt.mode}
                         type="button"
                         onClick={() =>
-                          setSortModeForStazione(
+                          setOrdinamentoForStazione(
                             stazione.id,
                             opt.mode
                           )
@@ -874,7 +963,7 @@ export default function StazioniScreen({
                           border
                           transition-colors
                           ${
-                            getSortMode(
+                            getOrdinamento(
                               stazione.id
                             ) === opt.mode
                               ? 'bg-trenord-green text-white border-trenord-green'
@@ -961,16 +1050,59 @@ export default function StazioniScreen({
                   );
                 })()}
 
-                {sortAttivita(
-                  getCategoriaFilter(stazione.id)
-                    ? stazione.attivita_stazione.filter(
-                        (a: any) =>
-                          a.categoria ===
-                          getCategoriaFilter(stazione.id)
-                      )
-                    : stazione.attivita_stazione,
-                  getSortMode(stazione.id)
-                ).map(
+                {(() => {
+
+                  const attivitaCategoria =
+                    getCategoriaFilter(stazione.id)
+                      ? stazione.attivita_stazione.filter(
+                          (a: any) =>
+                            a.categoria ===
+                            getCategoriaFilter(stazione.id)
+                        )
+                      : stazione.attivita_stazione;
+
+                  const filtri = getFiltriAttivi(stazione.id);
+
+                  const attivitaFiltrate =
+                    filtraAttivita(
+                      attivitaCategoria,
+                      filtri
+                    );
+
+                  const attivitaOrdinate =
+                    ordinaAttivita(
+                      attivitaFiltrate,
+                      getOrdinamento(stazione.id)
+                    );
+
+                  // I filtri aperte/convenzionate nascondono le attività
+                  // non corrispondenti: se azzerano la lista, un messaggio
+                  // chiarisce che è un filtro attivo, non un errore/lista
+                  // vuota per la stazione. Vedi conversazione.
+                  if (attivitaOrdinate.length === 0) {
+
+                    let messaggio =
+                      'Nessuna attività trovata con i filtri selezionati';
+
+                    if (filtri.aperte && filtri.convenzionate) {
+                      messaggio =
+                        'Nessuna attività aperta e convenzionata al momento';
+                    } else if (filtri.aperte) {
+                      messaggio =
+                        'Nessuna attività aperta al momento';
+                    } else if (filtri.convenzionate) {
+                      messaggio =
+                        'Nessuna attività convenzionata trovata';
+                    }
+
+                    return (
+                      <div className="text-sm text-gray-500 dark:text-gray-400 text-center py-6">
+                        {messaggio}
+                      </div>
+                    );
+                  }
+
+                  return attivitaOrdinate.map(
                   (attivita: any) => {
 
                     const stato =
@@ -1159,7 +1291,8 @@ export default function StazioniScreen({
 
                     );
                   }
-                )}
+                  );
+                })()}
 
               </div>
             )}
