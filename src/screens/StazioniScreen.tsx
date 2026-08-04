@@ -628,6 +628,34 @@ export default function StazioniScreen({
       (s) => !favorites.includes(s.id)
     );
 
+  // La stazione "più vicina" va calcolata su TUTTE le stazioni filtrate,
+  // preferite incluse: prima veniva presa semplicemente la prima della
+  // lista non-preferiti (normalStations[0]), quindi una stazione preferita
+  // più vicina di qualsiasi altra non riceveva mai il badge. Vedi
+  // conversazione.
+  const nearestStationId = (() => {
+    if (!userLocation) return null;
+
+    let nearestId: string | null = null;
+    let nearestDist = Infinity;
+
+    for (const s of filtered) {
+      if (!s.lat || !s.lng) continue;
+      const dist = calculateDistance(
+        userLocation.lat,
+        userLocation.lng,
+        Number(s.lat),
+        Number(s.lng)
+      );
+      if (dist < nearestDist) {
+        nearestDist = dist;
+        nearestId = s.id;
+      }
+    }
+
+    return nearestId;
+  })();
+
   // =========================
   // CARD
   // =========================
@@ -1338,7 +1366,10 @@ export default function StazioniScreen({
             {favoritesExpanded &&
               favoriteStations.map(
                 (station) =>
-                  renderStationCard(station)
+                  renderStationCard(
+                    station,
+                    station.id === nearestStationId
+                  )
               )}
 
           </div>
@@ -1350,10 +1381,10 @@ export default function StazioniScreen({
           <div className="flex flex-col gap-3">
 
             {normalStations.map(
-              (station, index) =>
+              (station) =>
                 renderStationCard(
                   station,
-                  index === 0
+                  station.id === nearestStationId
                 )
             )}
 
