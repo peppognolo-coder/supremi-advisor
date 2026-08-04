@@ -6,18 +6,44 @@ import {
 // TIPI
 // =========================
 
-export type SortMode =
-  | 'aperte'
-  | 'convenzionate'
+/**
+ * Filtri booleani combinabili tra loro (logica "e"): a differenza
+ * dell'ordinamento, nascondono le attività che non soddisfano la
+ * condizione. Entrambi possono essere attivi insieme (es. "aperta e
+ * convenzionata"). Vedi conversazione.
+ */
+export interface FiltriAttivita {
+  aperte: boolean;
+  convenzionate: boolean;
+}
+
+export const FILTRI_DEFAULT: FiltriAttivita = {
+  aperte: false,
+  convenzionate: false,
+};
+
+/**
+ * Ordinamento puro: non nasconde nulla, riordina soltanto. Un solo
+ * criterio alla volta (o nessuno = ordine alfabetico neutro).
+ * "Aperte ora" e "Convenzionate" sono stati spostati tra i FILTRI
+ * (FiltriAttivita) perché sono condizioni sì/no con una soglia naturale;
+ * qui restano solo i criteri senza soglia (rating, distanza). Vedi
+ * conversazione.
+ */
+export type Ordinamento =
   | 'rating'
-  | 'distanza';
+  | 'distanza'
+  | null;
 
-export interface SortOption {
-
-  mode: SortMode;
-
+export interface FiltroOption {
+  key: keyof FiltriAttivita;
   label: string;
+  emoji: string;
+}
 
+export interface OrdinamentoOption {
+  mode: Exclude<Ordinamento, null>;
+  label: string;
   emoji: string;
 }
 
@@ -25,19 +51,23 @@ export interface SortOption {
 // OPZIONI UI
 // =========================
 
-export const SORT_OPTIONS: SortOption[] = [
+export const FILTRI_OPTIONS: FiltroOption[] = [
 
   {
-    mode: 'aperte',
+    key: 'aperte',
     label: 'Aperte ora',
     emoji: '🟢',
   },
 
   {
-    mode: 'convenzionate',
+    key: 'convenzionate',
     label: 'Convenzionate',
     emoji: '✅',
   },
+
+];
+
+export const ORDINAMENTO_OPTIONS: OrdinamentoOption[] = [
 
   {
     mode: 'rating',
@@ -116,97 +146,70 @@ function mediaRating(
   );
 }
 
+function confrontoAlfabetico(
+  a: any,
+  b: any
+): number {
+
+  return (
+    a.nome ?? ''
+  ).localeCompare(
+    b.nome ?? '',
+    'it'
+  );
+}
+
 // =========================
-// UTILITY PRINCIPALE
+// FILTRO (nasconde le non corrispondenti)
 // =========================
 
 /**
- * Ordina un array di attività
- * secondo il criterio scelto.
- * Non modifica l'array originale.
- *
- * @param attivita  - lista attività da ordinare
- * @param mode      - criterio di ordinamento
- * @returns nuovo array ordinato
+ * Filtra un array di attività secondo i filtri booleani attivi
+ * (combinati con logica "e"). Non modifica l'array originale.
  *
  * @example
- * const sorted = sortAttivita(locali, 'aperte');
- * const sorted = sortAttivita(locali, 'rating');
+ * const visibili = filtraAttivita(locali, { aperte: true, convenzionate: false });
  */
-export function sortAttivita(
+export function filtraAttivita(
   attivita: any[],
-  mode: SortMode
+  filtri: FiltriAttivita
+): any[] {
+
+  return attivita.filter((a) => {
+
+    if (filtri.aperte && !getStatoApertura(a).aperto) {
+      return false;
+    }
+
+    if (filtri.convenzionate && !a.convenzionato) {
+      return false;
+    }
+
+    return true;
+  });
+}
+
+// =========================
+// ORDINAMENTO (riordina soltanto, non nasconde nulla)
+// =========================
+
+/**
+ * Ordina un array di attività secondo il criterio scelto.
+ * Non modifica l'array originale. Con `null` (nessun criterio
+ * selezionato, stato neutro) ordina alfabeticamente.
+ *
+ * @example
+ * const ordinate = ordinaAttivita(locali, 'rating');
+ * const ordinate = ordinaAttivita(locali, null); // neutro → alfabetico
+ */
+export function ordinaAttivita(
+  attivita: any[],
+  ordinamento: Ordinamento
 ): any[] {
 
   const arr = [...attivita];
 
-  switch (mode) {
-
-    // =========================
-    // APERTE ORA
-    // Aperte prima, poi chiuse.
-    // A parità: ordine alfabetico.
-    // =========================
-
-    case 'aperte': {
-
-      return arr.sort(
-        (a, b) => {
-
-          const aAperto =
-            getStatoApertura(a).aperto
-              ? 0
-              : 1;
-
-          const bAperto =
-            getStatoApertura(b).aperto
-              ? 0
-              : 1;
-
-          if (aAperto !== bAperto) {
-            return aAperto - bAperto;
-          }
-
-          return (
-            a.nome ?? ''
-          ).localeCompare(
-            b.nome ?? '',
-            'it'
-          );
-        }
-      );
-    }
-
-    // =========================
-    // CONVENZIONATE PRIMA
-    // Convenzionate prima, poi le altre.
-    // A parità: ordine alfabetico.
-    // =========================
-
-    case 'convenzionate': {
-
-      return arr.sort(
-        (a, b) => {
-
-          const aConv =
-            a.convenzionato ? 0 : 1;
-
-          const bConv =
-            b.convenzionato ? 0 : 1;
-
-          if (aConv !== bConv) {
-            return aConv - bConv;
-          }
-
-          return (
-            a.nome ?? ''
-          ).localeCompare(
-            b.nome ?? '',
-            'it'
-          );
-        }
-      );
-    }
+  switch (ordinamento) {
 
     // =========================
     // MIGLIOR RATING
@@ -229,12 +232,7 @@ export function sortAttivita(
             return bRating - aRating;
           }
 
-          return (
-            a.nome ?? ''
-          ).localeCompare(
-            b.nome ?? '',
-            'it'
-          );
+          return confrontoAlfabetico(a, b);
         }
       );
     }
@@ -264,17 +262,18 @@ export function sortAttivita(
             return aRank - bRank;
           }
 
-          return (
-            a.nome ?? ''
-          ).localeCompare(
-            b.nome ?? '',
-            'it'
-          );
+          return confrontoAlfabetico(a, b);
         }
       );
     }
 
+    // =========================
+    // NEUTRO (nessun criterio selezionato)
+    // Ordine alfabetico: prevedibile, coerente col
+    // criterio di pareggio già usato sopra.
+    // =========================
+
     default:
-      return arr;
+      return arr.sort(confrontoAlfabetico);
   }
 }
