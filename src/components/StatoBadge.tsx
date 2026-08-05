@@ -1,4 +1,7 @@
-import type { StatoSaletta } from '../lib/database.types';
+// Definito qui perché non esiste (e non è mai esistito) in database.types.ts —
+// prima l'import era rotto, TypeScript non lo segnalava solo perché `vite
+// build` non fa type-check completo. Vedi conversazione.
+type StatoSaletta = 'aperta' | 'chiusa' | 'manutenzione';
 
 const config: Record<StatoSaletta, { label: string; classes: string }> = {
   aperta: { label: 'Aperta', classes: 'bg-emerald-100 text-emerald-700' },
