@@ -354,12 +354,17 @@ export default function App() {
       <SearchOverlay
         isOpen={searchOpen}
         onClose={() => setSearchOpen(false)}
+        mode={searchIsPersonal ? 'personal' : 'navigate'}
         onSelectStation={(id) => {
           if (searchIsPersonal) {
             setActiveStation(id);
           } else {
             handleOpenStazione(id);
           }
+          setSearchOpen(false);
+        }}
+        onSelectSalette={(stationName) => {
+          handleOpenSegnalazione(stationName);
           setSearchOpen(false);
         }}
         activeStationId={searchIsPersonal ? activeStationId : null}
