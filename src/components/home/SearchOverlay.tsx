@@ -10,7 +10,7 @@ import { useScrollLock } from '../../lib/useScrollLock';
 interface SearchOverlayProps {
   isOpen: boolean;
   onClose: () => void;
-  onSelectStation: (id: string) => void;
+  onSelectStation: (id: string, nome: string) => void;
   /** Apre la sezione Salette pre-filtrata su questa stazione (solo mode="navigate"). */
   onSelectSalette?: (stationName: string) => void;
   activeStationId: string | null;
@@ -87,8 +87,8 @@ export const SearchOverlay: React.FC<SearchOverlayProps> = ({
 
   if (!isOpen) return null;
 
-  function handleSelect(id: string) {
-    onSelectStation(id);
+  function handleSelect(id: string, nome: string) {
+    onSelectStation(id, nome);
     onClose();
   }
 
@@ -193,25 +193,26 @@ export const SearchOverlay: React.FC<SearchOverlayProps> = ({
                 {results.length} {results.length === 1 ? 'risultato' : 'risultati'}
               </p>
             )}
-            <div className="flex flex-col gap-1 pb-4">
+            <div className="flex flex-col gap-2 pb-4">
               {results.map((station) => {
                 const isActive = station.id === activeStationId;
-                const showSaletteChip =
+                const showSaletteRow =
                   mode === 'navigate' && station.hasSalette && !!onSelectSalette;
                 return (
                   <div
                     key={station.id}
                     className={[
-                      'w-full flex items-center gap-2 px-3 py-2 rounded-2xl transition-colors',
+                      'w-full rounded-2xl overflow-hidden border transition-colors',
                       isActive
-                        ? 'bg-trenord-green/10 border border-trenord-green/20'
-                        : '',
+                        ? 'bg-trenord-green/10 border-trenord-green/20'
+                        : 'border-transparent',
                     ].join(' ')}
                   >
+                    {/* Fascia 1: apre la scheda della stazione */}
                     <button
                       type="button"
-                      onClick={() => handleSelect(station.id)}
-                      className="flex-1 min-w-0 flex items-center gap-3 py-1 text-left rounded-xl active:bg-gray-100 dark:active:bg-gray-800 transition-colors"
+                      onClick={() => handleSelect(station.id, station.nome)}
+                      className="w-full flex items-center gap-3 px-3 py-3 text-left active:bg-gray-100 dark:active:bg-gray-800 transition-colors"
                     >
                       <div
                         className={`w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 ${
@@ -232,24 +233,29 @@ export const SearchOverlay: React.FC<SearchOverlayProps> = ({
                         </p>
                         <p className="text-xs text-gray-400 dark:text-gray-500 font-mono mt-0.5">{station.codice}</p>
                       </div>
+                      {isActive ? (
+                        <span className="text-[10px] font-bold text-trenord-green bg-trenord-green/10 px-2 py-1 rounded-full flex-shrink-0 whitespace-nowrap">
+                          Attiva
+                        </span>
+                      ) : (
+                        <ChevronRight className="w-4 h-4 text-gray-300 dark:text-gray-600 flex-shrink-0" />
+                      )}
                     </button>
 
-                    {showSaletteChip && (
+                    {/* Fascia 2: apre le salette di questa stazione — separata da un bordo,
+                        così è chiaro che è una destinazione diversa dal tap sopra. Vedi conversazione. */}
+                    {showSaletteRow && (
                       <button
                         type="button"
                         onClick={() => handleSelectSalette(station.nome)}
-                        className="flex-shrink-0 flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-[11px] font-semibold text-gray-600 dark:text-gray-300 bg-gray-100 dark:bg-gray-800 active:bg-gray-200 dark:active:bg-gray-700 transition-colors whitespace-nowrap"
+                        className="w-full flex items-center gap-2 px-3 py-2.5 text-left border-t border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-800/60 active:bg-gray-100 dark:active:bg-gray-800 transition-colors"
                       >
-                        🛋️ Salette
+                        <span className="text-base flex-shrink-0">🛋️</span>
+                        <span className="text-xs font-medium text-gray-600 dark:text-gray-300 flex-1">
+                          Vedi le salette di questa stazione
+                        </span>
+                        <ChevronRight className="w-3.5 h-3.5 text-gray-300 dark:text-gray-600 flex-shrink-0" />
                       </button>
-                    )}
-
-                    {isActive ? (
-                      <span className="text-[10px] font-bold text-trenord-green bg-trenord-green/10 px-2 py-1 rounded-full flex-shrink-0 whitespace-nowrap">
-                        Attiva
-                      </span>
-                    ) : (
-                      <ChevronRight className="w-4 h-4 text-gray-300 dark:text-gray-600 flex-shrink-0" />
                     )}
                   </div>
                 );
