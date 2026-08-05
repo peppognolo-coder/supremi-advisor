@@ -50,6 +50,10 @@ export function useStationSearch() {
   const [allStations, setAllStations] = useState<
     Pick<Stazione, 'id' | 'nome' | 'codice' | 'regione'>[]
   >([]);
+  // Id delle stazioni che hanno almeno una saletta attiva/non eliminata:
+  // usato per decidere se mostrare il chip "Vedi salette" accanto al
+  // risultato. Vedi conversazione.
+  const [stazioniConSalette, setStazioniConSalette] = useState<Set<string>>(new Set());
   const [loadingAll, setLoadingAll] = useState(false);
   const [query, setQuery] = useState('');
 
@@ -63,14 +67,32 @@ export function useStationSearch() {
     async function load() {
       setLoadingAll(true);
       try {
-        const { data, error } = await supabase
-          .from('stazioni')
-          .select('id, nome, codice, regione')
-          .eq('attiva', true)
-          .order('nome', { ascending: true });
+        const [stazioniRes, saletteRes] = await Promise.all([
+          supabase
+            .from('stazioni')
+            .select('id, nome, codice, regione')
+            .eq('attiva', true)
+            .order('nome', { ascending: true }),
+          supabase
+            .from('salette')
+            .select('stazione_id')
+            .eq('attiva', true)
+            .is('deleted_at', null),
+        ]);
 
-        if (error) throw error;
-        if (!cancelled) setAllStations(data ?? []);
+        if (stazioniRes.error) throw stazioniRes.error;
+        if (saletteRes.error) throw saletteRes.error;
+
+        if (!cancelled) {
+          setAllStations(stazioniRes.data ?? []);
+          setStazioniConSalette(
+            new Set(
+              (saletteRes.data ?? [])
+                .map((s) => s.stazione_id)
+                .filter((id): id is string => !!id)
+            )
+          );
+        }
       } catch (err) {
         console.error('[useStationSearch] Errore caricamento stazioni:', err);
       } finally {
@@ -93,16 +115,20 @@ export function useStationSearch() {
       .split(/\s+/)
       .filter((t) => t.length > 0);
 
-    if (tokens.length === 0) {
-      // Nessuna query: mostra tutte le stazioni attive in ordine alfabetico.
-      // Prima limitava alle prime 20, costringendo a usare sempre la
-      // ricerca anche per chi preferisce scorrere l'elenco — inutile con
-      // solo 64 stazioni totali. Vedi conversazione.
-      return allStations;
-    }
+    const base =
+      tokens.length === 0
+        // Nessuna query: mostra tutte le stazioni attive in ordine alfabetico.
+        // Prima limitava alle prime 20, costringendo a usare sempre la
+        // ricerca anche per chi preferisce scorrere l'elenco — inutile con
+        // solo 64 stazioni totali. Vedi conversazione.
+        ? allStations
+        : allStations.filter((s) => matchesQuery(s, tokens));
 
-    return allStations.filter((s) => matchesQuery(s, tokens));
-  }, [allStations, query]);
+    return base.map((s) => ({
+      ...s,
+      hasSalette: stazioniConSalette.has(s.id),
+    }));
+  }, [allStations, query, stazioniConSalette]);
 
   const reset = useCallback(() => {
     setQuery('');
