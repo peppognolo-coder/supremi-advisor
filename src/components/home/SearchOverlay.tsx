@@ -11,7 +11,13 @@ interface SearchOverlayProps {
   isOpen: boolean;
   onClose: () => void;
   onSelectStation: (id: string) => void;
+  /** Apre la sezione Salette pre-filtrata su questa stazione (solo mode="navigate"). */
+  onSelectSalette?: (stationName: string) => void;
   activeStationId: string | null;
+  /** "personal" = "Cambia la mia stazione" (StazioneCard home). "navigate" = ricerca
+   *  globale (SearchBar home): qui, se la stazione ha salette, mostra anche il chip
+   *  "Salette" accanto al risultato. Vedi conversazione. */
+  mode: 'personal' | 'navigate';
 }
 
 // ---------------------------------------------------------------------------
@@ -44,7 +50,9 @@ export const SearchOverlay: React.FC<SearchOverlayProps> = ({
   isOpen,
   onClose,
   onSelectStation,
+  onSelectSalette,
   activeStationId,
+  mode,
 }) => {
   const { query, setQuery, results, loadingAll, reset } = useStationSearch();
   const inputRef = useRef<HTMLInputElement>(null);
@@ -81,6 +89,11 @@ export const SearchOverlay: React.FC<SearchOverlayProps> = ({
 
   function handleSelect(id: string) {
     onSelectStation(id);
+    onClose();
+  }
+
+  function handleSelectSalette(stationName: string) {
+    onSelectSalette?.(stationName);
     onClose();
   }
 
@@ -183,36 +196,54 @@ export const SearchOverlay: React.FC<SearchOverlayProps> = ({
             <div className="flex flex-col gap-1 pb-4">
               {results.map((station) => {
                 const isActive = station.id === activeStationId;
+                const showSaletteChip =
+                  mode === 'navigate' && station.hasSalette && !!onSelectSalette;
                 return (
-                  <button
+                  <div
                     key={station.id}
-                    onClick={() => handleSelect(station.id)}
                     className={[
-                      'w-full flex items-center gap-3 px-3 py-3 rounded-2xl text-left transition-colors',
+                      'w-full flex items-center gap-2 px-3 py-2 rounded-2xl transition-colors',
                       isActive
                         ? 'bg-trenord-green/10 border border-trenord-green/20'
-                        : 'active:bg-gray-100 dark:active:bg-gray-800',
+                        : '',
                     ].join(' ')}
                   >
-                    <div
-                      className={`w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 ${
-                        isActive ? 'bg-trenord-green' : 'bg-gray-100 dark:bg-gray-800'
-                      }`}
+                    <button
+                      type="button"
+                      onClick={() => handleSelect(station.id)}
+                      className="flex-1 min-w-0 flex items-center gap-3 py-1 text-left rounded-xl active:bg-gray-100 dark:active:bg-gray-800 transition-colors"
                     >
-                      <MapPin
-                        className={`w-4 h-4 ${isActive ? 'text-white' : 'text-gray-400'}`}
-                      />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p
-                        className={`text-sm font-semibold truncate ${
-                          isActive ? 'text-trenord-green' : 'text-gray-800 dark:text-gray-100'
+                      <div
+                        className={`w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 ${
+                          isActive ? 'bg-trenord-green' : 'bg-gray-100 dark:bg-gray-800'
                         }`}
                       >
-                        {station.nome}
-                      </p>
-                      <p className="text-xs text-gray-400 dark:text-gray-500 font-mono mt-0.5">{station.codice}</p>
-                    </div>
+                        <MapPin
+                          className={`w-4 h-4 ${isActive ? 'text-white' : 'text-gray-400'}`}
+                        />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p
+                          className={`text-sm font-semibold truncate ${
+                            isActive ? 'text-trenord-green' : 'text-gray-800 dark:text-gray-100'
+                          }`}
+                        >
+                          {station.nome}
+                        </p>
+                        <p className="text-xs text-gray-400 dark:text-gray-500 font-mono mt-0.5">{station.codice}</p>
+                      </div>
+                    </button>
+
+                    {showSaletteChip && (
+                      <button
+                        type="button"
+                        onClick={() => handleSelectSalette(station.nome)}
+                        className="flex-shrink-0 flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-[11px] font-semibold text-gray-600 dark:text-gray-300 bg-gray-100 dark:bg-gray-800 active:bg-gray-200 dark:active:bg-gray-700 transition-colors whitespace-nowrap"
+                      >
+                        🛋️ Salette
+                      </button>
+                    )}
+
                     {isActive ? (
                       <span className="text-[10px] font-bold text-trenord-green bg-trenord-green/10 px-2 py-1 rounded-full flex-shrink-0 whitespace-nowrap">
                         Attiva
@@ -220,7 +251,7 @@ export const SearchOverlay: React.FC<SearchOverlayProps> = ({
                     ) : (
                       <ChevronRight className="w-4 h-4 text-gray-300 dark:text-gray-600 flex-shrink-0" />
                     )}
-                  </button>
+                  </div>
                 );
               })}
             </div>
