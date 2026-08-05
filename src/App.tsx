@@ -107,12 +107,14 @@ export default function App() {
     setPendingExpandId(stationId);
     setPendingStationName(stationName ?? null);
     setPendingCategoriaFilter(categoriaFilter ?? null);
+    window.scrollTo(0, 0);
     setActiveTab('stazioni');
     pushTabHistory('stazioni');
   }
 
   function handleOpenSegnalazione(stationName: string) {
     setPendingSaletteStationName(stationName);
+    window.scrollTo(0, 0);
     setActiveTab('salette');
     pushTabHistory('salette');
   }
@@ -355,11 +357,11 @@ export default function App() {
         isOpen={searchOpen}
         onClose={() => setSearchOpen(false)}
         mode={searchIsPersonal ? 'personal' : 'navigate'}
-        onSelectStation={(id) => {
+        onSelectStation={(id, nome) => {
           if (searchIsPersonal) {
             setActiveStation(id);
           } else {
-            handleOpenStazione(id);
+            handleOpenStazione(id, nome);
           }
           setSearchOpen(false);
         }}
