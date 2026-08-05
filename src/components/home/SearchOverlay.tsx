@@ -270,7 +270,7 @@ export const SearchOverlay: React.FC<SearchOverlayProps> = ({
       ── */}
       {scelta && (
         <div
-          className="fixed inset-0 z-[70] bg-black/40 flex items-end sm:items-center justify-center p-4"
+          className="fixed inset-0 z-[70] bg-black/40 flex items-center justify-center p-4"
           onClick={() => setScelta(null)}
         >
           <div
