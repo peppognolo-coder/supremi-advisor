@@ -1,5 +1,5 @@
-import React, { useEffect, useRef } from 'react';
-import { Search, X, MapPin, ChevronRight, ArrowLeft } from 'lucide-react';
+import React, { useEffect, useRef, useState } from 'react';
+import { Search, X, MapPin, ChevronRight, ArrowLeft, BedDouble, Building2 } from 'lucide-react';
 import { useStationSearch } from '../../hooks/useStationSearch';
 import { useScrollLock } from '../../lib/useScrollLock';
 
@@ -15,8 +15,9 @@ interface SearchOverlayProps {
   onSelectSalette?: (stationName: string) => void;
   activeStationId: string | null;
   /** "personal" = "Cambia la mia stazione" (StazioneCard home). "navigate" = ricerca
-   *  globale (SearchBar home): qui, se la stazione ha salette, mostra anche il chip
-   *  "Salette" accanto al risultato. Vedi conversazione. */
+   *  globale (SearchBar home): qui, se la stazione ha anche salette, il tap apre un
+   *  piccolo modal di scelta (stazione vs salette) invece di andare dritto alla
+   *  stazione. Vedi conversazione. */
   mode: 'personal' | 'navigate';
 }
 
@@ -57,6 +58,11 @@ export const SearchOverlay: React.FC<SearchOverlayProps> = ({
   const { query, setQuery, results, loadingAll, reset } = useStationSearch();
   const inputRef = useRef<HTMLInputElement>(null);
 
+  // Stazione tappata che ha SIA la scheda stazione SIA salette: mostriamo un
+  // piccolo modal di scelta invece di decidere noi al posto dell'utente.
+  // null = nessuna scelta in corso. Vedi conversazione.
+  const [scelta, setScelta] = useState<{ id: string; nome: string } | null>(null);
+
   // ── Scroll lock ────────────────────────────────────────────────────────────
   // useScrollLock gestisce body overflow + modalOpenCount (pull-to-refresh).
   // Il componente monta solo quando isOpen=true (App.tsx usa `isOpen && <SearchOverlay>`
@@ -87,13 +93,27 @@ export const SearchOverlay: React.FC<SearchOverlayProps> = ({
 
   if (!isOpen) return null;
 
-  function handleSelect(id: string, nome: string) {
+  function handleSelect(id: string, nome: string, hasSalette: boolean) {
+    // Se la stazione ha anche salette (solo in modalità "navigate", ricerca
+    // globale) chiediamo prima cosa vuole vedere l'utente, invece di
+    // decidere per lui o di appesantire ogni riga della lista con un
+    // secondo pulsante sempre visibile. Vedi conversazione.
+    if (mode === 'navigate' && hasSalette && onSelectSalette) {
+      setScelta({ id, nome });
+      return;
+    }
     onSelectStation(id, nome);
     onClose();
   }
 
-  function handleSelectSalette(stationName: string) {
-    onSelectSalette?.(stationName);
+  function confermaScelta(tipo: 'stazione' | 'salette') {
+    if (!scelta) return;
+    if (tipo === 'stazione') {
+      onSelectStation(scelta.id, scelta.nome);
+    } else {
+      onSelectSalette?.(scelta.nome);
+    }
+    setScelta(null);
     onClose();
   }
 
@@ -117,7 +137,9 @@ export const SearchOverlay: React.FC<SearchOverlayProps> = ({
           >
             <ArrowLeft className="w-5 h-5" />
           </button>
-          <h2 className="text-base font-bold text-gray-900 dark:text-gray-100 flex-1">Cambia stazione</h2>
+          <h2 className="text-base font-bold text-gray-900 dark:text-gray-100 flex-1">
+            {mode === 'personal' ? 'Cambia stazione' : 'Cerca'}
+          </h2>
         </div>
 
         {/* ── BARRA DI RICERCA fissa ──────────────────────────────────────
@@ -193,77 +215,116 @@ export const SearchOverlay: React.FC<SearchOverlayProps> = ({
                 {results.length} {results.length === 1 ? 'risultato' : 'risultati'}
               </p>
             )}
-            <div className="flex flex-col gap-2 pb-4">
+            <div className="flex flex-col gap-1 pb-4">
               {results.map((station) => {
                 const isActive = station.id === activeStationId;
-                const showSaletteRow =
-                  mode === 'navigate' && station.hasSalette && !!onSelectSalette;
                 return (
-                  <div
+                  <button
                     key={station.id}
+                    type="button"
+                    onClick={() => handleSelect(station.id, station.nome, station.hasSalette)}
                     className={[
-                      'w-full rounded-2xl overflow-hidden border transition-colors',
+                      'w-full flex items-center gap-3 px-3 py-3 rounded-2xl text-left transition-colors',
                       isActive
-                        ? 'bg-trenord-green/10 border-trenord-green/20'
-                        : 'border-transparent',
+                        ? 'bg-trenord-green/10 border border-trenord-green/20'
+                        : 'active:bg-gray-100 dark:active:bg-gray-800',
                     ].join(' ')}
                   >
-                    {/* Fascia 1: apre la scheda della stazione */}
-                    <button
-                      type="button"
-                      onClick={() => handleSelect(station.id, station.nome)}
-                      className="w-full flex items-center gap-3 px-3 py-3 text-left active:bg-gray-100 dark:active:bg-gray-800 transition-colors"
+                    <div
+                      className={`w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 ${
+                        isActive ? 'bg-trenord-green' : 'bg-gray-100 dark:bg-gray-800'
+                      }`}
                     >
-                      <div
-                        className={`w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 ${
-                          isActive ? 'bg-trenord-green' : 'bg-gray-100 dark:bg-gray-800'
+                      <MapPin
+                        className={`w-4 h-4 ${isActive ? 'text-white' : 'text-gray-400'}`}
+                      />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p
+                        className={`text-sm font-semibold truncate ${
+                          isActive ? 'text-trenord-green' : 'text-gray-800 dark:text-gray-100'
                         }`}
                       >
-                        <MapPin
-                          className={`w-4 h-4 ${isActive ? 'text-white' : 'text-gray-400'}`}
-                        />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p
-                          className={`text-sm font-semibold truncate ${
-                            isActive ? 'text-trenord-green' : 'text-gray-800 dark:text-gray-100'
-                          }`}
-                        >
-                          {station.nome}
-                        </p>
-                        <p className="text-xs text-gray-400 dark:text-gray-500 font-mono mt-0.5">{station.codice}</p>
-                      </div>
-                      {isActive ? (
-                        <span className="text-[10px] font-bold text-trenord-green bg-trenord-green/10 px-2 py-1 rounded-full flex-shrink-0 whitespace-nowrap">
-                          Attiva
-                        </span>
-                      ) : (
-                        <ChevronRight className="w-4 h-4 text-gray-300 dark:text-gray-600 flex-shrink-0" />
-                      )}
-                    </button>
-
-                    {/* Fascia 2: apre le salette di questa stazione — separata da un bordo,
-                        così è chiaro che è una destinazione diversa dal tap sopra. Vedi conversazione. */}
-                    {showSaletteRow && (
-                      <button
-                        type="button"
-                        onClick={() => handleSelectSalette(station.nome)}
-                        className="w-full flex items-center gap-2 px-3 py-2.5 text-left border-t border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-800/60 active:bg-gray-100 dark:active:bg-gray-800 transition-colors"
-                      >
-                        <span className="text-base flex-shrink-0">🛋️</span>
-                        <span className="text-xs font-medium text-gray-600 dark:text-gray-300 flex-1">
-                          Vedi le salette di questa stazione
-                        </span>
-                        <ChevronRight className="w-3.5 h-3.5 text-gray-300 dark:text-gray-600 flex-shrink-0" />
-                      </button>
+                        {station.nome}
+                      </p>
+                      <p className="text-xs text-gray-400 dark:text-gray-500 font-mono mt-0.5">{station.codice}</p>
+                    </div>
+                    {isActive ? (
+                      <span className="text-[10px] font-bold text-trenord-green bg-trenord-green/10 px-2 py-1 rounded-full flex-shrink-0 whitespace-nowrap">
+                        Attiva
+                      </span>
+                    ) : (
+                      <ChevronRight className="w-4 h-4 text-gray-300 dark:text-gray-600 flex-shrink-0" />
                     )}
-                  </div>
+                  </button>
                 );
               })}
             </div>
           </div>
         )}
       </div>
+
+      {/* ── MODAL DI SCELTA ─────────────────────────────────────────────────
+          Compare solo al tap su una stazione che ha anche salette (mode
+          "navigate"). Vedi conversazione.
+      ── */}
+      {scelta && (
+        <div
+          className="fixed inset-0 z-[70] bg-black/40 flex items-end sm:items-center justify-center p-4"
+          onClick={() => setScelta(null)}
+        >
+          <div
+            className="w-full sm:max-w-sm bg-white dark:bg-gray-900 rounded-2xl p-5 flex flex-col gap-4"
+            onClick={(e) => e.stopPropagation()}
+            style={{ paddingBottom: 'max(1.25rem, env(safe-area-inset-bottom))' }}
+          >
+            <div>
+              <h3 className="text-base font-bold text-gray-900 dark:text-gray-100">{scelta.nome}</h3>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Cosa vuoi vedere?</p>
+            </div>
+
+            <div className="flex flex-col gap-2">
+              <button
+                type="button"
+                onClick={() => confermaScelta('stazione')}
+                className="w-full flex items-center gap-3 px-4 py-3 rounded-2xl border border-gray-200 dark:border-gray-700 active:bg-gray-50 dark:active:bg-gray-800 transition-colors text-left"
+              >
+                <div className="w-9 h-9 rounded-xl bg-gray-100 dark:bg-gray-800 flex items-center justify-center flex-shrink-0">
+                  <Building2 className="w-4 h-4 text-gray-500 dark:text-gray-400" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">Vai alla stazione</p>
+                  <p className="text-xs text-gray-400 dark:text-gray-500">Attività, bar, farmacie e altro</p>
+                </div>
+                <ChevronRight className="w-4 h-4 text-gray-300 dark:text-gray-600 flex-shrink-0" />
+              </button>
+
+              <button
+                type="button"
+                onClick={() => confermaScelta('salette')}
+                className="w-full flex items-center gap-3 px-4 py-3 rounded-2xl border border-gray-200 dark:border-gray-700 active:bg-gray-50 dark:active:bg-gray-800 transition-colors text-left"
+              >
+                <div className="w-9 h-9 rounded-xl bg-gray-100 dark:bg-gray-800 flex items-center justify-center flex-shrink-0">
+                  <BedDouble className="w-4 h-4 text-gray-500 dark:text-gray-400" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">Vedi le salette</p>
+                  <p className="text-xs text-gray-400 dark:text-gray-500">Sale relax, spogliatoi e altro</p>
+                </div>
+                <ChevronRight className="w-4 h-4 text-gray-300 dark:text-gray-600 flex-shrink-0" />
+              </button>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => setScelta(null)}
+              className="text-sm text-gray-400 dark:text-gray-500 py-1"
+            >
+              Annulla
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
