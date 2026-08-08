@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { createPortal } from 'react-dom';
 import { AlertTriangle } from 'lucide-react';
 
 /**
@@ -32,7 +33,7 @@ export default function ConfirmHardDeleteModal({
   const isMatch = inputValue.trim() === nome.trim();
   const isBlocked = !!blockedMessage;
 
-  return (
+  return createPortal(
     <div className="fixed inset-0 bg-black/40 z-[9999] flex items-center justify-center p-4">
       <div className="bg-white dark:bg-gray-900 rounded-2xl w-full max-w-sm p-6 flex flex-col gap-4">
 
@@ -91,6 +92,7 @@ export default function ConfirmHardDeleteModal({
         </div>
 
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
