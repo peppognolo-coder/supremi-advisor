@@ -3,6 +3,8 @@ import {
   useState,
 } from 'react';
 
+import { createPortal } from 'react-dom';
+
 import {
   RotateCcw,
   Trash2,
@@ -31,6 +33,7 @@ import {
 
 import AddAttivitaModal from '../components/AddAttivitaModal';
 import OpzioniAlimentariSection from '../components/forms/OpzioniAlimentariSection';
+import HotelFieldsSection from '../components/forms/HotelFieldsSection';
 import ConfirmHardDeleteModal from '../components/ConfirmHardDeleteModal';
 
 // =========================
@@ -75,7 +78,7 @@ function ConfirmModal({
   onCancel: () => void;
   loading: boolean;
 }) {
-  return (
+  return createPortal(
     <div className="fixed inset-0 bg-black/40 z-[9999] flex items-center justify-center p-4">
       <div className="bg-white dark:bg-gray-900 rounded-2xl w-full max-w-sm p-6 flex flex-col gap-4">
         <p className="text-sm text-gray-700 dark:text-gray-300">{message}</p>
@@ -91,7 +94,8 @@ function ConfirmModal({
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
 
@@ -105,7 +109,7 @@ function PickStazioneModal({
   onPick: (stazioneId: string) => void;
 }) {
   const [stazioneId, setStazioneId] = useState(stazioni[0]?.id ?? '');
-  return (
+  return createPortal(
     <div className="fixed inset-0 bg-black/40 z-[9999] flex items-center justify-center p-4">
       <div className="bg-white dark:bg-gray-900 rounded-2xl w-full max-w-sm p-6 flex flex-col gap-4">
         <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100">Aggiungi attività</h2>
@@ -137,7 +141,8 @@ function PickStazioneModal({
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
 
@@ -578,7 +583,7 @@ export default function AdminAttivitaScreen({ adminPin, initialEditId }: Props) 
       </div>
 
       {/* MODAL MODIFICA */}
-      {editingAttivita && (
+      {editingAttivita && createPortal(
         <div className="fixed inset-0 bg-black/40 z-[9999] flex items-center justify-center p-4"
           onClick={(e) => { if (e.target === e.currentTarget) setEditingAttivita(null); }}>
           <div className="bg-white dark:bg-gray-900 rounded-3xl w-full max-w-2xl p-6 pb-24 flex flex-col gap-4 max-h-[90dvh] overflow-y-auto">
@@ -616,135 +621,18 @@ export default function AdminAttivitaScreen({ adminPin, initialEditId }: Props) 
               </select>
             </div>
 
-            {/* SEZIONE HOTEL */}
+            {/* SEZIONE HOTEL — componente condiviso con AddAttivitaModal.tsx e
+                ContributoAttivitaForm.tsx (prima era duplicato qui a mano,
+                con lo stesso set di campi ma stile diverso: unificato per
+                evitare che le due versioni si scollino nel tempo. Vedi
+                conversazione). */}
             {editingAttivita.categoria === 'Hotel' && (
-              <div className="bg-blue-50 border border-blue-100 rounded-2xl p-4 flex flex-col gap-3">
-
-                <h3 className="font-semibold text-blue-700">
-                  Informazioni Hotel
-                </h3>
-
-                <div className="flex flex-col gap-1">
-                  <label className="text-xs text-gray-500">Telefono</label>
-                  <input
-                    value={editingAttivita.dati_extra?.telefono || ''}
-                    onChange={(e) =>
-                      setEditingAttivita({
-                        ...editingAttivita,
-                        dati_extra: {
-                          ...(editingAttivita.dati_extra ?? {}),
-                          telefono: e.target.value,
-                        },
-                      })
-                    }
-                    className="border rounded-xl px-3 py-2 text-base"
-                  />
-                </div>
-
-                <label className="flex items-center gap-2">
-                  <input
-                    type="checkbox"
-                    checked={Boolean(editingAttivita.dati_extra?.reception_h24)}
-                    onChange={(e) =>
-                      setEditingAttivita({
-                        ...editingAttivita,
-                        dati_extra: {
-                          ...(editingAttivita.dati_extra ?? {}),
-                          reception_h24: e.target.checked,
-                        },
-                      })
-                    }
-                  />
-                  Reception H24
-                </label>
-
-                <label className="flex items-center gap-2">
-                  <input
-                    type="checkbox"
-                    checked={Boolean(editingAttivita.dati_extra?.colazione)}
-                    onChange={(e) =>
-                      setEditingAttivita({
-                        ...editingAttivita,
-                        dati_extra: {
-                          ...(editingAttivita.dati_extra ?? {}),
-                          colazione: e.target.checked,
-                        },
-                      })
-                    }
-                  />
-                  Colazione disponibile
-                </label>
-
-                <label className="flex items-center gap-2">
-                  <input
-                    type="checkbox"
-                    checked={Boolean(editingAttivita.dati_extra?.wifi)}
-                    onChange={(e) =>
-                      setEditingAttivita({
-                        ...editingAttivita,
-                        dati_extra: {
-                          ...(editingAttivita.dati_extra ?? {}),
-                          wifi: e.target.checked,
-                        },
-                      })
-                    }
-                  />
-                  WiFi disponibile
-                </label>
-
-                <label className="flex items-center gap-2">
-                  <input
-                    type="checkbox"
-                    checked={Boolean(editingAttivita.dati_extra?.navetta)}
-                    onChange={(e) =>
-                      setEditingAttivita({
-                        ...editingAttivita,
-                        dati_extra: {
-                          ...(editingAttivita.dati_extra ?? {}),
-                          navetta: e.target.checked,
-                        },
-                      })
-                    }
-                  />
-                  Navetta disponibile
-                </label>
-
-                <label className="flex items-center gap-2">
-                  <input
-                    type="checkbox"
-                    checked={Boolean(editingAttivita.dati_extra?.ristorante)}
-                    onChange={(e) =>
-                      setEditingAttivita({
-                        ...editingAttivita,
-                        dati_extra: {
-                          ...(editingAttivita.dati_extra ?? {}),
-                          ristorante: e.target.checked,
-                        },
-                      })
-                    }
-                  />
-                  Ristorante interno
-                </label>
-
-                <div className="flex flex-col gap-1">
-                  <label className="text-xs text-gray-500">Note equipaggi</label>
-                  <textarea
-                    rows={3}
-                    value={editingAttivita.dati_extra?.note_equipaggi || ''}
-                    onChange={(e) =>
-                      setEditingAttivita({
-                        ...editingAttivita,
-                        dati_extra: {
-                          ...(editingAttivita.dati_extra ?? {}),
-                          note_equipaggi: e.target.value,  // ← FIX P1: virgola corretta dopo lo spread
-                        },
-                      })
-                    }
-                    className="border rounded-xl px-3 py-2 resize-none text-base"
-                  />
-                </div>
-
-              </div>
+              <HotelFieldsSection
+                value={editingAttivita.dati_extra ?? {}}
+                onChange={(dati_extra) =>
+                  setEditingAttivita({ ...editingAttivita, dati_extra })
+                }
+              />
             )}
 
             {/* OPZIONI ALIMENTARI (solo categorie alimentari) */}
@@ -808,8 +696,13 @@ export default function AdminAttivitaScreen({ adminPin, initialEditId }: Props) 
               </label>
             </div>
 
-            {/* FASCE ORARIE (solo NON Hotel) */}
-            {editingAttivita.categoria !== 'Hotel' && (
+            {/* FASCE ORARIE — anche per gli Hotel, per chi non ha reception
+                H24 e vuole comunque indicare degli orari. Se reception H24
+                è attiva, queste fasce vengono ignorate ai fini dello stato
+                aperto/chiuso (vedi nota sopra e getStatoApertura.ts).
+                Vedi conversazione. */}
+            {(editingAttivita.categoria !== 'Hotel' ||
+              !editingAttivita.dati_extra?.reception_h24) && (
               <div className="flex flex-col gap-4">
                 <div className="flex items-center justify-between">
                   <h3 className="font-semibold">Fasce orarie</h3>
@@ -913,7 +806,8 @@ export default function AdminAttivitaScreen({ adminPin, initialEditId }: Props) 
             </button>
 
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* CONFIRM MODAL */}
