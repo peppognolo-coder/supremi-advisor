@@ -4,6 +4,8 @@ import {
   useState,
 } from 'react';
 
+import { createPortal } from 'react-dom';
+
 import {
   Building2,
   MapPin,
@@ -1120,7 +1122,7 @@ export default function AdminScreen({ adminPin, refreshKey, onPinChanged }: Prop
             );
             setEditAttivitaId(undefined);
           }}
-          className="self-start flex items-center gap-2 px-3 py-2 rounded-xl bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800"
+          className="self-start flex items-center gap-2 px-3 py-2 rounded-xl bg-white border border-gray-200 text-sm text-gray-700 hover:bg-gray-50"
         >
 
           <ArrowLeft className="w-4 h-4" />
@@ -1152,7 +1154,7 @@ export default function AdminScreen({ adminPin, refreshKey, onPinChanged }: Prop
               false
             )
           }
-          className="self-start flex items-center gap-2 px-3 py-2 rounded-xl bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800"
+          className="self-start flex items-center gap-2 px-3 py-2 rounded-xl bg-white border border-gray-200 text-sm text-gray-700 hover:bg-gray-50"
         >
 
           <ArrowLeft className="w-4 h-4" />
@@ -1179,7 +1181,7 @@ export default function AdminScreen({ adminPin, refreshKey, onPinChanged }: Prop
           onClick={() =>
             setShowSaletteManager(false)
           }
-          className="self-start flex items-center gap-2 px-3 py-2 rounded-xl bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800"
+          className="self-start flex items-center gap-2 px-3 py-2 rounded-xl bg-white border border-gray-200 text-sm text-gray-700 hover:bg-gray-50"
         >
 
           <ArrowLeft className="w-4 h-4" />
@@ -1204,7 +1206,7 @@ export default function AdminScreen({ adminPin, refreshKey, onPinChanged }: Prop
       <div className="flex flex-col gap-4 pb-24">
         <button
           onClick={() => setShowProblemiManager(false)}
-          className="self-start flex items-center gap-2 px-3 py-2 rounded-xl bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800"
+          className="self-start flex items-center gap-2 px-3 py-2 rounded-xl bg-white border border-gray-200 text-sm text-gray-700 hover:bg-gray-50"
         >
           <ArrowLeft className="w-4 h-4" />
           Torna dashboard
@@ -1225,7 +1227,7 @@ export default function AdminScreen({ adminPin, refreshKey, onPinChanged }: Prop
         onClick={() =>
           setShowStazioniManager(false)
         }
-        className="self-start flex items-center gap-2 px-3 py-2 rounded-xl bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800"
+        className="self-start flex items-center gap-2 px-3 py-2 rounded-xl bg-white border border-gray-200 text-sm text-gray-700 hover:bg-gray-50"
       >
         <ArrowLeft className="w-4 h-4" />
         Torna dashboard
@@ -1262,7 +1264,7 @@ export default function AdminScreen({ adminPin, refreshKey, onPinChanged }: Prop
 
             <ShieldCheck className="w-6 h-6 text-trenord-green" />
 
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+            <h1 className="text-2xl font-bold text-gray-900">
 
               Dashboard Admin
 
@@ -1369,7 +1371,7 @@ export default function AdminScreen({ adminPin, refreshKey, onPinChanged }: Prop
 
         {/* OPPORTUNITÀ DI CRESCITA */}
         {!loading && (
-          <div className="bg-white dark:bg-gray-900 rounded-2xl border border-emerald-100 dark:border-emerald-900 p-4 shadow-sm flex flex-col gap-3">
+          <div className="bg-white rounded-2xl border border-emerald-100 p-4 shadow-sm flex flex-col gap-3">
 
             {/* HEADER */}
             <div className="flex items-center justify-between">
@@ -1401,7 +1403,7 @@ export default function AdminScreen({ adminPin, refreshKey, onPinChanged }: Prop
                       v.valore === 0 ? 'opacity-40' : ''
                     }`}
                   >
-                    <span className="text-gray-600 dark:text-gray-300">{v.label}</span>
+                    <span className="text-gray-600">{v.label}</span>
                     <span className={`font-bold tabular-nums ${
                       v.valore === 0 ? 'text-gray-400' : 'text-emerald-700'
                     }`}>
@@ -1421,13 +1423,13 @@ export default function AdminScreen({ adminPin, refreshKey, onPinChanged }: Prop
           <div className="grid grid-cols-2 gap-3">
 
             {/* SALETTE */}
-            <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 p-4 shadow-sm">
+            <div className="bg-white rounded-2xl border border-gray-100 p-4 shadow-sm">
 
               <div className="flex items-center justify-between">
 
                 <Building2 className="w-5 h-5 text-trenord-green" />
 
-                <span className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+                <span className="text-2xl font-bold text-gray-900">
 
                   {stats.salette}
 
@@ -1444,13 +1446,13 @@ export default function AdminScreen({ adminPin, refreshKey, onPinChanged }: Prop
             </div>
 
             {/* STAZIONI */}
-            <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 p-4 shadow-sm">
+            <div className="bg-white rounded-2xl border border-gray-100 p-4 shadow-sm">
 
               <div className="flex items-center justify-between">
 
                 <MapPin className="w-5 h-5 text-blue-500" />
 
-                <span className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+                <span className="text-2xl font-bold text-gray-900">
 
                   {stats.stazioni}
 
@@ -1473,14 +1475,14 @@ export default function AdminScreen({ adminPin, refreshKey, onPinChanged }: Prop
                   true
                 )
               }
-              className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 p-4 shadow-sm hover:border-trenord-green/40 transition-colors text-left"
+              className="bg-white rounded-2xl border border-gray-100 p-4 shadow-sm hover:border-trenord-green/40 transition-colors text-left"
             >
 
               <div className="flex items-center justify-between">
 
                 <Store className="w-5 h-5 text-trenord-green" />
 
-                <span className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+                <span className="text-2xl font-bold text-gray-900">
 
                   {stats.attivita}
 
@@ -1503,14 +1505,14 @@ export default function AdminScreen({ adminPin, refreshKey, onPinChanged }: Prop
                   true
                 )
               }
-              className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 p-4 shadow-sm hover:border-amber-300 transition-colors text-left"
+              className="bg-white rounded-2xl border border-gray-100 p-4 shadow-sm hover:border-amber-300 transition-colors text-left"
             >
 
               <div className="flex items-center justify-between">
 
                 <MessageSquareWarning className="w-5 h-5 text-amber-500" />
 
-                <span className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+                <span className="text-2xl font-bold text-gray-900">
 
                   {stats.pending}
 
@@ -1530,9 +1532,9 @@ export default function AdminScreen({ adminPin, refreshKey, onPinChanged }: Prop
         )}
 
         {/* QUICK ACTIONS */}
-        <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 p-4 shadow-sm flex flex-col gap-3">
+        <div className="bg-white rounded-2xl border border-gray-100 p-4 shadow-sm flex flex-col gap-3">
 
-          <h2 className="font-semibold text-gray-900 dark:text-gray-100">
+          <h2 className="font-semibold text-gray-900">
 
             Azioni rapide
 
@@ -1640,16 +1642,16 @@ export default function AdminScreen({ adminPin, refreshKey, onPinChanged }: Prop
         {/* ========================= */}
 
         {!loading && (
-          <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 p-4 shadow-sm flex flex-col gap-4">
+          <div className="bg-white rounded-2xl border border-gray-100 p-4 shadow-sm flex flex-col gap-4">
 
             {/* TITOLO + BADGE */}
             <div>
-              <h2 className="font-semibold text-gray-900 dark:text-gray-100">📈 Community & Crescita</h2>
+              <h2 className="font-semibold text-gray-900">📈 Community & Crescita</h2>
               <p className="text-xs text-gray-400 mt-0.5">Ultimi 30 giorni</p>
               {community.badges.length > 0 && (
                 <div className="flex flex-wrap gap-2 mt-2">
                   {community.badges.map((b) => (
-                    <span key={b} className="text-xs px-2.5 py-1 rounded-full bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 font-medium">
+                    <span key={b} className="text-xs px-2.5 py-1 rounded-full bg-gray-100 text-gray-600 font-medium">
                       {b}
                     </span>
                   ))}
@@ -1662,8 +1664,8 @@ export default function AdminScreen({ adminPin, refreshKey, onPinChanged }: Prop
               <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide">Contributi ricevuti</p>
               <div className="grid grid-cols-2 gap-3">
 
-                <div className="rounded-2xl border border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-800 p-3 flex flex-col gap-1">
-                  <span className="text-2xl font-bold text-gray-900 dark:text-gray-100">{community.contributi.ricevuti}</span>
+                <div className="rounded-2xl border border-gray-100 bg-gray-50 p-3 flex flex-col gap-1">
+                  <span className="text-2xl font-bold text-gray-900">{community.contributi.ricevuti}</span>
                   <span className="text-xs text-gray-500 uppercase tracking-wide">Totali</span>
                 </div>
 
@@ -1679,7 +1681,7 @@ export default function AdminScreen({ adminPin, refreshKey, onPinChanged }: Prop
 
                 <div className={`rounded-2xl border p-3 flex flex-col gap-1 ${
                   community.contributi.tassoApprovazione === null
-                    ? 'border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-800'
+                    ? 'border-gray-100 bg-gray-50'
                     : community.contributi.tassoApprovazione >= 60
                     ? 'border-emerald-100 bg-emerald-50'
                     : 'border-amber-100 bg-amber-50'
@@ -1706,18 +1708,18 @@ export default function AdminScreen({ adminPin, refreshKey, onPinChanged }: Prop
               <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide">Crescita database</p>
               <div className="grid grid-cols-3 gap-3">
 
-                <div className="rounded-2xl border border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-800 p-3 flex flex-col gap-1">
-                  <span className="text-2xl font-bold text-gray-900 dark:text-gray-100">{community.crescita.nuoveStazioni}</span>
+                <div className="rounded-2xl border border-gray-100 bg-gray-50 p-3 flex flex-col gap-1">
+                  <span className="text-2xl font-bold text-gray-900">{community.crescita.nuoveStazioni}</span>
                   <span className="text-xs text-gray-500 uppercase tracking-wide">Stazioni</span>
                 </div>
 
-                <div className="rounded-2xl border border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-800 p-3 flex flex-col gap-1">
-                  <span className="text-2xl font-bold text-gray-900 dark:text-gray-100">{community.crescita.nuoveAttivita}</span>
+                <div className="rounded-2xl border border-gray-100 bg-gray-50 p-3 flex flex-col gap-1">
+                  <span className="text-2xl font-bold text-gray-900">{community.crescita.nuoveAttivita}</span>
                   <span className="text-xs text-gray-500 uppercase tracking-wide">Attività</span>
                 </div>
 
-                <div className="rounded-2xl border border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-800 p-3 flex flex-col gap-1">
-                  <span className="text-2xl font-bold text-gray-900 dark:text-gray-100">{community.crescita.nuoveSalette}</span>
+                <div className="rounded-2xl border border-gray-100 bg-gray-50 p-3 flex flex-col gap-1">
+                  <span className="text-2xl font-bold text-gray-900">{community.crescita.nuoveSalette}</span>
                   <span className="text-xs text-gray-500 uppercase tracking-wide">Salette</span>
                 </div>
 
@@ -1737,7 +1739,7 @@ export default function AdminScreen({ adminPin, refreshKey, onPinChanged }: Prop
                 <div className={`rounded-2xl border p-3 flex flex-col gap-1 ${
                   community.engagement.problemi > 0
                     ? 'border-amber-100 bg-amber-50'
-                    : 'border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-800'
+                    : 'border-gray-100 bg-gray-50'
                 }`}>
                   <span className={`text-2xl font-bold ${community.engagement.problemi > 0 ? 'text-amber-700' : 'text-gray-400'}`}>
                     {community.engagement.problemi}
@@ -1753,13 +1755,13 @@ export default function AdminScreen({ adminPin, refreshKey, onPinChanged }: Prop
               <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide">Trend contributi</p>
               <div className="grid grid-cols-2 gap-3">
 
-                <div className="rounded-2xl border border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-800 p-3 flex flex-col gap-1">
-                  <span className="text-2xl font-bold text-gray-900 dark:text-gray-100">{community.contributi.ultimi7}</span>
+                <div className="rounded-2xl border border-gray-100 bg-gray-50 p-3 flex flex-col gap-1">
+                  <span className="text-2xl font-bold text-gray-900">{community.contributi.ultimi7}</span>
                   <span className="text-xs text-gray-500 uppercase tracking-wide">Ultimi 7 giorni</span>
                 </div>
 
-                <div className="rounded-2xl border border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-800 p-3 flex flex-col gap-1">
-                  <span className="text-2xl font-bold text-gray-900 dark:text-gray-100">{community.contributi.ricevuti}</span>
+                <div className="rounded-2xl border border-gray-100 bg-gray-50 p-3 flex flex-col gap-1">
+                  <span className="text-2xl font-bold text-gray-900">{community.contributi.ricevuti}</span>
                   <span className="text-xs text-gray-500 uppercase tracking-wide">Ultimi 30 giorni</span>
                 </div>
 
@@ -1774,10 +1776,10 @@ export default function AdminScreen({ adminPin, refreshKey, onPinChanged }: Prop
         {/* ========================= */}
 
         {!loading && copertura.totale > 0 && (
-          <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 p-4 shadow-sm flex flex-col gap-4">
+          <div className="bg-white rounded-2xl border border-gray-100 p-4 shadow-sm flex flex-col gap-4">
 
             <div>
-              <h2 className="font-semibold text-gray-900 dark:text-gray-100">Copertura database</h2>
+              <h2 className="font-semibold text-gray-900">Copertura database</h2>
               <p className="text-xs text-gray-400 mt-0.5">Completezza dati delle {copertura.totale} stazioni</p>
             </div>
 
@@ -1789,7 +1791,7 @@ export default function AdminScreen({ adminPin, refreshKey, onPinChanged }: Prop
                   {copertura.percentualeGps}%
                 </span>
               </div>
-              <div className="w-full bg-gray-100 dark:bg-gray-800 rounded-full h-2">
+              <div className="w-full bg-gray-100 rounded-full h-2">
                 <div
                   className={`h-2 rounded-full transition-all ${copertura.percentualeGps >= 80 ? 'bg-emerald-500' : copertura.percentualeGps >= 50 ? 'bg-amber-500' : 'bg-red-500'}`}
                   style={{ width: `${copertura.percentualeGps}%` }}
@@ -1803,11 +1805,11 @@ export default function AdminScreen({ adminPin, refreshKey, onPinChanged }: Prop
               <button
                 type="button"
                 onClick={() => apriStazioniConFiltro('tutte')}
-                className="rounded-2xl border border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-800 p-4 text-left hover:border-gray-300 dark:hover:border-gray-600 transition-colors"
+                className="rounded-2xl border border-gray-100 bg-gray-50 p-4 text-left hover:border-gray-300 transition-colors"
               >
                 <div className="flex items-center justify-between">
                   <Building2 className="w-5 h-5 text-gray-400" />
-                  <span className="text-2xl font-bold text-gray-700 dark:text-gray-300">{copertura.totale}</span>
+                  <span className="text-2xl font-bold text-gray-700">{copertura.totale}</span>
                 </div>
                 <p className="text-xs text-gray-500 mt-3 uppercase tracking-wide">Totali</p>
               </button>
@@ -1827,11 +1829,11 @@ export default function AdminScreen({ adminPin, refreshKey, onPinChanged }: Prop
               <button
                 type="button"
                 onClick={() => apriStazioniConFiltro('tutte', '__coord__')}
-                className={`rounded-2xl border p-4 text-left transition-colors ${copertura.conCoord === copertura.totale ? 'border-emerald-100 bg-emerald-50 hover:border-emerald-300' : 'border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 hover:border-gray-300 dark:hover:border-gray-600'}`}
+                className={`rounded-2xl border p-4 text-left transition-colors ${copertura.conCoord === copertura.totale ? 'border-emerald-100 bg-emerald-50 hover:border-emerald-300' : 'border-gray-100 bg-white hover:border-gray-300'}`}
               >
                 <div className="flex items-center justify-between">
                   <MapPin className={`w-5 h-5 ${copertura.conCoord === copertura.totale ? 'text-emerald-500' : 'text-gray-400'}`} />
-                  <span className={`text-2xl font-bold ${copertura.conCoord === copertura.totale ? 'text-emerald-700 dark:text-emerald-400' : 'text-gray-700 dark:text-gray-300'}`}>{copertura.conCoord}</span>
+                  <span className={`text-2xl font-bold ${copertura.conCoord === copertura.totale ? 'text-emerald-700' : 'text-gray-700'}`}>{copertura.conCoord}</span>
                 </div>
                 <p className="text-xs text-gray-500 mt-3 uppercase tracking-wide">Con coordinate</p>
               </button>
@@ -1839,11 +1841,11 @@ export default function AdminScreen({ adminPin, refreshKey, onPinChanged }: Prop
               <button
                 type="button"
                 onClick={() => apriStazioniConFiltro('tutte', '__maps__')}
-                className={`rounded-2xl border p-4 text-left transition-colors ${copertura.conMaps === copertura.totale ? 'border-emerald-100 bg-emerald-50 hover:border-emerald-300' : 'border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 hover:border-gray-300 dark:hover:border-gray-600'}`}
+                className={`rounded-2xl border p-4 text-left transition-colors ${copertura.conMaps === copertura.totale ? 'border-emerald-100 bg-emerald-50 hover:border-emerald-300' : 'border-gray-100 bg-white hover:border-gray-300'}`}
               >
                 <div className="flex items-center justify-between">
                   <MapPin className={`w-5 h-5 ${copertura.conMaps === copertura.totale ? 'text-emerald-500' : 'text-blue-400'}`} />
-                  <span className={`text-2xl font-bold ${copertura.conMaps === copertura.totale ? 'text-emerald-700 dark:text-emerald-400' : 'text-gray-700 dark:text-gray-300'}`}>{copertura.conMaps}</span>
+                  <span className={`text-2xl font-bold ${copertura.conMaps === copertura.totale ? 'text-emerald-700' : 'text-gray-700'}`}>{copertura.conMaps}</span>
                 </div>
                 <p className="text-xs text-gray-500 mt-3 uppercase tracking-wide">Con Maps Query</p>
               </button>
@@ -1851,11 +1853,11 @@ export default function AdminScreen({ adminPin, refreshKey, onPinChanged }: Prop
               <button
                 type="button"
                 onClick={() => apriStazioniConFiltro('tutte', '__indirizzo__')}
-                className={`rounded-2xl border p-4 text-left transition-colors ${copertura.conIndirizzo === copertura.totale ? 'border-emerald-100 bg-emerald-50 hover:border-emerald-300' : 'border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 hover:border-gray-300 dark:hover:border-gray-600'}`}
+                className={`rounded-2xl border p-4 text-left transition-colors ${copertura.conIndirizzo === copertura.totale ? 'border-emerald-100 bg-emerald-50 hover:border-emerald-300' : 'border-gray-100 bg-white hover:border-gray-300'}`}
               >
                 <div className="flex items-center justify-between">
                   <Building2 className={`w-5 h-5 ${copertura.conIndirizzo === copertura.totale ? 'text-emerald-500' : 'text-gray-400'}`} />
-                  <span className={`text-2xl font-bold ${copertura.conIndirizzo === copertura.totale ? 'text-emerald-700 dark:text-emerald-400' : 'text-gray-700 dark:text-gray-300'}`}>{copertura.conIndirizzo}</span>
+                  <span className={`text-2xl font-bold ${copertura.conIndirizzo === copertura.totale ? 'text-emerald-700' : 'text-gray-700'}`}>{copertura.conIndirizzo}</span>
                 </div>
                 <p className="text-xs text-gray-500 mt-3 uppercase tracking-wide">Con indirizzo</p>
               </button>
@@ -1863,11 +1865,11 @@ export default function AdminScreen({ adminPin, refreshKey, onPinChanged }: Prop
               <button
                 type="button"
                 onClick={() => apriStazioniConFiltro('tutte', '__pluscode__')}
-                className={`rounded-2xl border p-4 text-left transition-colors ${copertura.conPlusCode === copertura.totale ? 'border-emerald-100 bg-emerald-50 hover:border-emerald-300' : 'border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 hover:border-gray-300 dark:hover:border-gray-600'}`}
+                className={`rounded-2xl border p-4 text-left transition-colors ${copertura.conPlusCode === copertura.totale ? 'border-emerald-100 bg-emerald-50 hover:border-emerald-300' : 'border-gray-100 bg-white hover:border-gray-300'}`}
               >
                 <div className="flex items-center justify-between">
                   <AlertCircle className={`w-5 h-5 ${copertura.conPlusCode === copertura.totale ? 'text-emerald-500' : 'text-gray-400'}`} />
-                  <span className={`text-2xl font-bold ${copertura.conPlusCode === copertura.totale ? 'text-emerald-700 dark:text-emerald-400' : 'text-gray-700 dark:text-gray-300'}`}>{copertura.conPlusCode}</span>
+                  <span className={`text-2xl font-bold ${copertura.conPlusCode === copertura.totale ? 'text-emerald-700' : 'text-gray-700'}`}>{copertura.conPlusCode}</span>
                 </div>
                 <p className="text-xs text-gray-500 mt-3 uppercase tracking-wide">Con Plus Code</p>
               </button>
@@ -1898,11 +1900,11 @@ export default function AdminScreen({ adminPin, refreshKey, onPinChanged }: Prop
                   className={`flex items-center justify-between px-3 py-2 rounded-xl border w-full text-left transition-colors ${
                     color
                       ? 'bg-emerald-50 border-emerald-100 hover:border-emerald-300'
-                      : 'bg-white dark:bg-gray-900 border-gray-100 dark:border-gray-800 hover:border-gray-300 dark:hover:border-gray-600'
+                      : 'bg-white border-gray-100 hover:border-gray-300'
                   }`}
                 >
-                  <span className="text-sm text-gray-600 dark:text-gray-300">{label}</span>
-                  <span className={`text-sm font-semibold ${color ? 'text-emerald-600' : count > 0 ? 'text-red-600 dark:text-red-400' : 'text-gray-900 dark:text-gray-100'}`}>
+                  <span className="text-sm text-gray-600">{label}</span>
+                  <span className={`text-sm font-semibold ${color ? 'text-emerald-600' : count > 0 ? 'text-red-600' : 'text-gray-900'}`}>
                     {count}
                   </span>
                 </button>
@@ -1917,10 +1919,10 @@ export default function AdminScreen({ adminPin, refreshKey, onPinChanged }: Prop
         {/* ========================= */}
 
         {!loading && (
-          <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 p-4 shadow-sm flex flex-col gap-4">
+          <div className="bg-white rounded-2xl border border-gray-100 p-4 shadow-sm flex flex-col gap-4">
 
             <div>
-              <h2 className="font-semibold text-gray-900 dark:text-gray-100">🔍 Integrità database</h2>
+              <h2 className="font-semibold text-gray-900">🔍 Integrità database</h2>
               <p className="text-xs text-gray-400 mt-0.5">
                 Relazioni mancanti tra stazioni, salette e attività
               </p>
@@ -1935,7 +1937,7 @@ export default function AdminScreen({ adminPin, refreshKey, onPinChanged }: Prop
                 className={`rounded-2xl border p-4 text-left shadow-sm transition-colors ${
                   integrita.stazioniSenzaAttivita.length === 0
                     ? 'border-emerald-100 bg-emerald-50 hover:border-emerald-300'
-                    : 'border-red-100 dark:border-red-900 bg-white dark:bg-gray-900 hover:border-red-300 dark:hover:border-red-700'
+                    : 'border-red-100 bg-white hover:border-red-300'
                 }`}
               >
                 <div className="flex items-center justify-between">
@@ -1954,7 +1956,7 @@ export default function AdminScreen({ adminPin, refreshKey, onPinChanged }: Prop
                 className={`rounded-2xl border p-4 text-left shadow-sm transition-colors ${
                   integrita.stazioniSenzaSalette.length === 0
                     ? 'border-emerald-100 bg-emerald-50 hover:border-emerald-300'
-                    : 'border-amber-100 dark:border-amber-900 bg-white dark:bg-gray-900 hover:border-amber-300 dark:hover:border-amber-700'
+                    : 'border-amber-100 bg-white hover:border-amber-300'
                 }`}
               >
                 <div className="flex items-center justify-between">
@@ -1973,7 +1975,7 @@ export default function AdminScreen({ adminPin, refreshKey, onPinChanged }: Prop
                 className={`rounded-2xl border p-4 text-left shadow-sm transition-colors ${
                   integrita.saletteSenzaUbicazione.length === 0
                     ? 'border-emerald-100 bg-emerald-50 hover:border-emerald-300'
-                    : 'border-red-100 dark:border-red-900 bg-white dark:bg-gray-900 hover:border-red-300 dark:hover:border-red-700'
+                    : 'border-red-100 bg-white hover:border-red-300'
                 }`}
               >
                 <div className="flex items-center justify-between">
@@ -1992,7 +1994,7 @@ export default function AdminScreen({ adminPin, refreshKey, onPinChanged }: Prop
                 className={`rounded-2xl border p-4 text-left shadow-sm transition-colors ${
                   integrita.saletteSenzaCodice.length === 0
                     ? 'border-emerald-100 bg-emerald-50 hover:border-emerald-300'
-                    : 'border-amber-100 dark:border-amber-900 bg-white dark:bg-gray-900 hover:border-amber-300 dark:hover:border-amber-700'
+                    : 'border-amber-100 bg-white hover:border-amber-300'
                 }`}
               >
                 <div className="flex items-center justify-between">
@@ -2015,11 +2017,11 @@ export default function AdminScreen({ adminPin, refreshKey, onPinChanged }: Prop
 
         {!loading && (
 
-          <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 p-4 shadow-sm flex flex-col gap-4">
+          <div className="bg-white rounded-2xl border border-gray-100 p-4 shadow-sm flex flex-col gap-4">
 
             <div>
 
-              <h2 className="font-semibold text-gray-900 dark:text-gray-100">
+              <h2 className="font-semibold text-gray-900">
 
                 Qualità dati
 
@@ -2056,7 +2058,7 @@ export default function AdminScreen({ adminPin, refreshKey, onPinChanged }: Prop
                     qualita.senzaMaps
                       .length === 0
                       ? 'bg-emerald-50 border-emerald-100 hover:border-emerald-300'
-                      : 'bg-white dark:bg-gray-900 border-red-100 dark:border-red-900 hover:border-red-300 dark:hover:border-red-700'
+                      : 'bg-white border-red-100 hover:border-red-300'
                   }
                 `}
               >
@@ -2119,7 +2121,7 @@ export default function AdminScreen({ adminPin, refreshKey, onPinChanged }: Prop
                     qualita.senzaIndirizzo
                       .length === 0
                       ? 'bg-emerald-50 border-emerald-100 hover:border-emerald-300'
-                      : 'bg-white dark:bg-gray-900 border-red-100 dark:border-red-900 hover:border-red-300 dark:hover:border-red-700'
+                      : 'bg-white border-red-100 hover:border-red-300'
                   }
                 `}
               >
@@ -2183,7 +2185,7 @@ export default function AdminScreen({ adminPin, refreshKey, onPinChanged }: Prop
                     qualita.senzaOrari
                       .length === 0
                       ? 'bg-emerald-50 border-emerald-100 hover:border-emerald-300'
-                      : 'bg-white dark:bg-gray-900 border-red-100 dark:border-red-900 hover:border-red-300 dark:hover:border-red-700'
+                      : 'bg-white border-red-100 hover:border-red-300'
                   }
                 `}
               >
@@ -2238,13 +2240,13 @@ export default function AdminScreen({ adminPin, refreshKey, onPinChanged }: Prop
                 className="
                   rounded-2xl
                   border
-                  border-gray-100 dark:border-gray-800
-                  bg-white dark:bg-gray-900
+                  border-gray-100
+                  bg-white
                   p-4
                   text-left
                   shadow-sm
                   transition-colors
-                  hover:border-gray-300 dark:hover:border-gray-600
+                  hover:border-gray-300
                 "
               >
 
@@ -2284,13 +2286,13 @@ export default function AdminScreen({ adminPin, refreshKey, onPinChanged }: Prop
                 className="
                   rounded-2xl
                   border
-                  border-gray-100 dark:border-gray-800
-                  bg-white dark:bg-gray-900
+                  border-gray-100
+                  bg-white
                   p-4
                   text-left
                   shadow-sm
                   transition-colors
-                  hover:border-gray-300 dark:hover:border-gray-600
+                  hover:border-gray-300
                 "
               >
 
@@ -2338,7 +2340,7 @@ export default function AdminScreen({ adminPin, refreshKey, onPinChanged }: Prop
                     qualita.duplicati
                       .length === 0
                       ? 'bg-emerald-50 border-emerald-100 hover:border-emerald-300'
-                      : 'bg-white dark:bg-gray-900 border-amber-100 dark:border-amber-900 hover:border-amber-300 dark:hover:border-amber-700'
+                      : 'bg-white border-amber-100 hover:border-amber-300'
                   }
                 `}
               >
@@ -2397,11 +2399,11 @@ export default function AdminScreen({ adminPin, refreshKey, onPinChanged }: Prop
 
         {!loading && (
 
-          <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 p-4 shadow-sm flex flex-col gap-4">
+          <div className="bg-white rounded-2xl border border-gray-100 p-4 shadow-sm flex flex-col gap-4">
 
             <div>
 
-              <h2 className="font-semibold text-gray-900 dark:text-gray-100">
+              <h2 className="font-semibold text-gray-900">
 
                 Stato database
 
@@ -2418,13 +2420,13 @@ export default function AdminScreen({ adminPin, refreshKey, onPinChanged }: Prop
             <div className="grid grid-cols-2 gap-3">
 
               {/* ATTIVITÀ ATTIVE */}
-              <div className="rounded-2xl border border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-800 p-4 flex flex-col gap-3">
+              <div className="rounded-2xl border border-gray-100 bg-gray-50 p-4 flex flex-col gap-3">
 
                 <div className="flex items-center justify-between">
 
                   <Store className="w-5 h-5 text-gray-400" />
 
-                  <span className="text-2xl font-bold text-gray-700 dark:text-gray-300">
+                  <span className="text-2xl font-bold text-gray-700">
 
                     {statoDb.totale}
 
@@ -2441,13 +2443,13 @@ export default function AdminScreen({ adminPin, refreshKey, onPinChanged }: Prop
               </div>
 
               {/* CONVENZIONATE */}
-              <div className="rounded-2xl border border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-800 p-4 flex flex-col gap-3">
+              <div className="rounded-2xl border border-gray-100 bg-gray-50 p-4 flex flex-col gap-3">
 
                 <div className="flex items-center justify-between">
 
                   <ShieldCheck className="w-5 h-5 text-gray-400" />
 
-                  <span className="text-2xl font-bold text-gray-700 dark:text-gray-300">
+                  <span className="text-2xl font-bold text-gray-700">
 
                     {statoDb.convenzionate}
 
@@ -2464,13 +2466,13 @@ export default function AdminScreen({ adminPin, refreshKey, onPinChanged }: Prop
               </div>
 
               {/* CON ORARI */}
-              <div className="rounded-2xl border border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-800 p-4 flex flex-col gap-3">
+              <div className="rounded-2xl border border-gray-100 bg-gray-50 p-4 flex flex-col gap-3">
 
                 <div className="flex items-center justify-between">
 
                   <Clock className="w-5 h-5 text-gray-400" />
 
-                  <span className="text-2xl font-bold text-gray-700 dark:text-gray-300">
+                  <span className="text-2xl font-bold text-gray-700">
 
                     {statoDb.conOrari}
 
@@ -2487,13 +2489,13 @@ export default function AdminScreen({ adminPin, refreshKey, onPinChanged }: Prop
               </div>
 
               {/* CON MAPS QUERY */}
-              <div className="rounded-2xl border border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-800 p-4 flex flex-col gap-3">
+              <div className="rounded-2xl border border-gray-100 bg-gray-50 p-4 flex flex-col gap-3">
 
                 <div className="flex items-center justify-between">
 
                   <MapPin className="w-5 h-5 text-gray-400" />
 
-                  <span className="text-2xl font-bold text-gray-700 dark:text-gray-300">
+                  <span className="text-2xl font-bold text-gray-700">
 
                     {statoDb.conMaps}
 
@@ -2510,13 +2512,13 @@ export default function AdminScreen({ adminPin, refreshKey, onPinChanged }: Prop
               </div>
 
               {/* CON INDIRIZZO */}
-              <div className="rounded-2xl border border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-800 p-4 flex flex-col gap-3">
+              <div className="rounded-2xl border border-gray-100 bg-gray-50 p-4 flex flex-col gap-3">
 
                 <div className="flex items-center justify-between">
 
                   <Building2 className="w-5 h-5 text-gray-400" />
 
-                  <span className="text-2xl font-bold text-gray-700 dark:text-gray-300">
+                  <span className="text-2xl font-bold text-gray-700">
 
                     {statoDb.conIndirizzo}
 
@@ -2574,11 +2576,11 @@ export default function AdminScreen({ adminPin, refreshKey, onPinChanged }: Prop
 
         {!loading && verificheStats && (
 
-          <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 p-4 shadow-sm flex flex-col gap-4">
+          <div className="bg-white rounded-2xl border border-gray-100 p-4 shadow-sm flex flex-col gap-4">
 
             <div>
 
-              <h2 className="font-semibold text-gray-900 dark:text-gray-100">
+              <h2 className="font-semibold text-gray-900">
 
                 Verifiche salette
 
@@ -2625,7 +2627,7 @@ export default function AdminScreen({ adminPin, refreshKey, onPinChanged }: Prop
                 className={`rounded-2xl border p-4 flex flex-col gap-3 text-left w-full ${
                 verificheStats.totaleProblemi > 0
                   ? 'border-amber-100 bg-amber-50 hover:border-amber-300'
-                  : 'border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-800'
+                  : 'border-gray-100 bg-gray-50'
               }`}>
 
                 <div className="flex items-center justify-between">
@@ -2657,13 +2659,13 @@ export default function AdminScreen({ adminPin, refreshKey, onPinChanged }: Prop
               </button>
 
               {/* ULTIMI 7 GIORNI */}
-              <div className="rounded-2xl border border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-800 p-4 flex flex-col gap-3">
+              <div className="rounded-2xl border border-gray-100 bg-gray-50 p-4 flex flex-col gap-3">
 
                 <div className="flex items-center justify-between">
 
                   <Clock className="w-5 h-5 text-gray-400" />
 
-                  <span className="text-2xl font-bold text-gray-700 dark:text-gray-300">
+                  <span className="text-2xl font-bold text-gray-700">
 
                     {verificheStats.ultimi7giorni}
 
@@ -2737,10 +2739,10 @@ export default function AdminScreen({ adminPin, refreshKey, onPinChanged }: Prop
                     key={tipo}
                     type="button"
                     onClick={() => apriSegnalazioniSalette(tipo)}
-                    className="flex items-center justify-between px-3 py-2 rounded-xl bg-gray-50 dark:bg-gray-800 border border-gray-100 dark:border-gray-800 hover:border-gray-300 dark:hover:border-gray-600 w-full text-left transition-colors"
+                    className="flex items-center justify-between px-3 py-2 rounded-xl bg-gray-50 border border-gray-100 hover:border-gray-300 w-full text-left transition-colors"
                   >
 
-                    <span className="text-sm text-gray-600 dark:text-gray-300">
+                    <span className="text-sm text-gray-600">
 
                       {tipo
                         .replace(/_/g, ' ')
@@ -2750,7 +2752,7 @@ export default function AdminScreen({ adminPin, refreshKey, onPinChanged }: Prop
 
                     </span>
 
-                    <span className="text-sm font-semibold text-gray-900 dark:text-gray-100">
+                    <span className="text-sm font-semibold text-gray-900">
 
                       {count}
 
@@ -2771,11 +2773,11 @@ export default function AdminScreen({ adminPin, refreshKey, onPinChanged }: Prop
 
         {!loading && verificheAttivitaStats && (
 
-          <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 p-4 shadow-sm flex flex-col gap-4">
+          <div className="bg-white rounded-2xl border border-gray-100 p-4 shadow-sm flex flex-col gap-4">
 
             <div>
 
-              <h2 className="font-semibold text-gray-900 dark:text-gray-100">
+              <h2 className="font-semibold text-gray-900">
 
                 Verifiche attività
 
@@ -2819,7 +2821,7 @@ export default function AdminScreen({ adminPin, refreshKey, onPinChanged }: Prop
                 className={`rounded-2xl border p-4 flex flex-col gap-3 text-left w-full ${
                 verificheAttivitaStats.totaleProblemi > 0
                   ? 'border-amber-100 bg-amber-50 hover:border-amber-300'
-                  : 'border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-800'
+                  : 'border-gray-100 bg-gray-50'
               }`}>
 
                 <div className="flex items-center justify-between">
@@ -2906,10 +2908,10 @@ export default function AdminScreen({ adminPin, refreshKey, onPinChanged }: Prop
                     key={tipo}
                     type="button"
                     onClick={() => apriSegnalazioniAttivita(tipo)}
-                    className="flex items-center justify-between px-3 py-2 rounded-xl bg-gray-50 dark:bg-gray-800 border border-gray-100 dark:border-gray-800 hover:border-gray-300 dark:hover:border-gray-600 w-full text-left transition-colors"
+                    className="flex items-center justify-between px-3 py-2 rounded-xl bg-gray-50 border border-gray-100 hover:border-gray-300 w-full text-left transition-colors"
                   >
 
-                    <span className="text-sm text-gray-600 dark:text-gray-300">
+                    <span className="text-sm text-gray-600">
 
                       {tipo
                         .replace(/_/g, ' ')
@@ -2919,7 +2921,7 @@ export default function AdminScreen({ adminPin, refreshKey, onPinChanged }: Prop
 
                     </span>
 
-                    <span className="text-sm font-semibold text-gray-900 dark:text-gray-100">
+                    <span className="text-sm font-semibold text-gray-900">
 
                       {count}
 
@@ -2935,7 +2937,7 @@ export default function AdminScreen({ adminPin, refreshKey, onPinChanged }: Prop
         )}
 
       {/* MODAL SEGNALAZIONI SALETTE */}
-      {modalSegnalazioniSalette && (
+      {modalSegnalazioniSalette && createPortal(
 
         <div
           className="fixed inset-0 z-[9999] bg-black/40 flex items-center justify-center p-4"
@@ -2943,7 +2945,7 @@ export default function AdminScreen({ adminPin, refreshKey, onPinChanged }: Prop
         >
 
           <div
-            className="bg-white dark:bg-gray-900 rounded-3xl w-full max-w-lg max-h-[80dvh] overflow-y-auto p-5 flex flex-col gap-4 shadow-2xl"
+            className="bg-white rounded-3xl w-full max-w-lg max-h-[80dvh] overflow-y-auto p-5 flex flex-col gap-4 shadow-2xl"
             onClick={(e) => e.stopPropagation()}
           >
 
@@ -2952,7 +2954,7 @@ export default function AdminScreen({ adminPin, refreshKey, onPinChanged }: Prop
 
               <div>
 
-                <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100">
+                <h2 className="text-lg font-bold text-gray-900">
 
                   Segnalazioni salette
 
@@ -2972,7 +2974,7 @@ export default function AdminScreen({ adminPin, refreshKey, onPinChanged }: Prop
 
               <button
                 onClick={() => setModalSegnalazioniSalette(null)}
-                className="w-8 h-8 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 flex items-center justify-center"
+                className="w-8 h-8 rounded-full hover:bg-gray-100 flex items-center justify-center"
               >
 
                 <X className="w-4 h-4 text-gray-400" />
@@ -3004,7 +3006,7 @@ export default function AdminScreen({ adminPin, refreshKey, onPinChanged }: Prop
                     {/* SALETTA */}
                     <div>
 
-                      <p className="font-semibold text-gray-900 dark:text-gray-100">
+                      <p className="font-semibold text-gray-900">
 
                         {v.salette?.tipo || 'Saletta sconosciuta'}
 
@@ -3036,7 +3038,7 @@ export default function AdminScreen({ adminPin, refreshKey, onPinChanged }: Prop
                     {/* NOTE */}
                     {v.nota && (
 
-                      <p className="text-xs text-gray-600 dark:text-gray-300 bg-white dark:bg-gray-800 rounded-xl px-3 py-2 border border-amber-100 dark:border-amber-900">
+                      <p className="text-xs text-gray-600 bg-white rounded-xl px-3 py-2 border border-amber-100">
 
                         {v.nota}
 
@@ -3092,11 +3094,12 @@ export default function AdminScreen({ adminPin, refreshKey, onPinChanged }: Prop
 
           </div>
 
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* MODAL SEGNALAZIONI ATTIVITA */}
-      {modalSegnalazioniAttivita && (
+      {modalSegnalazioniAttivita && createPortal(
 
         <div
           className="fixed inset-0 z-[9999] bg-black/40 flex items-center justify-center p-4"
@@ -3104,7 +3107,7 @@ export default function AdminScreen({ adminPin, refreshKey, onPinChanged }: Prop
         >
 
           <div
-            className="bg-white dark:bg-gray-900 rounded-3xl w-full max-w-lg max-h-[80dvh] overflow-y-auto p-5 flex flex-col gap-4 shadow-2xl"
+            className="bg-white rounded-3xl w-full max-w-lg max-h-[80dvh] overflow-y-auto p-5 flex flex-col gap-4 shadow-2xl"
             onClick={(e) => e.stopPropagation()}
           >
 
@@ -3113,7 +3116,7 @@ export default function AdminScreen({ adminPin, refreshKey, onPinChanged }: Prop
 
               <div>
 
-                <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100">
+                <h2 className="text-lg font-bold text-gray-900">
 
                   Segnalazioni attività
 
@@ -3133,7 +3136,7 @@ export default function AdminScreen({ adminPin, refreshKey, onPinChanged }: Prop
 
               <button
                 onClick={() => setModalSegnalazioniAttivita(null)}
-                className="w-8 h-8 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 flex items-center justify-center"
+                className="w-8 h-8 rounded-full hover:bg-gray-100 flex items-center justify-center"
               >
 
                 <X className="w-4 h-4 text-gray-400" />
@@ -3165,7 +3168,7 @@ export default function AdminScreen({ adminPin, refreshKey, onPinChanged }: Prop
                     {/* ATTIVITA */}
                     <div>
 
-                      <p className="font-semibold text-gray-900 dark:text-gray-100">
+                      <p className="font-semibold text-gray-900">
 
                         {v.attivita_stazione?.nome || 'Attività sconosciuta'}
 
@@ -3197,7 +3200,7 @@ export default function AdminScreen({ adminPin, refreshKey, onPinChanged }: Prop
                     {/* NOTE */}
                     {v.nota && (
 
-                      <p className="text-xs text-gray-600 dark:text-gray-300 bg-white dark:bg-gray-800 rounded-xl px-3 py-2 border border-amber-100 dark:border-amber-900">
+                      <p className="text-xs text-gray-600 bg-white rounded-xl px-3 py-2 border border-amber-100">
 
                         {v.nota}
 
@@ -3253,19 +3256,20 @@ export default function AdminScreen({ adminPin, refreshKey, onPinChanged }: Prop
 
           </div>
 
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* INFO / SISTEMA */}
-        <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 p-4 shadow-sm">
+        <div className="bg-white rounded-2xl border border-gray-100 p-4 shadow-sm">
 
-          <h2 className="font-semibold text-gray-900 dark:text-gray-100 mb-3">
+          <h2 className="font-semibold text-gray-900 mb-3">
 
             Sistema
 
           </h2>
 
-          <div className="flex flex-col gap-2 text-sm text-gray-600 dark:text-gray-300">
+          <div className="flex flex-col gap-2 text-sm text-gray-600">
 
             <div className="flex items-center justify-between">
 
@@ -3310,7 +3314,7 @@ export default function AdminScreen({ adminPin, refreshKey, onPinChanged }: Prop
       {/* MODAL QUALITÀ DATI        */}
       {/* ========================= */}
 
-      {modalQualita && (
+      {modalQualita && createPortal(
 
         <div
           className="
@@ -3335,7 +3339,7 @@ export default function AdminScreen({ adminPin, refreshKey, onPinChanged }: Prop
 
           <div
             className="
-              bg-white dark:bg-gray-900
+              bg-white
               rounded-3xl
               w-full
               max-w-2xl
@@ -3347,11 +3351,11 @@ export default function AdminScreen({ adminPin, refreshKey, onPinChanged }: Prop
           >
 
             {/* HEADER MODAL */}
-            <div className="flex items-center justify-between px-6 pt-6 pb-4 border-b border-gray-100 dark:border-gray-800 flex-shrink-0">
+            <div className="flex items-center justify-between px-6 pt-6 pb-4 border-b border-gray-100 flex-shrink-0">
 
               <div>
 
-                <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">
+                <h2 className="text-xl font-bold text-gray-900">
 
                   {modalQualita.titolo}
 
@@ -3378,7 +3382,7 @@ export default function AdminScreen({ adminPin, refreshKey, onPinChanged }: Prop
                 onClick={() =>
                   setModalQualita(null)
                 }
-                className="w-9 h-9 rounded-xl bg-gray-100 dark:bg-gray-800 flex items-center justify-center hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+                className="w-9 h-9 rounded-xl bg-gray-100 flex items-center justify-center hover:bg-gray-200 transition-colors"
               >
 
                 <X className="w-5 h-5 text-gray-500" />
@@ -3405,7 +3409,7 @@ export default function AdminScreen({ adminPin, refreshKey, onPinChanged }: Prop
 
                   <div
                     key={a.id}
-                    className="bg-gray-50 dark:bg-gray-800 rounded-2xl p-4 flex items-start justify-between gap-3"
+                    className="bg-gray-50 rounded-2xl p-4 flex items-start justify-between gap-3"
                   >
 
                     <div className="flex-1 min-w-0">
@@ -3413,7 +3417,7 @@ export default function AdminScreen({ adminPin, refreshKey, onPinChanged }: Prop
                       {/* NOME + BADGE */}
                       <div className="flex items-center gap-2 flex-wrap">
 
-                        <span className="font-semibold text-gray-900 dark:text-gray-100">
+                        <span className="font-semibold text-gray-900">
 
                           {a.nome}
 
@@ -3545,18 +3549,19 @@ export default function AdminScreen({ adminPin, refreshKey, onPinChanged }: Prop
 
           </div>
 
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* MODAL TOTP — Configura Authenticator */}
-      {showTotpModal && (
+      {showTotpModal && createPortal(
         <>
           <ScrollLockWhileOpen />
         <div
           className="fixed inset-0 bg-black/50 z-[9999] flex items-center justify-center p-4"
           onClick={(e) => { if (e.target === e.currentTarget) setShowTotpModal(false); }}
         >
-          <div className="bg-white dark:bg-gray-900 rounded-3xl w-full max-w-sm flex flex-col gap-5 p-6 max-h-[80dvh] overflow-y-auto">
+          <div className="bg-white rounded-3xl w-full max-w-sm flex flex-col gap-5 p-6 max-h-[80dvh] overflow-y-auto">
 
             {/* HEADER */}
             <div className="flex items-start justify-between flex-shrink-0">
@@ -3565,7 +3570,7 @@ export default function AdminScreen({ adminPin, refreshKey, onPinChanged }: Prop
                   <QrCode className="w-5 h-5 text-white" />
                 </div>
                 <div>
-                  <h2 className="font-bold text-gray-900 dark:text-gray-100">Configura Authenticator</h2>
+                  <h2 className="font-bold text-gray-900">Configura Authenticator</h2>
                   <p className="text-xs text-gray-400 mt-0.5">Google Authenticator o Authy</p>
                 </div>
               </div>
@@ -3590,9 +3595,9 @@ export default function AdminScreen({ adminPin, refreshKey, onPinChanged }: Prop
               <div className="flex flex-col gap-4">
 
                 {/* ISTRUZIONI */}
-                <div className="bg-gray-50 dark:bg-gray-800 rounded-xl p-4 flex flex-col gap-2 text-sm text-gray-700 dark:text-gray-300">
+                <div className="bg-gray-50 rounded-xl p-4 flex flex-col gap-2 text-sm text-gray-700">
                   <p className="font-semibold">Come configurare:</p>
-                  <ol className="list-decimal list-inside space-y-1 text-gray-600 dark:text-gray-300">
+                  <ol className="list-decimal list-inside space-y-1 text-gray-600">
                     <li>Apri Google Authenticator o Authy</li>
                     <li>Tocca "+" e scegli "Scansiona QR"</li>
                     <li>Inquadra il codice qui sotto</li>
@@ -3605,7 +3610,7 @@ export default function AdminScreen({ adminPin, refreshKey, onPinChanged }: Prop
                   <img
                     src={totpQr}
                     alt="QR Code Authenticator"
-                    className="w-52 h-52 rounded-2xl border border-gray-200 dark:border-gray-700"
+                    className="w-52 h-52 rounded-2xl border border-gray-200"
                   />
                   <p className="text-xs text-gray-400 text-center">
                     Ogni codice è valido 30 secondi
@@ -3614,7 +3619,7 @@ export default function AdminScreen({ adminPin, refreshKey, onPinChanged }: Prop
 
                 {/* DOWNLOAD APP */}
                 <div className="bg-blue-50 border border-blue-100 rounded-xl px-4 py-3 flex flex-col gap-2">
-                  <p className="text-xs font-semibold text-gray-600 dark:text-gray-300">
+                  <p className="text-xs font-semibold text-gray-600">
                     Non hai ancora un'app di autenticazione? Scaricane una gratuita:
                   </p>
                   <div className="flex flex-col gap-1.5">
@@ -3684,8 +3689,8 @@ export default function AdminScreen({ adminPin, refreshKey, onPinChanged }: Prop
                     <p className="text-xs font-semibold text-gray-400 uppercase mb-1">
                       Chiave manuale (alternativa al QR)
                     </p>
-                    <div className="bg-gray-100 dark:bg-gray-800 rounded-xl px-4 py-3 flex items-center justify-between gap-2">
-                      <span className="font-mono text-sm text-gray-800 dark:text-gray-200 break-all select-all">
+                    <div className="bg-gray-100 rounded-xl px-4 py-3 flex items-center justify-between gap-2">
+                      <span className="font-mono text-sm text-gray-800 break-all select-all">
                         {totpSecret}
                       </span>
                       <button
@@ -3730,7 +3735,8 @@ export default function AdminScreen({ adminPin, refreshKey, onPinChanged }: Prop
 
           </div>
         </div>
-        </>
+        </>,
+        document.body
       )}
 
       {showSecurityModal && (
