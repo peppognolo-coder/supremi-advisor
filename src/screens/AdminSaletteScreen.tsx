@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 
 import {
   Save,
@@ -149,7 +150,7 @@ function AddSalettaModal({
     onClose();
   }
 
-  return (
+  return createPortal(
     <div
       className="fixed inset-0 bg-black/40 z-[9999] flex items-center justify-center p-4"
       onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
@@ -222,7 +223,8 @@ function AddSalettaModal({
         </button>
 
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
 
@@ -247,7 +249,7 @@ function ConfirmModal({
   loadingLabel?: string;
   variant?: 'danger' | 'primary';
 }) {
-  return (
+  return createPortal(
     <div className="fixed inset-0 bg-black/40 z-[9999] flex items-center justify-center p-4">
       <div className="bg-white dark:bg-gray-900 rounded-2xl w-full max-w-sm p-6 flex flex-col gap-4">
         <p className="text-sm text-gray-700 dark:text-gray-300">{message}</p>
@@ -273,7 +275,8 @@ function ConfirmModal({
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
 
