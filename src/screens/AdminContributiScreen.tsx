@@ -4,6 +4,8 @@ import {
   useState,
 } from 'react';
 
+import { createPortal } from 'react-dom';
+
 import {
   Check,
   X,
@@ -384,7 +386,7 @@ export default function AdminContributiScreen({ adminPin }: Props) {
       </div>
 
       {/* MODAL MODIFICA */}
-      {editingContributo && (
+      {editingContributo && createPortal(
         <div className="fixed inset-0 bg-black/40 z-[9999] flex items-center justify-center p-4"
           onClick={(e) => { if (e.target === e.currentTarget) setEditingContributo(null); }}>
           <div className="bg-white dark:bg-gray-900 rounded-3xl w-full max-w-2xl p-6 pb-24 flex flex-col gap-4 max-h-[90dvh] overflow-y-auto">
@@ -1116,7 +1118,8 @@ export default function AdminContributiScreen({ adminPin }: Props) {
             </button>
 
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </>
   );
