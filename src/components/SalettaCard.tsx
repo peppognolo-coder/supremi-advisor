@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 
 import {
   ChevronDown,
@@ -373,7 +374,7 @@ export default function SalettaCard({
       )}
 
       {/* MODAL CODICE DI ACCESSO — verifica TOTP */}
-      {codiceModalSalettaId && (
+      {codiceModalSalettaId && createPortal(
         <div
           className="fixed inset-0 bg-black/50 z-[9999] flex items-center justify-center p-4"
           style={{ overscrollBehavior: 'contain' }}
@@ -498,7 +499,8 @@ export default function SalettaCard({
             )}
 
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </>
   );
