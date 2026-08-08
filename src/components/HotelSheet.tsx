@@ -4,18 +4,18 @@ import { createPortal } from 'react-dom';
 import {
   MapPin, Phone,
   Clock, Star, X, AlertTriangle, CheckCircle,
-  QrCode, KeyRound, Smartphone, Upload, Calendar,
+  QrCode, KeyRound, Smartphone, Calendar, Upload,
 } from 'lucide-react';
 
 import toast from 'react-hot-toast';
 
 import { supabase } from '../lib/supabase';
-import { getDeviceId } from '../lib/device';
-import { messaggioErroreInvio } from '../lib/rateLimitError';
 import { useScrollLock } from '../lib/useScrollLock';
 import { useSwipeDown } from '../lib/useSwipeDown';
 import type { AttivitaRow, HotelDatiExtra } from '../lib/adminApi';
 import { TIPI_PROBLEMA_HOTEL } from '../lib/adminApi'; // FIX P3: import da adminApi, rimossa dichiarazione locale
+import QrCheckinUpload, { type QrCheckinData } from './forms/QrCheckinUpload';
+import { submitHotelQrContributo } from '../lib/submitHotelQrContributo';
 
 // =========================
 // TIPI
@@ -148,11 +148,11 @@ export default function HotelSheet({ hotel, onClose }: Props) {
   const [secondiRimasti, setSecondiRimasti] = useState(0);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  // Stato form segnalazione nuovo QR
+  // Scorciatoia rapida "Carica/Aggiorna QR" — stessi pezzi condivisi
+  // (QrCheckinUpload, submitHotelQrContributo) usati anche in
+  // ProponiModificaAttivitaModal.tsx. Vedi conversazione.
   const [showNuovoQr, setShowNuovoQr]       = useState(false);
-  const [nuovoQrFile, setNuovoQrFile]       = useState<File | null>(null);
-  const [nuovoQrPreview, setNuovoQrPreview] = useState<string | null>(null);
-  const [nuovoQrScadenza, setNuovoQrScadenza] = useState('');
+  const [nuovoQrData, setNuovoQrData]       = useState<QrCheckinData | null>(null);
   const [nuovoQrLoading, setNuovoQrLoading] = useState(false);
 
   useEffect(() => {
@@ -216,54 +216,22 @@ export default function HotelSheet({ hotel, onClose }: Props) {
     }
   }
 
-  function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    const allowed = ['image/jpeg', 'image/png', 'image/webp'];
-    if (!allowed.includes(file.type)) {
-      toast.error('Formato non supportato. Usa JPG, PNG o WebP.');
-      return;
-    }
-    if (file.size > 5 * 1024 * 1024) {
-      toast.error('Immagine troppo grande. Massimo 5MB.');
-      return;
-    }
-    setNuovoQrFile(file);
-    const reader = new FileReader();
-    reader.onload = (ev) => setNuovoQrPreview(ev.target?.result as string);
-    reader.readAsDataURL(file);
-  }
-
   async function inviaQrContributo() {
-    if (!nuovoQrFile || !nuovoQrPreview) {
+    if (!nuovoQrData) {
       toast.error('Seleziona un\'immagine del nuovo QR.');
       return;
     }
     setNuovoQrLoading(true);
-    try {
-      const { error } = await supabase.from('contributi').insert({
-        tipo: 'hotel_qr',
-        stato: 'pending',
-        device_id: getDeviceId(),
-        dati: {
-          attivita_id: hotel.id,
-          hotel_nome:  hotel.nome,
-          imageBase64: nuovoQrPreview,
-          mimeType:    nuovoQrFile.type,
-          scadenza:    nuovoQrScadenza || null,
-        },
-      });
-      if (error) throw error;
-      toast.success('QR inviato per approvazione. Grazie!');
-      setShowNuovoQr(false);
-      setNuovoQrFile(null);
-      setNuovoQrPreview(null);
-      setNuovoQrScadenza('');
-    } catch (error: any) {
-      toast.error(messaggioErroreInvio(error));
-    } finally {
-      setNuovoQrLoading(false);
-    }
+    const res = await submitHotelQrContributo({
+      attivitaId: hotel.id,
+      hotelNome: hotel.nome,
+      qrData: nuovoQrData,
+    });
+    setNuovoQrLoading(false);
+    if (!res.ok) { toast.error(res.error); return; }
+    toast.success('QR inviato per approvazione. Grazie!');
+    setShowNuovoQr(false);
+    setNuovoQrData(null);
   }
 
   const dati = (hotel.dati_extra ?? {}) as HotelDatiExtra;
@@ -558,47 +526,17 @@ export default function HotelSheet({ hotel, onClose }: Props) {
                 {hotel.qr_checkin_url ? 'Carica QR aggiornato' : 'Carica il QR'}
               </button>
 
-              {/* Form upload nuovo QR */}
+              {/* Form upload nuovo QR — QrCheckinUpload è lo stesso componente
+                  condiviso usato in ProponiModificaAttivitaModal.tsx. Vedi
+                  conversazione. */}
               {showNuovoQr && (
-                <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-2xl p-4 flex flex-col gap-3">
-                  <p className="text-sm font-semibold text-gray-800 dark:text-gray-200">Carica il nuovo QR check-in</p>
-
-                  {/* Upload file */}
-                  <label className="flex flex-col items-center justify-center gap-2 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-xl p-4 cursor-pointer hover:border-trenord-green transition-colors">
-                    {nuovoQrPreview ? (
-                      <img src={nuovoQrPreview} alt="Preview QR" className="w-40 rounded-lg" />
-                    ) : (
-                      <>
-                        <Upload className="w-8 h-8 text-gray-300" />
-                        <span className="text-sm text-gray-500">Tocca per selezionare l'immagine</span>
-                        <span className="text-xs text-gray-400">JPG, PNG, WebP — max 5MB</span>
-                      </>
-                    )}
-                    <input
-                      type="file"
-                      accept="image/jpeg,image/png,image/webp"
-                      className="hidden"
-                      onChange={handleFileChange}
-                    />
-                  </label>
-
-                  {/* Data scadenza */}
-                  <div>
-                    <label className="text-xs font-semibold text-gray-400 uppercase">
-                      Data di scadenza (opzionale)
-                    </label>
-                    <input
-                      type="date"
-                      value={nuovoQrScadenza}
-                      onChange={(e) => setNuovoQrScadenza(e.target.value)}
-                      className="mt-1 border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2 w-full text-base bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
-                    />
-                  </div>
+                <div className="flex flex-col gap-3">
+                  <QrCheckinUpload onChange={setNuovoQrData} />
 
                   <button
                     type="button"
                     onClick={inviaQrContributo}
-                    disabled={nuovoQrLoading || !nuovoQrPreview}
+                    disabled={nuovoQrLoading || !nuovoQrData}
                     className="py-3 rounded-xl bg-trenord-green text-white font-medium text-sm hover:opacity-90 disabled:opacity-40"
                   >
                     {nuovoQrLoading ? 'Invio in corso...' : 'Invia per approvazione'}
