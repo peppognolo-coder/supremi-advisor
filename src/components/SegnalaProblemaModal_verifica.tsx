@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { createPortal } from 'react-dom';
 import { useScrollLock } from '../lib/useScrollLock';
 
 import {
@@ -133,7 +134,7 @@ export default function SegnalaProblemaModal({
     }
   }
 
-  return (
+  return createPortal(
 
     <div className="fixed inset-0 z-[9999] bg-black/40 flex items-end justify-center p-4">
 
@@ -254,6 +255,7 @@ export default function SegnalaProblemaModal({
 
       </div>
 
-    </div>
+    </div>,
+    document.body
   );
 }
