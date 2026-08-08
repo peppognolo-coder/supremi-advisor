@@ -5,6 +5,7 @@ import { X, Pencil, Plus, Trash2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { supabase } from '../lib/supabase';
 import { getDeviceId } from '../lib/device';
+import { submitHotelQrContributo } from '../lib/submitHotelQrContributo';
 import { messaggioErroreInvio } from '../lib/rateLimitError';
 import { useSwipeDown } from '../lib/useSwipeDown';
 import {
@@ -17,6 +18,7 @@ import {
 } from '../lib/adminApi';
 import HotelFieldsSection from './forms/HotelFieldsSection';
 import OpzioniAlimentariSection from './forms/OpzioniAlimentariSection';
+import QrCheckinUpload, { type QrCheckinData } from './forms/QrCheckinUpload';
 
 interface Props {
   attivita: AttivitaRow;
@@ -43,9 +45,11 @@ function Switch({ label, value, onChange }: { label: string; value: boolean; onC
  * AddAttivitaModal (nuova attività), qui il form parte precompilato con i
  * valori attuali e al submit calcola il DIFF — solo i campi realmente
  * cambiati vengono inclusi nel contributo, come { prima, dopo }.
- * Niente QR check-in qui: ha già il suo percorso dedicato (upload diretto
- * dalla scheda hotel con verifica TOTP) — mescolarlo qui creerebbe due vie
- * per la stessa cosa.
+ * Per gli hotel include anche il caricamento del QR check-in (prima era un
+ * percorso separato dentro HotelSheet.tsx, sola lettura lì — unificato qui
+ * perché concettualmente è comunque "una modifica proposta". Genera un
+ * secondo contributo di tipo 'hotel_qr', stesso formato già usato e
+ * approvato dall'admin. Vedi conversazione.
  */
 export default function ProponiModificaAttivitaModal({ attivita, onClose, onSuccess }: Props) {
   const { panelRef, dragStyle, handleDragStart } = useSwipeDown({ onClose });
@@ -63,6 +67,12 @@ export default function ProponiModificaAttivitaModal({ attivita, onClose, onSucc
   const [mapsQuery, setMapsQuery]   = useState(attivita.maps_query ?? '');
   const [fasceOrarie, setFasceOrarie] = useState<FasciaOraria[]>(attivita.fasce_orarie ?? []);
   const [notaUtente, setNotaUtente] = useState('');
+
+  // QR check-in (solo Hotel) — raccolto da QrCheckinUpload (componente
+  // condiviso), inviato come contributo separato al submit tramite
+  // submitHotelQrContributo (anch'essa condivisa con HotelSheet.tsx).
+  // Vedi conversazione.
+  const [qrData, setQrData] = useState<QrCheckinData | null>(null);
 
   const [hotelDati, setHotelDati] = useState<HotelDatiExtra>({
     telefono: attivita.dati_extra?.telefono ?? '',
@@ -134,27 +144,49 @@ export default function ProponiModificaAttivitaModal({ attivita, onClose, onSucc
       }
     }
 
-    if (Object.keys(modifiche).length === 0) {
+    if (Object.keys(modifiche).length === 0 && !qrData) {
       toast.error('Non hai modificato nulla');
       return;
     }
 
     setLoading(true);
 
-    const { error } = await supabase.from('contributi').insert({
-      tipo: 'modifica_attivita',
-      dati: {
-        attivita_id: attivita.id,
-        nome_attivita: attivita.nome,
-        modifiche,
-        nota_utente: notaUtente.trim() || null,
-      },
-      stato: 'pending',
-      device_id: getDeviceId(),
-    });
+    // Le due proposte (campi + QR) sono indipendenti: se una fallisce,
+    // l'altra è comunque stata inviata e non va persa/rifatta da capo.
+    let erroreModifiche: string | null = null;
+    let erroreQr: string | null = null;
+
+    if (Object.keys(modifiche).length > 0) {
+      const { error } = await supabase.from('contributi').insert({
+        tipo: 'modifica_attivita',
+        dati: {
+          attivita_id: attivita.id,
+          nome_attivita: attivita.nome,
+          modifiche,
+          nota_utente: notaUtente.trim() || null,
+        },
+        stato: 'pending',
+        device_id: getDeviceId(),
+      });
+      if (error) erroreModifiche = messaggioErroreInvio(error);
+    }
+
+    if (qrData) {
+      const res = await submitHotelQrContributo({
+        attivitaId: attivita.id,
+        hotelNome: attivita.nome,
+        qrData,
+      });
+      if (!res.ok) erroreQr = res.error;
+    }
 
     setLoading(false);
-    if (error) { toast.error(messaggioErroreInvio(error)); return; }
+
+    if (erroreModifiche || erroreQr) {
+      toast.error(erroreModifiche ?? erroreQr ?? 'Errore invio proposta');
+      return;
+    }
+
     toast.success('Proposta inviata! Verrà revisionata da un admin.');
     onSuccess?.();
     onClose();
@@ -226,6 +258,19 @@ export default function ProponiModificaAttivitaModal({ attivita, onClose, onSucc
           {isHotel && (
             <>
               <HotelFieldsSection value={hotelDati} onChange={setHotelDati} />
+
+              {/* QR CHECK-IN — componente condiviso con HotelSheet.tsx
+                  (QrCheckinUpload), unificato qui invece di un percorso
+                  separato dentro la scheda di sola lettura. Vedi conversazione. */}
+              <div className="flex flex-col gap-2">
+                {attivita.qr_checkin_url && !qrData && (
+                  <p className="text-xs text-gray-500 px-1">
+                    Questo hotel ha già un QR check-in caricato. Seleziona un'immagine sotto solo se vuoi sostituirlo.
+                  </p>
+                )}
+                <QrCheckinUpload onChange={setQrData} />
+              </div>
+
               <Switch label="Convenzionato Trenord" value={convenzionato} onChange={setConvenzionato} />
             </>
           )}
@@ -281,8 +326,12 @@ export default function ProponiModificaAttivitaModal({ attivita, onClose, onSucc
             </div>
           )}
 
-          {/* FASCE ORARIE (solo per non-hotel) */}
-          {!isHotel && (
+          {/* FASCE ORARIE — anche per gli hotel, per chi non ha reception H24
+              e vuole comunque indicare degli orari. Se reception H24 è
+              attiva, queste fasce vengono ignorate ai fini dello stato
+              aperto/chiuso (vedi HotelFieldsSection e getStatoApertura.ts).
+              Vedi conversazione. */}
+          {(!isHotel || !hotelDati.reception_h24) && (
             <div className="flex flex-col gap-3">
               <div className="flex items-center justify-between">
                 <label className="text-xs font-semibold text-gray-400 uppercase tracking-wide">Fasce orarie</label>
