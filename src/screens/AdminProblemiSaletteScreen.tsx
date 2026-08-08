@@ -3,6 +3,8 @@ import {
   useState,
 } from 'react';
 
+import { createPortal } from 'react-dom';
+
 import {
   AlertTriangle,
   CheckCircle,
@@ -411,7 +413,7 @@ export default function AdminProblemiSaletteScreen({ adminPin }: Props) {
       </div>
 
       {/* MODAL DETTAGLIO */}
-      {dettaglio && (
+      {dettaglio && createPortal(
         <div
           className="fixed inset-0 bg-black/40 z-[9999] flex items-end sm:items-center justify-center p-0 sm:p-4"
           onClick={(e) => { if (e.target === e.currentTarget) setDettaglio(null); }}
@@ -466,7 +468,8 @@ export default function AdminProblemiSaletteScreen({ adminPin }: Props) {
             </div>
 
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </>
   );
