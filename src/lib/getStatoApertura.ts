@@ -85,17 +85,36 @@ function oggiIndice(): number {
 
 /**
  * Calcola se un'attività è aperta ora
- * in base alle sue fasce_orarie.
+ * in base alle sue fasce_orarie — con un'eccezione: se è un Hotel con
+ * reception H24, è sempre considerato aperto, a prescindere dalle fasce
+ * orarie eventualmente impostate (la reception H24 vince). Vedi
+ * conversazione.
  *
  * @example
  * getStatoApertura(attivita)
  * // { aperto: true,  testo: "Chiude alle 22:00" }
  * // { aperto: false, testo: "Riapre domani alle 06:00" }
  * // { aperto: false, testo: "Orari non disponibili" }
+ * // { aperto: true,  testo: "Reception aperta H24" }
  */
 export function getStatoApertura(
-  attivita: { fasce_orarie?: any }
+  attivita: {
+    fasce_orarie?: any;
+    categoria?: string;
+    dati_extra?: { reception_h24?: boolean } | null;
+  }
 ): StatoApertura {
+
+  if (
+    attivita?.categoria === 'Hotel' &&
+    attivita?.dati_extra?.reception_h24
+  ) {
+
+    return {
+      aperto: true,
+      testo: 'Reception aperta H24',
+    };
+  }
 
   const fasce: FasciaOraria[] =
     Array.isArray(
