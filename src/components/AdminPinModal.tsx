@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { createPortal } from 'react-dom';
 import { useScrollLock } from '../lib/useScrollLock';
 
 import {
@@ -75,7 +76,7 @@ export default function AdminPinModal({
   // =========================
 
   if (mode === 'logout') {
-    return (
+    return createPortal(
       <div className="fixed inset-0 z-[999] bg-black/40 flex items-center justify-center p-4">
         <div className="bg-white dark:bg-gray-900 rounded-3xl p-5 w-full max-w-sm flex flex-col gap-4 shadow-2xl animate-in fade-in zoom-in-95 duration-200">
 
@@ -103,7 +104,8 @@ export default function AdminPinModal({
           </div>
 
         </div>
-      </div>
+      </div>,
+      document.body
     );
   }
 
@@ -111,7 +113,7 @@ export default function AdminPinModal({
   // LOGIN — TASTIERINO
   // =========================
 
-  return (
+  return createPortal(
     <div className="fixed inset-0 z-[999] bg-black/40 flex items-center justify-center p-4">
       <div className="bg-white dark:bg-gray-900 rounded-3xl p-5 w-full max-w-sm flex flex-col gap-5 shadow-2xl animate-in fade-in zoom-in-95 duration-200">
 
@@ -163,6 +165,7 @@ export default function AdminPinModal({
         </button>
 
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
