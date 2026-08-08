@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 
 import {
   Search,
@@ -1315,7 +1316,7 @@ export default function StazioniScreen({
     useScrollLock();
     const { panelRef, dragStyle, handleDragStart } = useSwipeDown({ onClose });
 
-    return (
+    return createPortal(
       <div
         className="fixed inset-0 bg-black/40 z-[9999] flex items-end"
         onClick={onClose}
@@ -1353,7 +1354,8 @@ export default function StazioniScreen({
             {children}
           </div>
         </div>
-      </div>
+      </div>,
+      document.body
     );
   }
 
