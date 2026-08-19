@@ -1294,10 +1294,10 @@ export default function AdminScreen({ adminPin, refreshKey, onPinChanged }: Prop
         {!loading && (
           <div className={`rounded-2xl border p-4 shadow-sm flex flex-col gap-3 ${
             statoSistema.livello === 'ok'
-              ? 'bg-emerald-50 border-emerald-200'
+              ? 'bg-emerald-50 dark:bg-emerald-950 border-emerald-200 dark:border-emerald-800'
               : statoSistema.livello === 'attenzione'
-              ? 'bg-amber-50 border-amber-200'
-              : 'bg-red-50 border-red-200'
+              ? 'bg-amber-50 dark:bg-amber-950 border-amber-200 dark:border-amber-800'
+              : 'bg-red-50 dark:bg-red-950 border-red-200 dark:border-red-800'
           }`}>
 
             {/* HEADER */}
@@ -1308,10 +1308,10 @@ export default function AdminScreen({ adminPin, refreshKey, onPinChanged }: Prop
                 </span>
                 <span className={`font-bold text-base ${
                   statoSistema.livello === 'ok'
-                    ? 'text-emerald-800'
+                    ? 'text-emerald-800 dark:text-emerald-200'
                     : statoSistema.livello === 'attenzione'
-                    ? 'text-amber-800'
-                    : 'text-red-800'
+                    ? 'text-amber-800 dark:text-amber-200'
+                    : 'text-red-800 dark:text-red-200'
                 }`}>
                   {statoSistema.livello === 'ok'
                     ? 'Sistema in salute'
@@ -1323,8 +1323,8 @@ export default function AdminScreen({ adminPin, refreshKey, onPinChanged }: Prop
               {statoSistema.totaleCriticita > 0 && (
                 <span className={`text-sm font-bold px-2.5 py-1 rounded-full ${
                   statoSistema.livello === 'attenzione'
-                    ? 'bg-amber-200 text-amber-800'
-                    : 'bg-red-200 text-red-800'
+                    ? 'bg-amber-200 dark:bg-amber-800 text-amber-800 dark:text-amber-200'
+                    : 'bg-red-200 dark:bg-red-800 text-red-800 dark:text-red-200'
                 }`}>
                   {statoSistema.totaleCriticita} criticità
                 </span>
@@ -1341,17 +1341,17 @@ export default function AdminScreen({ adminPin, refreshKey, onPinChanged }: Prop
                     onClick={v.onClick}
                     className={`flex items-center justify-between text-sm w-full px-3 py-2 rounded-xl transition-colors ${
                       statoSistema.livello === 'attenzione'
-                        ? 'hover:bg-amber-100'
-                        : 'hover:bg-red-100'
+                        ? 'hover:bg-amber-100 dark:hover:bg-amber-900'
+                        : 'hover:bg-red-100 dark:hover:bg-red-900'
                     }`}
                   >
                     <span className={
-                      statoSistema.livello === 'attenzione' ? 'text-amber-700' : 'text-red-700'
+                      statoSistema.livello === 'attenzione' ? 'text-amber-700 dark:text-amber-300' : 'text-red-700 dark:text-red-300'
                     }>
                       {v.label}
                     </span>
                     <span className={`font-bold tabular-nums ${
-                      statoSistema.livello === 'attenzione' ? 'text-amber-800' : 'text-red-800'
+                      statoSistema.livello === 'attenzione' ? 'text-amber-800 dark:text-amber-200' : 'text-red-800 dark:text-red-200'
                     }`}>
                       {v.valore}
                     </span>
@@ -1361,7 +1361,7 @@ export default function AdminScreen({ adminPin, refreshKey, onPinChanged }: Prop
             )}
 
             {statoSistema.livello === 'ok' && (
-              <p className="text-sm text-emerald-700">
+              <p className="text-sm text-emerald-700 dark:text-emerald-300">
                 Nessuna criticità rilevata. Tutti i dati sono completi e aggiornati.
               </p>
             )}
@@ -1371,25 +1371,25 @@ export default function AdminScreen({ adminPin, refreshKey, onPinChanged }: Prop
 
         {/* OPPORTUNITÀ DI CRESCITA */}
         {!loading && (
-          <div className="bg-white dark:bg-gray-900 rounded-2xl border border-emerald-100 p-4 shadow-sm flex flex-col gap-3">
+          <div className="bg-white dark:bg-gray-900 rounded-2xl border border-emerald-100 dark:border-emerald-900 p-4 shadow-sm flex flex-col gap-3">
 
             {/* HEADER */}
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <span className="text-xl">🌱</span>
-                <span className="font-bold text-base text-emerald-800">
+                <span className="font-bold text-base text-emerald-800 dark:text-emerald-200">
                   Opportunità di crescita
                 </span>
               </div>
               {statoSistema.totaleOpportunita > 0 && (
-                <span className="text-sm font-bold px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-800">
+                <span className="text-sm font-bold px-2.5 py-1 rounded-full bg-emerald-100 dark:bg-emerald-900 text-emerald-800 dark:text-emerald-200">
                   {statoSistema.totaleOpportunita} voci
                 </span>
               )}
             </div>
 
             {statoSistema.totaleOpportunita === 0 ? (
-              <p className="text-sm text-emerald-700">
+              <p className="text-sm text-emerald-700 dark:text-emerald-300">
                 Ottimo! Nessuna opportunità di crescita rilevata.
               </p>
             ) : (
@@ -1399,13 +1399,13 @@ export default function AdminScreen({ adminPin, refreshKey, onPinChanged }: Prop
                     key={v.label}
                     type="button"
                     onClick={v.onClick}
-                    className={`flex items-center justify-between text-sm w-full px-3 py-2 rounded-xl transition-colors hover:bg-emerald-50 ${
+                    className={`flex items-center justify-between text-sm w-full px-3 py-2 rounded-xl transition-colors hover:bg-emerald-50 dark:hover:bg-emerald-950 ${
                       v.valore === 0 ? 'opacity-40' : ''
                     }`}
                   >
                     <span className="text-gray-600 dark:text-gray-300">{v.label}</span>
                     <span className={`font-bold tabular-nums ${
-                      v.valore === 0 ? 'text-gray-400' : 'text-emerald-700'
+                      v.valore === 0 ? 'text-gray-400' : 'text-emerald-700 dark:text-emerald-300'
                     }`}>
                       {v.valore}
                     </span>
@@ -1450,7 +1450,7 @@ export default function AdminScreen({ adminPin, refreshKey, onPinChanged }: Prop
 
               <div className="flex items-center justify-between">
 
-                <MapPin className="w-5 h-5 text-blue-500" />
+                <MapPin className="w-5 h-5 text-blue-500 dark:text-blue-400" />
 
                 <span className="text-2xl font-bold text-gray-900 dark:text-gray-100">
 
@@ -1505,12 +1505,12 @@ export default function AdminScreen({ adminPin, refreshKey, onPinChanged }: Prop
                   true
                 )
               }
-              className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 p-4 shadow-sm hover:border-amber-300 transition-colors text-left"
+              className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 p-4 shadow-sm hover:border-amber-300 dark:hover:border-amber-700 transition-colors text-left"
             >
 
               <div className="flex items-center justify-between">
 
-                <MessageSquareWarning className="w-5 h-5 text-amber-500" />
+                <MessageSquareWarning className="w-5 h-5 text-amber-500 dark:text-amber-400" />
 
                 <span className="text-2xl font-bold text-gray-900 dark:text-gray-100">
 
@@ -1669,13 +1669,13 @@ export default function AdminScreen({ adminPin, refreshKey, onPinChanged }: Prop
                   <span className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide">Totali</span>
                 </div>
 
-                <div className="rounded-2xl border border-emerald-100 bg-emerald-50 p-3 flex flex-col gap-1">
-                  <span className="text-2xl font-bold text-emerald-700">{community.contributi.approvati}</span>
+                <div className="rounded-2xl border border-emerald-100 dark:border-emerald-900 bg-emerald-50 dark:bg-emerald-950 p-3 flex flex-col gap-1">
+                  <span className="text-2xl font-bold text-emerald-700 dark:text-emerald-300">{community.contributi.approvati}</span>
                   <span className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide">Approvati</span>
                 </div>
 
-                <div className="rounded-2xl border border-red-100 bg-red-50 p-3 flex flex-col gap-1">
-                  <span className="text-2xl font-bold text-red-600">{community.contributi.respinti}</span>
+                <div className="rounded-2xl border border-red-100 dark:border-red-900 bg-red-50 dark:bg-red-950 p-3 flex flex-col gap-1">
+                  <span className="text-2xl font-bold text-red-600 dark:text-red-400">{community.contributi.respinti}</span>
                   <span className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide">Respinti</span>
                 </div>
 
@@ -1683,15 +1683,15 @@ export default function AdminScreen({ adminPin, refreshKey, onPinChanged }: Prop
                   community.contributi.tassoApprovazione === null
                     ? 'border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-800'
                     : community.contributi.tassoApprovazione >= 60
-                    ? 'border-emerald-100 bg-emerald-50'
-                    : 'border-amber-100 bg-amber-50'
+                    ? 'border-emerald-100 dark:border-emerald-900 bg-emerald-50 dark:bg-emerald-950'
+                    : 'border-amber-100 dark:border-amber-900 bg-amber-50 dark:bg-amber-950'
                 }`}>
                   <span className={`text-2xl font-bold ${
                     community.contributi.tassoApprovazione === null
                       ? 'text-gray-400'
                       : community.contributi.tassoApprovazione >= 60
-                      ? 'text-emerald-700'
-                      : 'text-amber-700'
+                      ? 'text-emerald-700 dark:text-emerald-300'
+                      : 'text-amber-700 dark:text-amber-300'
                   }`}>
                     {community.contributi.tassoApprovazione !== null
                       ? `${community.contributi.tassoApprovazione}%`
@@ -1731,17 +1731,17 @@ export default function AdminScreen({ adminPin, refreshKey, onPinChanged }: Prop
               <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide">Coinvolgimento community</p>
               <div className="grid grid-cols-2 gap-3">
 
-                <div className="rounded-2xl border border-emerald-100 bg-emerald-50 p-3 flex flex-col gap-1">
-                  <span className="text-2xl font-bold text-emerald-700">{community.engagement.conferme}</span>
+                <div className="rounded-2xl border border-emerald-100 dark:border-emerald-900 bg-emerald-50 dark:bg-emerald-950 p-3 flex flex-col gap-1">
+                  <span className="text-2xl font-bold text-emerald-700 dark:text-emerald-300">{community.engagement.conferme}</span>
                   <span className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide">Conferme</span>
                 </div>
 
                 <div className={`rounded-2xl border p-3 flex flex-col gap-1 ${
                   community.engagement.problemi > 0
-                    ? 'border-amber-100 bg-amber-50'
+                    ? 'border-amber-100 dark:border-amber-900 bg-amber-50 dark:bg-amber-950'
                     : 'border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-800'
                 }`}>
-                  <span className={`text-2xl font-bold ${community.engagement.problemi > 0 ? 'text-amber-700' : 'text-gray-400'}`}>
+                  <span className={`text-2xl font-bold ${community.engagement.problemi > 0 ? 'text-amber-700 dark:text-amber-300' : 'text-gray-400'}`}>
                     {community.engagement.problemi}
                   </span>
                   <span className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide">Segnalazioni</span>
@@ -1787,7 +1787,7 @@ export default function AdminScreen({ adminPin, refreshKey, onPinChanged }: Prop
             <div className="flex flex-col gap-1.5">
               <div className="flex justify-between text-xs">
                 <span className="text-gray-500 dark:text-gray-400 font-medium">Copertura GPS</span>
-                <span className={`font-bold ${copertura.percentualeGps >= 80 ? 'text-emerald-600' : copertura.percentualeGps >= 50 ? 'text-amber-600' : 'text-red-600'}`}>
+                <span className={`font-bold ${copertura.percentualeGps >= 80 ? 'text-emerald-600 dark:text-emerald-400' : copertura.percentualeGps >= 50 ? 'text-amber-600 dark:text-amber-400' : 'text-red-600 dark:text-red-400'}`}>
                   {copertura.percentualeGps}%
                 </span>
               </div>
@@ -1817,11 +1817,11 @@ export default function AdminScreen({ adminPin, refreshKey, onPinChanged }: Prop
               <button
                 type="button"
                 onClick={() => apriStazioniConFiltro('attive')}
-                className="rounded-2xl border border-emerald-100 bg-emerald-50 p-4 text-left hover:border-emerald-300 transition-colors"
+                className="rounded-2xl border border-emerald-100 dark:border-emerald-900 bg-emerald-50 dark:bg-emerald-950 p-4 text-left hover:border-emerald-300 dark:hover:border-emerald-700 transition-colors"
               >
                 <div className="flex items-center justify-between">
-                  <CheckCircle className="w-5 h-5 text-emerald-500" />
-                  <span className="text-2xl font-bold text-emerald-700">{copertura.attive}</span>
+                  <CheckCircle className="w-5 h-5 text-emerald-500 dark:text-emerald-400" />
+                  <span className="text-2xl font-bold text-emerald-700 dark:text-emerald-300">{copertura.attive}</span>
                 </div>
                 <p className="text-xs text-gray-500 dark:text-gray-400 mt-3 uppercase tracking-wide">Attive</p>
               </button>
@@ -1829,11 +1829,11 @@ export default function AdminScreen({ adminPin, refreshKey, onPinChanged }: Prop
               <button
                 type="button"
                 onClick={() => apriStazioniConFiltro('tutte', '__coord__')}
-                className={`rounded-2xl border p-4 text-left transition-colors ${copertura.conCoord === copertura.totale ? 'border-emerald-100 bg-emerald-50 hover:border-emerald-300' : 'border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 hover:border-gray-300 dark:hover:border-gray-700'}`}
+                className={`rounded-2xl border p-4 text-left transition-colors ${copertura.conCoord === copertura.totale ? 'border-emerald-100 dark:border-emerald-900 bg-emerald-50 dark:bg-emerald-950 hover:border-emerald-300 dark:hover:border-emerald-700' : 'border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 hover:border-gray-300 dark:hover:border-gray-700'}`}
               >
                 <div className="flex items-center justify-between">
-                  <MapPin className={`w-5 h-5 ${copertura.conCoord === copertura.totale ? 'text-emerald-500' : 'text-gray-400'}`} />
-                  <span className={`text-2xl font-bold ${copertura.conCoord === copertura.totale ? 'text-emerald-700' : 'text-gray-700 dark:text-gray-300'}`}>{copertura.conCoord}</span>
+                  <MapPin className={`w-5 h-5 ${copertura.conCoord === copertura.totale ? 'text-emerald-500 dark:text-emerald-400' : 'text-gray-400'}`} />
+                  <span className={`text-2xl font-bold ${copertura.conCoord === copertura.totale ? 'text-emerald-700 dark:text-emerald-300' : 'text-gray-700 dark:text-gray-300'}`}>{copertura.conCoord}</span>
                 </div>
                 <p className="text-xs text-gray-500 dark:text-gray-400 mt-3 uppercase tracking-wide">Con coordinate</p>
               </button>
@@ -1841,11 +1841,11 @@ export default function AdminScreen({ adminPin, refreshKey, onPinChanged }: Prop
               <button
                 type="button"
                 onClick={() => apriStazioniConFiltro('tutte', '__maps__')}
-                className={`rounded-2xl border p-4 text-left transition-colors ${copertura.conMaps === copertura.totale ? 'border-emerald-100 bg-emerald-50 hover:border-emerald-300' : 'border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 hover:border-gray-300 dark:hover:border-gray-700'}`}
+                className={`rounded-2xl border p-4 text-left transition-colors ${copertura.conMaps === copertura.totale ? 'border-emerald-100 dark:border-emerald-900 bg-emerald-50 dark:bg-emerald-950 hover:border-emerald-300 dark:hover:border-emerald-700' : 'border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 hover:border-gray-300 dark:hover:border-gray-700'}`}
               >
                 <div className="flex items-center justify-between">
-                  <MapPin className={`w-5 h-5 ${copertura.conMaps === copertura.totale ? 'text-emerald-500' : 'text-blue-400'}`} />
-                  <span className={`text-2xl font-bold ${copertura.conMaps === copertura.totale ? 'text-emerald-700' : 'text-gray-700 dark:text-gray-300'}`}>{copertura.conMaps}</span>
+                  <MapPin className={`w-5 h-5 ${copertura.conMaps === copertura.totale ? 'text-emerald-500 dark:text-emerald-400' : 'text-blue-400'}`} />
+                  <span className={`text-2xl font-bold ${copertura.conMaps === copertura.totale ? 'text-emerald-700 dark:text-emerald-300' : 'text-gray-700 dark:text-gray-300'}`}>{copertura.conMaps}</span>
                 </div>
                 <p className="text-xs text-gray-500 dark:text-gray-400 mt-3 uppercase tracking-wide">Con Maps Query</p>
               </button>
@@ -1853,11 +1853,11 @@ export default function AdminScreen({ adminPin, refreshKey, onPinChanged }: Prop
               <button
                 type="button"
                 onClick={() => apriStazioniConFiltro('tutte', '__indirizzo__')}
-                className={`rounded-2xl border p-4 text-left transition-colors ${copertura.conIndirizzo === copertura.totale ? 'border-emerald-100 bg-emerald-50 hover:border-emerald-300' : 'border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 hover:border-gray-300 dark:hover:border-gray-700'}`}
+                className={`rounded-2xl border p-4 text-left transition-colors ${copertura.conIndirizzo === copertura.totale ? 'border-emerald-100 dark:border-emerald-900 bg-emerald-50 dark:bg-emerald-950 hover:border-emerald-300 dark:hover:border-emerald-700' : 'border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 hover:border-gray-300 dark:hover:border-gray-700'}`}
               >
                 <div className="flex items-center justify-between">
-                  <Building2 className={`w-5 h-5 ${copertura.conIndirizzo === copertura.totale ? 'text-emerald-500' : 'text-gray-400'}`} />
-                  <span className={`text-2xl font-bold ${copertura.conIndirizzo === copertura.totale ? 'text-emerald-700' : 'text-gray-700 dark:text-gray-300'}`}>{copertura.conIndirizzo}</span>
+                  <Building2 className={`w-5 h-5 ${copertura.conIndirizzo === copertura.totale ? 'text-emerald-500 dark:text-emerald-400' : 'text-gray-400'}`} />
+                  <span className={`text-2xl font-bold ${copertura.conIndirizzo === copertura.totale ? 'text-emerald-700 dark:text-emerald-300' : 'text-gray-700 dark:text-gray-300'}`}>{copertura.conIndirizzo}</span>
                 </div>
                 <p className="text-xs text-gray-500 dark:text-gray-400 mt-3 uppercase tracking-wide">Con indirizzo</p>
               </button>
@@ -1865,11 +1865,11 @@ export default function AdminScreen({ adminPin, refreshKey, onPinChanged }: Prop
               <button
                 type="button"
                 onClick={() => apriStazioniConFiltro('tutte', '__pluscode__')}
-                className={`rounded-2xl border p-4 text-left transition-colors ${copertura.conPlusCode === copertura.totale ? 'border-emerald-100 bg-emerald-50 hover:border-emerald-300' : 'border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 hover:border-gray-300 dark:hover:border-gray-700'}`}
+                className={`rounded-2xl border p-4 text-left transition-colors ${copertura.conPlusCode === copertura.totale ? 'border-emerald-100 dark:border-emerald-900 bg-emerald-50 dark:bg-emerald-950 hover:border-emerald-300 dark:hover:border-emerald-700' : 'border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 hover:border-gray-300 dark:hover:border-gray-700'}`}
               >
                 <div className="flex items-center justify-between">
-                  <AlertCircle className={`w-5 h-5 ${copertura.conPlusCode === copertura.totale ? 'text-emerald-500' : 'text-gray-400'}`} />
-                  <span className={`text-2xl font-bold ${copertura.conPlusCode === copertura.totale ? 'text-emerald-700' : 'text-gray-700 dark:text-gray-300'}`}>{copertura.conPlusCode}</span>
+                  <AlertCircle className={`w-5 h-5 ${copertura.conPlusCode === copertura.totale ? 'text-emerald-500 dark:text-emerald-400' : 'text-gray-400'}`} />
+                  <span className={`text-2xl font-bold ${copertura.conPlusCode === copertura.totale ? 'text-emerald-700 dark:text-emerald-300' : 'text-gray-700 dark:text-gray-300'}`}>{copertura.conPlusCode}</span>
                 </div>
                 <p className="text-xs text-gray-500 dark:text-gray-400 mt-3 uppercase tracking-wide">Con Plus Code</p>
               </button>
@@ -1899,12 +1899,12 @@ export default function AdminScreen({ adminPin, refreshKey, onPinChanged }: Prop
                   }}
                   className={`flex items-center justify-between px-3 py-2 rounded-xl border w-full text-left transition-colors ${
                     color
-                      ? 'bg-emerald-50 border-emerald-100 hover:border-emerald-300'
+                      ? 'bg-emerald-50 dark:bg-emerald-950 border-emerald-100 dark:border-emerald-900 hover:border-emerald-300 dark:hover:border-emerald-700 dark:hover:border-emerald-700'
                       : 'bg-white dark:bg-gray-900 border-gray-100 dark:border-gray-800 hover:border-gray-300 dark:hover:border-gray-700'
                   }`}
                 >
                   <span className="text-sm text-gray-600 dark:text-gray-300">{label}</span>
-                  <span className={`text-sm font-semibold ${color ? 'text-emerald-600' : count > 0 ? 'text-red-600' : 'text-gray-900 dark:text-gray-100'}`}>
+                  <span className={`text-sm font-semibold ${color ? 'text-emerald-600 dark:text-emerald-400' : count > 0 ? 'text-red-600 dark:text-red-400' : 'text-gray-900 dark:text-gray-100'}`}>
                     {count}
                   </span>
                 </button>
@@ -1936,13 +1936,13 @@ export default function AdminScreen({ adminPin, refreshKey, onPinChanged }: Prop
                 onClick={() => apriStazioniConFiltro('tutte', '__no_attivita__')}
                 className={`rounded-2xl border p-4 text-left shadow-sm transition-colors ${
                   integrita.stazioniSenzaAttivita.length === 0
-                    ? 'border-emerald-100 bg-emerald-50 hover:border-emerald-300'
-                    : 'border-red-100 bg-white dark:bg-gray-900 hover:border-red-300'
+                    ? 'border-emerald-100 dark:border-emerald-900 bg-emerald-50 dark:bg-emerald-950 hover:border-emerald-300 dark:hover:border-emerald-700'
+                    : 'border-red-100 dark:border-red-900 bg-white dark:bg-gray-900 hover:border-red-300 dark:hover:border-red-700'
                 }`}
               >
                 <div className="flex items-center justify-between">
-                  <Store className={`w-5 h-5 ${integrita.stazioniSenzaAttivita.length === 0 ? 'text-emerald-500' : 'text-red-500'}`} />
-                  <span className={`text-2xl font-bold ${integrita.stazioniSenzaAttivita.length === 0 ? 'text-emerald-700' : 'text-red-600'}`}>
+                  <Store className={`w-5 h-5 ${integrita.stazioniSenzaAttivita.length === 0 ? 'text-emerald-500 dark:text-emerald-400' : 'text-red-500 dark:text-red-400'}`} />
+                  <span className={`text-2xl font-bold ${integrita.stazioniSenzaAttivita.length === 0 ? 'text-emerald-700 dark:text-emerald-300' : 'text-red-600 dark:text-red-400'}`}>
                     {integrita.stazioniSenzaAttivita.length}
                   </span>
                 </div>
@@ -1955,13 +1955,13 @@ export default function AdminScreen({ adminPin, refreshKey, onPinChanged }: Prop
                 onClick={() => apriStazioniConFiltro('tutte', '__no_salette__')}
                 className={`rounded-2xl border p-4 text-left shadow-sm transition-colors ${
                   integrita.stazioniSenzaSalette.length === 0
-                    ? 'border-emerald-100 bg-emerald-50 hover:border-emerald-300'
-                    : 'border-amber-100 bg-white dark:bg-gray-900 hover:border-amber-300'
+                    ? 'border-emerald-100 dark:border-emerald-900 bg-emerald-50 dark:bg-emerald-950 hover:border-emerald-300 dark:hover:border-emerald-700'
+                    : 'border-amber-100 dark:border-amber-900 bg-white dark:bg-gray-900 hover:border-amber-300 dark:hover:border-amber-700'
                 }`}
               >
                 <div className="flex items-center justify-between">
-                  <Building2 className={`w-5 h-5 ${integrita.stazioniSenzaSalette.length === 0 ? 'text-emerald-500' : 'text-amber-500'}`} />
-                  <span className={`text-2xl font-bold ${integrita.stazioniSenzaSalette.length === 0 ? 'text-emerald-700' : 'text-amber-600'}`}>
+                  <Building2 className={`w-5 h-5 ${integrita.stazioniSenzaSalette.length === 0 ? 'text-emerald-500 dark:text-emerald-400' : 'text-amber-500 dark:text-amber-400'}`} />
+                  <span className={`text-2xl font-bold ${integrita.stazioniSenzaSalette.length === 0 ? 'text-emerald-700 dark:text-emerald-300' : 'text-amber-600 dark:text-amber-400'}`}>
                     {integrita.stazioniSenzaSalette.length}
                   </span>
                 </div>
@@ -1974,13 +1974,13 @@ export default function AdminScreen({ adminPin, refreshKey, onPinChanged }: Prop
                 onClick={() => apriSaletteConFiltro('__no_ubicazione__')}
                 className={`rounded-2xl border p-4 text-left shadow-sm transition-colors ${
                   integrita.saletteSenzaUbicazione.length === 0
-                    ? 'border-emerald-100 bg-emerald-50 hover:border-emerald-300'
-                    : 'border-red-100 bg-white dark:bg-gray-900 hover:border-red-300'
+                    ? 'border-emerald-100 dark:border-emerald-900 bg-emerald-50 dark:bg-emerald-950 hover:border-emerald-300 dark:hover:border-emerald-700'
+                    : 'border-red-100 dark:border-red-900 bg-white dark:bg-gray-900 hover:border-red-300 dark:hover:border-red-700'
                 }`}
               >
                 <div className="flex items-center justify-between">
-                  <MapPin className={`w-5 h-5 ${integrita.saletteSenzaUbicazione.length === 0 ? 'text-emerald-500' : 'text-red-500'}`} />
-                  <span className={`text-2xl font-bold ${integrita.saletteSenzaUbicazione.length === 0 ? 'text-emerald-700' : 'text-red-600'}`}>
+                  <MapPin className={`w-5 h-5 ${integrita.saletteSenzaUbicazione.length === 0 ? 'text-emerald-500 dark:text-emerald-400' : 'text-red-500 dark:text-red-400'}`} />
+                  <span className={`text-2xl font-bold ${integrita.saletteSenzaUbicazione.length === 0 ? 'text-emerald-700 dark:text-emerald-300' : 'text-red-600 dark:text-red-400'}`}>
                     {integrita.saletteSenzaUbicazione.length}
                   </span>
                 </div>
@@ -1993,13 +1993,13 @@ export default function AdminScreen({ adminPin, refreshKey, onPinChanged }: Prop
                 onClick={() => apriSaletteConFiltro('__no_codice__')}
                 className={`rounded-2xl border p-4 text-left shadow-sm transition-colors ${
                   integrita.saletteSenzaCodice.length === 0
-                    ? 'border-emerald-100 bg-emerald-50 hover:border-emerald-300'
-                    : 'border-amber-100 bg-white dark:bg-gray-900 hover:border-amber-300'
+                    ? 'border-emerald-100 dark:border-emerald-900 bg-emerald-50 dark:bg-emerald-950 hover:border-emerald-300 dark:hover:border-emerald-700'
+                    : 'border-amber-100 dark:border-amber-900 bg-white dark:bg-gray-900 hover:border-amber-300 dark:hover:border-amber-700'
                 }`}
               >
                 <div className="flex items-center justify-between">
-                  <ShieldCheck className={`w-5 h-5 ${integrita.saletteSenzaCodice.length === 0 ? 'text-emerald-500' : 'text-amber-500'}`} />
-                  <span className={`text-2xl font-bold ${integrita.saletteSenzaCodice.length === 0 ? 'text-emerald-700' : 'text-amber-600'}`}>
+                  <ShieldCheck className={`w-5 h-5 ${integrita.saletteSenzaCodice.length === 0 ? 'text-emerald-500 dark:text-emerald-400' : 'text-amber-500 dark:text-amber-400'}`} />
+                  <span className={`text-2xl font-bold ${integrita.saletteSenzaCodice.length === 0 ? 'text-emerald-700 dark:text-emerald-300' : 'text-amber-600 dark:text-amber-400'}`}>
                     {integrita.saletteSenzaCodice.length}
                   </span>
                 </div>
@@ -2057,8 +2057,8 @@ export default function AdminScreen({ adminPin, refreshKey, onPinChanged }: Prop
                   ${
                     qualita.senzaMaps
                       .length === 0
-                      ? 'bg-emerald-50 border-emerald-100 hover:border-emerald-300'
-                      : 'bg-white dark:bg-gray-900 border-red-100 hover:border-red-300'
+                      ? 'bg-emerald-50 dark:bg-emerald-950 border-emerald-100 dark:border-emerald-900 hover:border-emerald-300 dark:hover:border-emerald-700'
+                      : 'bg-white dark:bg-gray-900 border-red-100 dark:border-red-900 hover:border-red-300 dark:hover:border-red-700'
                   }
                 `}
               >
@@ -2069,8 +2069,8 @@ export default function AdminScreen({ adminPin, refreshKey, onPinChanged }: Prop
                     className={`w-5 h-5 ${
                       qualita.senzaMaps
                         .length === 0
-                        ? 'text-emerald-500'
-                        : 'text-red-500'
+                        ? 'text-emerald-500 dark:text-emerald-400'
+                        : 'text-red-500 dark:text-red-400'
                     }`}
                   />
 
@@ -2078,8 +2078,8 @@ export default function AdminScreen({ adminPin, refreshKey, onPinChanged }: Prop
                     className={`text-2xl font-bold ${
                       qualita.senzaMaps
                         .length === 0
-                        ? 'text-emerald-600'
-                        : 'text-red-600'
+                        ? 'text-emerald-600 dark:text-emerald-400'
+                        : 'text-red-600 dark:text-red-400'
                     }`}
                   >
 
@@ -2120,8 +2120,8 @@ export default function AdminScreen({ adminPin, refreshKey, onPinChanged }: Prop
                   ${
                     qualita.senzaIndirizzo
                       .length === 0
-                      ? 'bg-emerald-50 border-emerald-100 hover:border-emerald-300'
-                      : 'bg-white dark:bg-gray-900 border-red-100 hover:border-red-300'
+                      ? 'bg-emerald-50 dark:bg-emerald-950 border-emerald-100 dark:border-emerald-900 hover:border-emerald-300 dark:hover:border-emerald-700'
+                      : 'bg-white dark:bg-gray-900 border-red-100 dark:border-red-900 hover:border-red-300 dark:hover:border-red-700'
                   }
                 `}
               >
@@ -2132,8 +2132,8 @@ export default function AdminScreen({ adminPin, refreshKey, onPinChanged }: Prop
                     className={`w-5 h-5 ${
                       qualita.senzaIndirizzo
                         .length === 0
-                        ? 'text-emerald-500'
-                        : 'text-red-500'
+                        ? 'text-emerald-500 dark:text-emerald-400'
+                        : 'text-red-500 dark:text-red-400'
                     }`}
                   />
 
@@ -2141,8 +2141,8 @@ export default function AdminScreen({ adminPin, refreshKey, onPinChanged }: Prop
                     className={`text-2xl font-bold ${
                       qualita.senzaIndirizzo
                         .length === 0
-                        ? 'text-emerald-600'
-                        : 'text-red-600'
+                        ? 'text-emerald-600 dark:text-emerald-400'
+                        : 'text-red-600 dark:text-red-400'
                     }`}
                   >
 
@@ -2184,8 +2184,8 @@ export default function AdminScreen({ adminPin, refreshKey, onPinChanged }: Prop
                   ${
                     qualita.senzaOrari
                       .length === 0
-                      ? 'bg-emerald-50 border-emerald-100 hover:border-emerald-300'
-                      : 'bg-white dark:bg-gray-900 border-red-100 hover:border-red-300'
+                      ? 'bg-emerald-50 dark:bg-emerald-950 border-emerald-100 dark:border-emerald-900 hover:border-emerald-300 dark:hover:border-emerald-700'
+                      : 'bg-white dark:bg-gray-900 border-red-100 dark:border-red-900 hover:border-red-300 dark:hover:border-red-700'
                   }
                 `}
               >
@@ -2196,8 +2196,8 @@ export default function AdminScreen({ adminPin, refreshKey, onPinChanged }: Prop
                     className={`w-5 h-5 ${
                       qualita.senzaOrari
                         .length === 0
-                        ? 'text-emerald-500'
-                        : 'text-red-500'
+                        ? 'text-emerald-500 dark:text-emerald-400'
+                        : 'text-red-500 dark:text-red-400'
                     }`}
                   />
 
@@ -2205,8 +2205,8 @@ export default function AdminScreen({ adminPin, refreshKey, onPinChanged }: Prop
                     className={`text-2xl font-bold ${
                       qualita.senzaOrari
                         .length === 0
-                        ? 'text-emerald-600'
-                        : 'text-red-600'
+                        ? 'text-emerald-600 dark:text-emerald-400'
+                        : 'text-red-600 dark:text-red-400'
                     }`}
                   >
 
@@ -2339,8 +2339,8 @@ export default function AdminScreen({ adminPin, refreshKey, onPinChanged }: Prop
                   ${
                     qualita.duplicati
                       .length === 0
-                      ? 'bg-emerald-50 border-emerald-100 hover:border-emerald-300'
-                      : 'bg-white dark:bg-gray-900 border-amber-100 hover:border-amber-300'
+                      ? 'bg-emerald-50 dark:bg-emerald-950 border-emerald-100 dark:border-emerald-900 hover:border-emerald-300 dark:hover:border-emerald-700'
+                      : 'bg-white dark:bg-gray-900 border-amber-100 dark:border-amber-900 hover:border-amber-300 dark:hover:border-amber-700'
                   }
                 `}
               >
@@ -2351,8 +2351,8 @@ export default function AdminScreen({ adminPin, refreshKey, onPinChanged }: Prop
                     className={`w-5 h-5 ${
                       qualita.duplicati
                         .length === 0
-                        ? 'text-emerald-500'
-                        : 'text-amber-500'
+                        ? 'text-emerald-500 dark:text-emerald-400'
+                        : 'text-amber-500 dark:text-amber-400'
                     }`}
                   />
 
@@ -2360,8 +2360,8 @@ export default function AdminScreen({ adminPin, refreshKey, onPinChanged }: Prop
                     className={`text-2xl font-bold ${
                       qualita.duplicati
                         .length === 0
-                        ? 'text-emerald-600'
-                        : 'text-amber-600'
+                        ? 'text-emerald-600 dark:text-emerald-400'
+                        : 'text-amber-600 dark:text-amber-400'
                     }`}
                   >
 
@@ -2535,13 +2535,13 @@ export default function AdminScreen({ adminPin, refreshKey, onPinChanged }: Prop
               </div>
 
               {/* ATTIVITÀ COMPLETE */}
-              <div className="rounded-2xl border border-emerald-100 bg-emerald-50 p-4 flex flex-col gap-3">
+              <div className="rounded-2xl border border-emerald-100 dark:border-emerald-900 bg-emerald-50 dark:bg-emerald-950 p-4 flex flex-col gap-3">
 
                 <div className="flex items-center justify-between">
 
-                  <AlertCircle className="w-5 h-5 text-emerald-500" />
+                  <AlertCircle className="w-5 h-5 text-emerald-500 dark:text-emerald-400" />
 
-                  <span className="text-2xl font-bold text-emerald-700">
+                  <span className="text-2xl font-bold text-emerald-700 dark:text-emerald-300">
 
                     {statoDb.complete}
 
@@ -2555,7 +2555,7 @@ export default function AdminScreen({ adminPin, refreshKey, onPinChanged }: Prop
 
                 </p>
 
-                <p className="text-xs text-emerald-600 font-medium">
+                <p className="text-xs text-emerald-600 dark:text-emerald-400 font-medium">
 
                   {statoDb.complete} / {statoDb.totale}
                   {' '}
@@ -2598,13 +2598,13 @@ export default function AdminScreen({ adminPin, refreshKey, onPinChanged }: Prop
             <div className="grid grid-cols-2 gap-3">
 
               {/* CONFERME */}
-              <div className="rounded-2xl border border-emerald-100 bg-emerald-50 p-4 flex flex-col gap-3">
+              <div className="rounded-2xl border border-emerald-100 dark:border-emerald-900 bg-emerald-50 dark:bg-emerald-950 p-4 flex flex-col gap-3">
 
                 <div className="flex items-center justify-between">
 
-                  <CheckCircle className="w-5 h-5 text-emerald-500" />
+                  <CheckCircle className="w-5 h-5 text-emerald-500 dark:text-emerald-400" />
 
-                  <span className="text-2xl font-bold text-emerald-700">
+                  <span className="text-2xl font-bold text-emerald-700 dark:text-emerald-300">
 
                     {verificheStats.totaleConferme}
 
@@ -2626,7 +2626,7 @@ export default function AdminScreen({ adminPin, refreshKey, onPinChanged }: Prop
                 onClick={() => apriSegnalazioniSalette(null)}
                 className={`rounded-2xl border p-4 flex flex-col gap-3 text-left w-full ${
                 verificheStats.totaleProblemi > 0
-                  ? 'border-amber-100 bg-amber-50 hover:border-amber-300'
+                  ? 'border-amber-100 dark:border-amber-900 bg-amber-50 dark:bg-amber-950 hover:border-amber-300 dark:hover:border-amber-700'
                   : 'border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-800'
               }`}>
 
@@ -2634,13 +2634,13 @@ export default function AdminScreen({ adminPin, refreshKey, onPinChanged }: Prop
 
                   <AlertTriangle className={`w-5 h-5 ${
                     verificheStats.totaleProblemi > 0
-                      ? 'text-amber-500'
+                      ? 'text-amber-500 dark:text-amber-400'
                       : 'text-gray-400'
                   }`} />
 
                   <span className={`text-2xl font-bold ${
                     verificheStats.totaleProblemi > 0
-                      ? 'text-amber-700'
+                      ? 'text-amber-700 dark:text-amber-300'
                       : 'text-gray-500 dark:text-gray-400'
                   }`}>
 
@@ -2684,22 +2684,22 @@ export default function AdminScreen({ adminPin, refreshKey, onPinChanged }: Prop
               {/* NON VERIFICATE */}
               <div className={`rounded-2xl border p-4 flex flex-col gap-3 ${
                 verificheStats.saletteNonVerificate > 0
-                  ? 'border-amber-100 bg-amber-50'
-                  : 'border-emerald-100 bg-emerald-50'
+                  ? 'border-amber-100 dark:border-amber-900 bg-amber-50 dark:bg-amber-950'
+                  : 'border-emerald-100 dark:border-emerald-900 bg-emerald-50 dark:bg-emerald-950'
               }`}>
 
                 <div className="flex items-center justify-between">
 
                   <AlertCircle className={`w-5 h-5 ${
                     verificheStats.saletteNonVerificate > 0
-                      ? 'text-amber-500'
-                      : 'text-emerald-500'
+                      ? 'text-amber-500 dark:text-amber-400'
+                      : 'text-emerald-500 dark:text-emerald-400'
                   }`} />
 
                   <span className={`text-2xl font-bold ${
                     verificheStats.saletteNonVerificate > 0
-                      ? 'text-amber-700'
-                      : 'text-emerald-700'
+                      ? 'text-amber-700 dark:text-amber-300'
+                      : 'text-emerald-700 dark:text-emerald-300'
                   }`}>
 
                     {verificheStats.saletteNonVerificate}
@@ -2793,13 +2793,13 @@ export default function AdminScreen({ adminPin, refreshKey, onPinChanged }: Prop
 
             <div className="grid grid-cols-2 gap-3">
 
-              <div className="rounded-2xl border border-emerald-100 bg-emerald-50 p-4 flex flex-col gap-3">
+              <div className="rounded-2xl border border-emerald-100 dark:border-emerald-900 bg-emerald-50 dark:bg-emerald-950 p-4 flex flex-col gap-3">
 
                 <div className="flex items-center justify-between">
 
-                  <CheckCircle className="w-5 h-5 text-emerald-500" />
+                  <CheckCircle className="w-5 h-5 text-emerald-500 dark:text-emerald-400" />
 
-                  <span className="text-2xl font-bold text-emerald-700">
+                  <span className="text-2xl font-bold text-emerald-700 dark:text-emerald-300">
 
                     {verificheAttivitaStats.totaleConferme}
 
@@ -2820,7 +2820,7 @@ export default function AdminScreen({ adminPin, refreshKey, onPinChanged }: Prop
                 onClick={() => apriSegnalazioniAttivita(null)}
                 className={`rounded-2xl border p-4 flex flex-col gap-3 text-left w-full ${
                 verificheAttivitaStats.totaleProblemi > 0
-                  ? 'border-amber-100 bg-amber-50 hover:border-amber-300'
+                  ? 'border-amber-100 dark:border-amber-900 bg-amber-50 dark:bg-amber-950 hover:border-amber-300 dark:hover:border-amber-700'
                   : 'border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-800'
               }`}>
 
@@ -2828,13 +2828,13 @@ export default function AdminScreen({ adminPin, refreshKey, onPinChanged }: Prop
 
                   <AlertTriangle className={`w-5 h-5 ${
                     verificheAttivitaStats.totaleProblemi > 0
-                      ? 'text-amber-500'
+                      ? 'text-amber-500 dark:text-amber-400'
                       : 'text-gray-400'
                   }`} />
 
                   <span className={`text-2xl font-bold ${
                     verificheAttivitaStats.totaleProblemi > 0
-                      ? 'text-amber-700'
+                      ? 'text-amber-700 dark:text-amber-300'
                       : 'text-gray-500 dark:text-gray-400'
                   }`}>
 
@@ -2854,22 +2854,22 @@ export default function AdminScreen({ adminPin, refreshKey, onPinChanged }: Prop
 
               <div className={`rounded-2xl border p-4 flex flex-col gap-3 col-span-2 ${
                 verificheAttivitaStats.attivitaNonVerificate > 0
-                  ? 'border-amber-100 bg-amber-50'
-                  : 'border-emerald-100 bg-emerald-50'
+                  ? 'border-amber-100 dark:border-amber-900 bg-amber-50 dark:bg-amber-950'
+                  : 'border-emerald-100 dark:border-emerald-900 bg-emerald-50 dark:bg-emerald-950'
               }`}>
 
                 <div className="flex items-center justify-between">
 
                   <AlertCircle className={`w-5 h-5 ${
                     verificheAttivitaStats.attivitaNonVerificate > 0
-                      ? 'text-amber-500'
-                      : 'text-emerald-500'
+                      ? 'text-amber-500 dark:text-amber-400'
+                      : 'text-emerald-500 dark:text-emerald-400'
                   }`} />
 
                   <span className={`text-2xl font-bold ${
                     verificheAttivitaStats.attivitaNonVerificate > 0
-                      ? 'text-amber-700'
-                      : 'text-emerald-700'
+                      ? 'text-amber-700 dark:text-amber-300'
+                      : 'text-emerald-700 dark:text-emerald-300'
                   }`}>
 
                     {verificheAttivitaStats.attivitaNonVerificate}
@@ -3000,7 +3000,7 @@ export default function AdminScreen({ adminPin, refreshKey, onPinChanged }: Prop
 
                   <div
                     key={v.id}
-                    className="bg-amber-50 border border-amber-100 rounded-2xl p-4 flex flex-col gap-3"
+                    className="bg-amber-50 dark:bg-amber-950 border border-amber-100 dark:border-amber-900 rounded-2xl p-4 flex flex-col gap-3"
                   >
 
                     {/* SALETTA */}
@@ -3023,9 +3023,9 @@ export default function AdminScreen({ adminPin, refreshKey, onPinChanged }: Prop
                     {/* PROBLEMA */}
                     <div className="flex items-center gap-2">
 
-                      <AlertTriangle className="w-4 h-4 text-amber-500 flex-shrink-0" />
+                      <AlertTriangle className="w-4 h-4 text-amber-500 dark:text-amber-400 flex-shrink-0" />
 
-                      <span className="text-sm font-medium text-amber-800">
+                      <span className="text-sm font-medium text-amber-800 dark:text-amber-200">
 
                         {v.tipo_problema
                           ?.replace(/_/g, ' ')
@@ -3038,7 +3038,7 @@ export default function AdminScreen({ adminPin, refreshKey, onPinChanged }: Prop
                     {/* NOTE */}
                     {v.nota && (
 
-                      <p className="text-xs text-gray-600 dark:text-gray-300 bg-white dark:bg-gray-900 rounded-xl px-3 py-2 border border-amber-100">
+                      <p className="text-xs text-gray-600 dark:text-gray-300 bg-white dark:bg-gray-900 rounded-xl px-3 py-2 border border-amber-100 dark:border-amber-900">
 
                         {v.nota}
 
@@ -3162,7 +3162,7 @@ export default function AdminScreen({ adminPin, refreshKey, onPinChanged }: Prop
 
                   <div
                     key={v.id}
-                    className="bg-amber-50 border border-amber-100 rounded-2xl p-4 flex flex-col gap-3"
+                    className="bg-amber-50 dark:bg-amber-950 border border-amber-100 dark:border-amber-900 rounded-2xl p-4 flex flex-col gap-3"
                   >
 
                     {/* ATTIVITA */}
@@ -3185,9 +3185,9 @@ export default function AdminScreen({ adminPin, refreshKey, onPinChanged }: Prop
                     {/* PROBLEMA */}
                     <div className="flex items-center gap-2">
 
-                      <AlertTriangle className="w-4 h-4 text-amber-500 flex-shrink-0" />
+                      <AlertTriangle className="w-4 h-4 text-amber-500 dark:text-amber-400 flex-shrink-0" />
 
-                      <span className="text-sm font-medium text-amber-800">
+                      <span className="text-sm font-medium text-amber-800 dark:text-amber-200">
 
                         {v.tipo_problema
                           ?.replace(/_/g, ' ')
@@ -3200,7 +3200,7 @@ export default function AdminScreen({ adminPin, refreshKey, onPinChanged }: Prop
                     {/* NOTE */}
                     {v.nota && (
 
-                      <p className="text-xs text-gray-600 dark:text-gray-300 bg-white dark:bg-gray-900 rounded-xl px-3 py-2 border border-amber-100">
+                      <p className="text-xs text-gray-600 dark:text-gray-300 bg-white dark:bg-gray-900 rounded-xl px-3 py-2 border border-amber-100 dark:border-amber-900">
 
                         {v.nota}
 
@@ -3279,7 +3279,7 @@ export default function AdminScreen({ adminPin, refreshKey, onPinChanged }: Prop
 
               </span>
 
-              <span className="text-emerald-600 font-semibold">
+              <span className="text-emerald-600 dark:text-emerald-400 font-semibold">
 
                 Attiva
 
@@ -3295,7 +3295,7 @@ export default function AdminScreen({ adminPin, refreshKey, onPinChanged }: Prop
 
               </span>
 
-              <span className="text-emerald-600 font-semibold">
+              <span className="text-emerald-600 dark:text-emerald-400 font-semibold">
 
                 Online
 
@@ -3433,8 +3433,8 @@ export default function AdminScreen({ adminPin, refreshKey, onPinChanged }: Prop
                             font-semibold
                             ${
                               a.is_active
-                                ? 'bg-emerald-100 text-emerald-700'
-                                : 'bg-red-100 text-red-600'
+                                ? 'bg-emerald-100 dark:bg-emerald-900 text-emerald-700 dark:text-emerald-300'
+                                : 'bg-red-100 dark:bg-red-900 text-red-600 dark:text-red-400'
                             }
                           `}
                         >
@@ -3586,7 +3586,7 @@ export default function AdminScreen({ adminPin, refreshKey, onPinChanged }: Prop
             )}
 
             {totpError && (
-              <div className="bg-red-50 border border-red-200 rounded-xl px-4 py-3 text-sm text-red-700">
+              <div className="bg-red-50 dark:bg-red-950 border border-red-200 dark:border-red-800 rounded-xl px-4 py-3 text-sm text-red-700 dark:text-red-300">
                 {totpError}
               </div>
             )}
@@ -3618,7 +3618,7 @@ export default function AdminScreen({ adminPin, refreshKey, onPinChanged }: Prop
                 </div>
 
                 {/* DOWNLOAD APP */}
-                <div className="bg-blue-50 border border-blue-100 rounded-xl px-4 py-3 flex flex-col gap-2">
+                <div className="bg-blue-50 dark:bg-blue-950 border border-blue-100 dark:border-blue-900 rounded-xl px-4 py-3 flex flex-col gap-2">
                   <p className="text-xs font-semibold text-gray-600 dark:text-gray-300">
                     Non hai ancora un'app di autenticazione? Scaricane una gratuita:
                   </p>
@@ -3627,7 +3627,7 @@ export default function AdminScreen({ adminPin, refreshKey, onPinChanged }: Prop
                       href="https://apps.apple.com/it/app/google-authenticator/id388497605"
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="flex items-center gap-2 text-sm text-blue-700 font-medium hover:underline"
+                      className="flex items-center gap-2 text-sm text-blue-700 dark:text-blue-300 font-medium hover:underline"
                     >
                       🍎 Google Authenticator — App Store (iOS)
                     </a>
@@ -3635,7 +3635,7 @@ export default function AdminScreen({ adminPin, refreshKey, onPinChanged }: Prop
                       href="https://play.google.com/store/apps/details?id=com.google.android.apps.authenticator2"
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="flex items-center gap-2 text-sm text-blue-700 font-medium hover:underline"
+                      className="flex items-center gap-2 text-sm text-blue-700 dark:text-blue-300 font-medium hover:underline"
                     >
                       🤖 Google Authenticator — Play Store (Android)
                     </a>
@@ -3643,7 +3643,7 @@ export default function AdminScreen({ adminPin, refreshKey, onPinChanged }: Prop
                       href="https://authy.com/download/"
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="flex items-center gap-2 text-sm text-blue-700 font-medium hover:underline"
+                      className="flex items-center gap-2 text-sm text-blue-700 dark:text-blue-300 font-medium hover:underline"
                     >
                       🔐 Authy — iOS e Android
                     </a>
@@ -3718,7 +3718,7 @@ export default function AdminScreen({ adminPin, refreshKey, onPinChanged }: Prop
                 )}
 
                 {/* AVVISO */}
-                <div className="bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 text-xs text-amber-800">
+                <div className="bg-amber-50 dark:bg-amber-950 border border-amber-200 dark:border-amber-800 rounded-xl px-4 py-3 text-xs text-amber-800 dark:text-amber-200">
                   ⚠️ Non condividere la chiave manuale. Chiunque la possieda può generare codici validi.
                   Distribuisci solo lo screenshot del QR.
                 </div>
