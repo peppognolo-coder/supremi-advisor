@@ -39,6 +39,11 @@ function escapeHtml(value: unknown): string {
 }
 
 const APP_URL = 'https://supremi-advisor.netlify.app/';
+// Deep-link diretto alla sezione admin giusta invece della sola home —
+// vedi il nuovo supporto per ?admin=contributi / ?admin=problemi in
+// App.tsx e AdminScreen.tsx. Vedi conversazione.
+const APP_URL_CONTRIBUTI = `${APP_URL}?admin=contributi`;
+const APP_URL_PROBLEMI = `${APP_URL}?admin=problemi`;
 
 /**
  * Costruisce il testo del messaggio in base alla tabella/tipo di riga
@@ -58,47 +63,47 @@ function buildMessage(table: string, record: Record<string, any>): string | null
           `🆕 <b>Nuova attività proposta</b>\n` +
           `${escapeHtml(dati.nome ?? 'senza nome')} — ${escapeHtml(dati.categoria ?? '')}\n` +
           `📍 ${escapeHtml(dati.stazione ?? '')}\n\n` +
-          `👉 ${APP_URL}`
+          `👉 ${APP_URL_CONTRIBUTI}`
         );
 
       case 'stazione':
         return (
           `🆕 <b>Nuova stazione proposta</b>\n` +
           `${escapeHtml(dati.nome ?? '')}\n\n` +
-          `👉 ${APP_URL}`
+          `👉 ${APP_URL_CONTRIBUTI}`
         );
 
       case 'saletta':
         return (
           `🆕 <b>Nuovo elemento Località Operativa</b>\n` +
           `${escapeHtml(dati.stazione ?? '')} — ${escapeHtml(dati.tipo ?? '')}\n\n` +
-          `👉 ${APP_URL}`
+          `👉 ${APP_URL_CONTRIBUTI}`
         );
 
       case 'modifica_attivita':
         return (
           `✏️ <b>Proposta di modifica attività</b>\n` +
           `${escapeHtml(dati.nome_attivita ?? '')}\n\n` +
-          `👉 ${APP_URL}`
+          `👉 ${APP_URL_CONTRIBUTI}`
         );
 
       case 'segnalazione_saletta':
         return (
           `🛋️ <b>Aggiornamento saletta segnalato</b>\n\n` +
-          `👉 ${APP_URL}`
+          `👉 ${APP_URL_CONTRIBUTI}`
         );
 
       case 'hotel_qr':
         return (
           `📱 <b>Nuovo QR check-in hotel</b>\n` +
           `${escapeHtml(dati.hotel_nome ?? '')}\n\n` +
-          `👉 ${APP_URL}`
+          `👉 ${APP_URL_CONTRIBUTI}`
         );
 
       default:
         return (
           `🔔 <b>Nuovo contributo</b> (${escapeHtml(tipo ?? 'tipo sconosciuto')})\n\n` +
-          `👉 ${APP_URL}`
+          `👉 ${APP_URL_CONTRIBUTI}`
         );
     }
   }
@@ -107,7 +112,7 @@ function buildMessage(table: string, record: Record<string, any>): string | null
     return (
       `⚠️ <b>Nuova segnalazione saletta</b>\n` +
       `Tipo: ${escapeHtml(record.tipo_problema ?? '—')}\n\n` +
-      `👉 ${APP_URL}`
+      `👉 ${APP_URL_PROBLEMI}`
     );
   }
 
