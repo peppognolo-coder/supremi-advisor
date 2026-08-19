@@ -280,10 +280,15 @@ export default function SalettaCard({
                           <Clock className="w-3.5 h-3.5" />
                           {stato.testo}
                         </div>
-                        <div className="flex flex-col gap-1">
+                        <div className="bg-gray-50 dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-xl divide-y divide-gray-200 dark:divide-gray-700 overflow-hidden">
                           {saletta.fasce_orarie.map((f, i) => (
-                            <div key={i} className="text-xs text-gray-500 dark:text-gray-400">
-                              {f.giorni.join(', ') || '—'}: {f.apertura || '—'}–{f.chiusura || '—'}
+                            <div key={i} className="flex items-center justify-between gap-3 px-3 py-2">
+                              <span className="text-xs font-medium text-gray-500 dark:text-gray-400">
+                                {f.giorni.join(' · ') || '—'}
+                              </span>
+                              <span className="text-sm font-semibold text-gray-800 dark:text-gray-100 tabular-nums whitespace-nowrap">
+                                {f.apertura || '—'} – {f.chiusura || '—'}
+                              </span>
                             </div>
                           ))}
                         </div>
