@@ -115,9 +115,13 @@ interface Props {
   /** Chiamata dopo un cambio PIN riuscito, per aggiornare lo stato in
       App.tsx (e localStorage) senza forzare un logout. */
   onPinChanged?: (newPin: string) => void;
+  /** Apre direttamente una sotto-sezione all'avvio invece della dashboard
+      — usato dal deep-link delle notifiche Telegram (?admin=contributi /
+      ?admin=problemi). Vedi conversazione. */
+  initialSection?: 'contributi' | 'problemi';
 }
 
-export default function AdminScreen({ adminPin, refreshKey, onPinChanged }: Props) {
+export default function AdminScreen({ adminPin, refreshKey, onPinChanged, initialSection }: Props) {
 
   const [loading, setLoading] =
     useState(true);
@@ -134,7 +138,7 @@ export default function AdminScreen({ adminPin, refreshKey, onPinChanged }: Prop
   const [
     showContributiManager,
     setShowContributiManager,
-  ] = useState(false);
+  ] = useState(initialSection === 'contributi');
 
   const [
     showAttivitaManager,
@@ -149,7 +153,7 @@ export default function AdminScreen({ adminPin, refreshKey, onPinChanged }: Prop
   const [
     showProblemiManager,
     setShowProblemiManager,
-  ] = useState(false);
+  ] = useState(initialSection === 'problemi');
 
   // Stato modal TOTP
   const [showTotpModal, setShowTotpModal]   = useState(false);
