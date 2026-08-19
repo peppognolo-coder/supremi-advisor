@@ -35,6 +35,15 @@ export default function App() {
   const { theme, toggleTheme } = useTheme();
   const [activeTab, setActiveTab] = useState<Tab>('home');
 
+  // Deep-link dalla notifica Telegram (?admin=contributi / ?admin=problemi)
+  // — usato sia per aprire subito la sezione giusta sia (più sotto, nello
+  // stesso effect di ripristino PIN) per decidere se mostrare il login
+  // quando la sessione admin non è salvata su questo dispositivo. Letto
+  // una sola volta al mount, prima che l'URL venga ripulito. Vedi
+  // conversazione.
+  const [adminDeepLinkSection, setAdminDeepLinkSection] =
+    useState<'contributi' | 'problemi' | null>(null);
+
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchIsPersonal, setSearchIsPersonal] = useState(false);
 
@@ -166,8 +175,35 @@ export default function App() {
   const [pinVerificando, setPinVerificando] = useState(false);
 
   useEffect(() => {
+    // Letto qui (variabile locale, non stato React) e non nell'effect
+    // separato di prima proprio per evitare il problema di ordine: due
+    // effect diversi creati nello stesso render iniziale non si vedono a
+    // vicenda finché non arriva un secondo render, quindi tutta la logica
+    // che dipende dal deep-link va nello stesso effect. Vedi conversazione.
+    const params = new URLSearchParams(window.location.search);
+    const deepLinkSection = params.get('admin');
+    const isValidSection = deepLinkSection === 'contributi' || deepLinkSection === 'problemi';
+
+    if (isValidSection) {
+      setAdminDeepLinkSection(deepLinkSection as 'contributi' | 'problemi');
+      setActiveTab('admin');
+      pushTabHistory('admin');
+    }
+
+    // Ripulisce l'URL (toglie ?admin=...) senza ricaricare la pagina, così
+    // un refresh successivo non riapre sempre la stessa sezione.
+    if (params.has('admin')) {
+      window.history.replaceState({}, '', window.location.pathname);
+    }
+
     const stored = localStorage.getItem('trenord_admin_pin');
-    if (!stored) return;
+    if (!stored) {
+      // Nessuna sessione admin salvata su questo dispositivo: se si è
+      // arrivati qui da un deep-link (notifica Telegram), apre subito il
+      // login invece di lasciare la schermata vuota.
+      if (isValidSection) setShowPinModal('login');
+      return;
+    }
 
     // Il PIN salvato viene sempre riverificato contro il database
     // all'avvio — se nel frattempo è stato cambiato (da questo o da un
@@ -185,6 +221,7 @@ export default function App() {
           toast.success('Modalità admin ripristinata');
         } else {
           localStorage.removeItem('trenord_admin_pin');
+          if (isValidSection) setShowPinModal('login');
         }
       })
       .catch(() => {
@@ -339,7 +376,11 @@ export default function App() {
 
         {activeTab === 'admin' && adminMode && (
           <div className="max-w-2xl mx-auto px-4 py-4">
-            <AdminScreen refreshKey={refreshKey} adminPin={adminPin ?? ''} />
+            <AdminScreen
+              refreshKey={refreshKey}
+              adminPin={adminPin ?? ''}
+              initialSection={adminDeepLinkSection ?? undefined}
+            />
           </div>
         )}
       </main>
