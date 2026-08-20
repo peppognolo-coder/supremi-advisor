@@ -11,6 +11,7 @@ import StazioniScreen from './screens/StazioniScreen';
 import AdminScreen from './screens/AdminScreen';
 import SegnalazioniScreen from './screens/SegnalazioniScreen';
 import ContributiScreen from './screens/ContributiScreen';
+import FaqScreen from './screens/FaqScreen';
 
 import { SearchOverlay } from './components/home/SearchOverlay';
 import { useHomeStation } from './hooks/useHomeStation';
@@ -29,6 +30,7 @@ const screenTitles: Record<Tab, string> = {
   contributi: 'Contributi',
   segnalazioni: 'Segnalazioni',
   admin: 'Amministrazione',
+  faq: 'Aiuto & FAQ',
 };
 
 export default function App() {
@@ -365,6 +367,12 @@ export default function App() {
         {activeTab === 'contributi' && (
           <div className="max-w-2xl mx-auto px-4 py-4">
             <ContributiScreen />
+          </div>
+        )}
+
+        {activeTab === 'faq' && (
+          <div className="max-w-2xl mx-auto px-4 py-4">
+            <FaqScreen />
           </div>
         )}
 
