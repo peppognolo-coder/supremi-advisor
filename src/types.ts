@@ -4,4 +4,5 @@ export type Tab =
   | 'stazioni'
   | 'contributi'
   | 'segnalazioni'
-  | 'admin';
+  | 'admin'
+  | 'faq';
