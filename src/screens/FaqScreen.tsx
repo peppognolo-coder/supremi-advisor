@@ -32,7 +32,7 @@ export default function FaqScreen() {
   }
 
   return (
-    <div className="flex flex-col gap-5">
+    <div className="flex flex-col gap-5 pb-24">
       {/* Ricerca */}
       <div className="flex items-center gap-2 px-3.5 py-2.5 rounded-2xl bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 shadow-sm">
         <Search className="w-4 h-4 text-gray-400 dark:text-gray-500 shrink-0" />
