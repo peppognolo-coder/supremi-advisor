@@ -1,5 +1,5 @@
 import React, { useRef, useState, useEffect, useMemo } from 'react';
-import { Settings, Sun, Moon } from 'lucide-react';
+import { Settings, Sun, Moon, HelpCircle, ChevronRight } from 'lucide-react';
 
 import type { Tab } from '../types';
 import type { HomeStationData } from '../hooks/useHomeStation';
@@ -161,6 +161,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({
     }
   }
   function handleOpenProblemi() { onNavigate('salette'); }
+  function handleOpenFaq() { onNavigate('faq'); }
 
   // ---------------------------------------------------------------------------
   // Render
@@ -240,6 +241,25 @@ const HomeScreen: React.FC<HomeScreenProps> = ({
           onNuovoContributo={handleNuovoContributo}
           onSegnalaProblema={handleSegnalaProblema}
         />
+
+        <div className="px-4">
+          <button
+            onClick={handleOpenFaq}
+            className={[
+              'w-full flex items-center gap-3 p-4 rounded-2xl bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 shadow-sm',
+              'active:scale-[0.98] transition-all duration-150 hover:border-gray-200 dark:hover:border-gray-700 hover:shadow',
+            ].join(' ')}
+          >
+            <div className="bg-blue-50 dark:bg-blue-950 text-blue-600 dark:text-blue-400 p-2 rounded-xl">
+              <HelpCircle className="w-5 h-5" />
+            </div>
+            <div className="flex-1 text-left">
+              <p className="text-sm font-medium text-gray-900 dark:text-gray-100">Aiuto &amp; FAQ</p>
+              <p className="text-xs text-gray-400 dark:text-gray-500">Domande frequenti sull'uso dell'app</p>
+            </div>
+            <ChevronRight className="w-4 h-4 text-gray-300 dark:text-gray-600 shrink-0" />
+          </button>
+        </div>
 
         <FavoriteStations
           stations={favoriteStations}
