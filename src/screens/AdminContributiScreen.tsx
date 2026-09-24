@@ -221,6 +221,21 @@ export default function AdminContributiScreen({ adminPin }: Props) {
     if (editingContributo.tipo === 'attivita' && !validaAttivita(dati)) return;
     if (Array.isArray(dati.fasce_orarie)) dati.fasce_orarie = ordinaFasce(dati.fasce_orarie);
 
+    // L'immagine QR non è modificabile da questo pannello (solo la sua
+    // scadenza) — non serve mai rispedirla qui, ed è proprio lei a
+    // rischiare di far superare il limite di dimensione delle richieste
+    // verso questa funzione. Il valore resta comunque intatto sul server
+    // (updateContributoDati unisce questi dati a quelli già salvati,
+    // invece di sovrascriverli — vedi admin-api.ts), quindi ometterla qui
+    // non la cancella. Per tipo 'attivita' l'immagine è annidata dentro
+    // qr_checkin_new insieme alla scadenza (che invece VA inviata, se
+    // modificata): si toglie quindi solo imageBase64 da dentro
+    // quell'oggetto, non l'oggetto intero. Vedi conversazione.
+    delete (dati as Record<string, unknown>).imageBase64;
+    if (dati.qr_checkin_new) {
+      dati.qr_checkin_new = { ...dati.qr_checkin_new, imageBase64: undefined };
+    }
+
     const res = await updateContributoDati(adminPin, editingContributo.id, dati);
     if (!res.ok) { toast.error(res.error?.message ?? 'Errore salvataggio'); return; }
 
