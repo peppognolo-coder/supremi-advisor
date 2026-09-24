@@ -635,8 +635,8 @@ export default function AdminAttivitaScreen({ adminPin, initialEditId }: Props) 
               />
             )}
 
-            {/* OPZIONI ALIMENTARI (solo categorie alimentari) */}
-            {CATEGORIE_ALIMENTARI.includes(editingAttivita.categoria) && (
+            {/* OPZIONI ALIMENTARI (categorie alimentari + Hotel) */}
+            {(CATEGORIE_ALIMENTARI.includes(editingAttivita.categoria) || editingAttivita.categoria === 'Hotel') && (
               <OpzioniAlimentariSection
                 value={editingAttivita.dati_extra?.opzioni_alimentari ?? []}
                 onChange={(opzioni_alimentari) =>
