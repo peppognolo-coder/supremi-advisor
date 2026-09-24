@@ -116,6 +116,10 @@ export default function AddAttivitaModal({ stazioneId, onClose, onSuccess, direc
         ...hotelDati,
         telefono:        hotelDati.telefono?.trim() || null,
         note_equipaggi:  hotelDati.note_equipaggi?.trim() || null,
+        // Opzioni alimentari facoltative: anche un hotel può avere
+        // ristorante/colazione con opzioni vegetariane, vegane o senza
+        // glutine — vedi conversazione.
+        ...(opzioniAlimentari.length > 0 ? { opzioni_alimentari: opzioniAlimentari } : {}),
       } : isAlimentare && opzioniAlimentari.length > 0 ? {
         opzioni_alimentari: opzioniAlimentari,
       } : null,
@@ -238,8 +242,8 @@ export default function AddAttivitaModal({ stazioneId, onClose, onSuccess, direc
             </>
           )}
 
-          {/* OPZIONI ALIMENTARI (solo per categorie alimentari) */}
-          {isAlimentare && (
+          {/* OPZIONI ALIMENTARI (categorie alimentari + Hotel, che spesso serve pasti) */}
+          {(isAlimentare || isHotel) && (
             <OpzioniAlimentariSection value={opzioniAlimentari} onChange={setOpzioniAlimentari} />
           )}
 
