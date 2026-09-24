@@ -421,12 +421,47 @@ export const handler: Handler = async (event: HandlerEvent) => {
     }
 
     if (action === 'updateContributoDati') {
-      const { id, dati } = (payload ?? {}) as { id?: string; dati?: unknown };
+      const { id, dati } = (payload ?? {}) as { id?: string; dati?: Record<string, unknown> };
       if (!id)   return err({ ...ERRORS.MISSING_PAYLOAD, message: 'Campo obbligatorio: id' });
       if (!dati) return err({ ...ERRORS.MISSING_PAYLOAD, message: 'Campo obbligatorio: dati' });
+
+      // UNITO, non sovrascritto. Il client (AdminContributiScreen.tsx) non
+      // include più qr_checkin_new/imageBase64 in questa chiamata — quel
+      // campo non viene mai modificato in questa schermata (solo la
+      // scadenza, annidata), e rimandarlo ogni volta rischiava di superare
+      // il limite di dimensione delle richieste verso questa funzione,
+      // esattamente come succedeva con approveContributo. Una sovrascrittura
+      // diretta della colonna, però, cancellerebbe quel campo dal database
+      // per sempre non appena il client lo omette — quindi qui si legge
+      // prima il valore attuale e si uniscono sopra solo i campi ricevuti,
+      // lasciando intatto tutto il resto. Vedi conversazione.
+      const { data: attuale, error: fetchErr } = await supabase
+        .from('contributi')
+        .select('dati')
+        .eq('id', id)
+        .single();
+      if (fetchErr) return dbErr(fetchErr.message);
+
+      const datiAttuali = (attuale?.dati as Record<string, unknown> ?? {});
+      const datiUniti: Record<string, unknown> = { ...datiAttuali, ...dati };
+
+      // qr_checkin_new va unito un livello più in profondità: contiene
+      // l'immagine (mai inviata da qui, vedi sopra) insieme alla sua
+      // scadenza (che invece può arrivare modificata). Un'unione piatta
+      // sostituirebbe l'intero oggetto con quello ricevuto — privo
+      // dell'immagine — cancellandola. Si unisce quindi esplicitamente
+      // anche questo livello, cosicché un campo omesso al suo interno
+      // resti quello già salvato. Vedi conversazione.
+      if (dati.qr_checkin_new && datiAttuali.qr_checkin_new) {
+        datiUniti.qr_checkin_new = {
+          ...(datiAttuali.qr_checkin_new as Record<string, unknown>),
+          ...(dati.qr_checkin_new as Record<string, unknown>),
+        };
+      }
+
       const { data, error } = await supabase
         .from('contributi')
-        .update({ dati })
+        .update({ dati: datiUniti })
         .eq('id', id).select().single();
       if (error) return dbErr(error.message);
       return ok(data);
