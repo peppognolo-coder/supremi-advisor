@@ -277,6 +277,9 @@ export default function ContributoAttivitaForm({
                 ...hotelDati,
                 telefono: hotelDati.telefono?.trim() || null,
                 note_equipaggi: hotelDati.note_equipaggi?.trim() || null,
+                // Opzioni alimentari facoltative anche per l'hotel (ristorante/
+                // colazione interni) — vedi conversazione.
+                ...(opzioniAlimentari.length > 0 ? { opzioni_alimentari: opzioniAlimentari } : {}),
               },
             }
           : CATEGORIE_ALIMENTARI.includes(categoria) && opzioniAlimentari.length > 0
@@ -634,8 +637,9 @@ export default function ContributoAttivitaForm({
           </>
         )}
 
-        {/* OPZIONI ALIMENTARI — facoltative, solo categorie alimentari */}
-        {CATEGORIE_ALIMENTARI.includes(categoria) && (
+        {/* OPZIONI ALIMENTARI — facoltative, categorie alimentari + Hotel
+            (spesso ha ristorante/colazione interni) — vedi conversazione */}
+        {(CATEGORIE_ALIMENTARI.includes(categoria) || categoria === 'Hotel') && (
           <OpzioniAlimentariSection value={opzioniAlimentari} onChange={setOpzioniAlimentari} />
         )}
 
