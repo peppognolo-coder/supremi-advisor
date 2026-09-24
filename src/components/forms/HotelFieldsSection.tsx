@@ -29,8 +29,8 @@ export default function HotelFieldsSection({ value, onChange }: Props) {
   }
 
   return (
-    <div className="flex flex-col gap-3 bg-blue-50 border border-blue-100 rounded-2xl p-4">
-      <p className="text-xs font-semibold text-blue-700 uppercase tracking-wide">🏨 Informazioni hotel</p>
+    <div className="flex flex-col gap-3 bg-blue-50 dark:bg-blue-950 border border-blue-100 dark:border-blue-900 rounded-2xl p-4">
+      <p className="text-xs font-semibold text-blue-700 dark:text-blue-400 uppercase tracking-wide">🏨 Informazioni hotel</p>
 
       <div className="flex flex-col gap-1">
         <label className="text-xs font-semibold text-gray-400 uppercase tracking-wide">Telefono</label>
