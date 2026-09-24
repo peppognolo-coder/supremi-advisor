@@ -661,8 +661,17 @@ export const handler: Handler = async (event: HandlerEvent) => {
       // affidabile e verificabile: il feed home lo usa per capire se
       // l'entità esiste/è ancora attiva quando genera le voci "Da sapere",
       // invece di doverla ricercare per nome (fragile). Vedi conversazione.
+      //
+      // IMPORTANTE: qr_checkin_new/imageBase64 non vengono MAI riscritti
+      // qui, a prescindere da chi chiama questa azione. L'immagine QR va
+      // sempre su Storage (upload-hotel-qr), mai nella colonna dati di
+      // contributi: tenerla lì la fa ripresentare per sempre nel pannello
+      // admin come stringa enorme, e rischia di far superare il limite di
+      // dimensione delle richieste verso questa stessa funzione. Vedi
+      // conversazione.
+      const { qr_checkin_new, imageBase64, ...datiSenzaImmagini } = dati as Record<string, unknown>;
       const datiAggiornati = {
-        ...dati,
+        ...datiSenzaImmagini,
         ...(attivitaId ? { attivita_id: attivitaId } : {}),
         ...(salettaId ? { saletta_id: salettaId } : {}),
         ...(stazioneId ? { stazione_id: stazioneId } : {}),
