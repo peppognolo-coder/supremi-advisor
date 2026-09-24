@@ -55,15 +55,30 @@ interface Props {
 // HELPER renderValore
 // =========================
 
+// Campi che possono contenere un'immagine in base64: non vanno mai
+// stampati per intero (stringhe da centinaia di KB a qualche MB) — vedi
+// conversazione: causavano sia una card illeggibile sia, se rispediti al
+// server durante l'approvazione, il superamento del limite di dimensione
+// delle richieste verso le funzioni Netlify.
+const CAMPI_IMMAGINE = new Set(['imageBase64', 'qr_checkin_new']);
+
+// Rete di sicurezza generica: qualsiasi valore (anche non ancora previsto
+// sopra) più lungo di questa soglia viene troncato invece di essere
+// stampato per intero nella card dei contributi in attesa.
+const LUNGHEZZA_MAX_VISUALIZZATA = 300;
+
 function renderValore(key: string, value: unknown): string {
   if (value === null || value === undefined) return '—';
   if (typeof value === 'boolean') return value ? 'Sì' : 'No';
+  if (CAMPI_IMMAGINE.has(key)) return '🖼️ Immagine allegata';
   if (Array.isArray(value)) {
     if (key === 'fasce_orarie') return `${value.length} fasce`;
     return value.join(', ');
   }
-  if (typeof value === 'object') return JSON.stringify(value);
-  return String(value);
+  const testo = typeof value === 'object' ? JSON.stringify(value) : String(value);
+  return testo.length > LUNGHEZZA_MAX_VISUALIZZATA
+    ? `${testo.slice(0, LUNGHEZZA_MAX_VISUALIZZATA)}… (troncato)`
+    : testo;
 }
 
 // =========================
@@ -221,6 +236,16 @@ export default function AdminContributiScreen({ adminPin }: Props) {
   async function handleApprove(c: Contributo) {
     setProcessingId(c.id);
 
+    // IMPORTANTE: il base64 dell'immagine QR non deve MAI viaggiare dentro
+    // il body di approveContributo (che passa dalla Netlify Function
+    // admin-api). Una foto da telefono, anche sotto il limite di 5MB
+    // imposto lato client, supera facilmente il limite di ~6MB per
+    // richiesta/risposta imposto da Netlify (Lambda) sulle sue funzioni
+    // sincrone — è questo che causava l'errore al click su "Approva".
+    // Si carica quindi SEMPRE l'immagine per prima (verso Storage, un
+    // payload snello, dedicato) e si approva il contributo alleggerito,
+    // senza il base64 al suo interno. Vedi conversazione.
+
     // Gestione speciale per QR hotel: upload immagine su Storage
     if (c.tipo === 'hotel_qr') {
       const { attivita_id, imageBase64, mimeType, scadenza } = (c.dati ?? {}) as {
@@ -237,8 +262,14 @@ export default function AdminContributiScreen({ adminPin }: Props) {
         setProcessingId(null);
         return;
       }
-      // Segna il contributo come approvato
-      const res = await approveContributo(adminPin, c);
+      // Il QR è già su Storage: il contributo va approvato SENZA il base64,
+      // altrimenti torna a viaggiare (di nuovo) nel body di approveContributo
+      // e resterebbe salvato per sempre in contributi.dati.
+      const contributoAlleggerito = {
+        ...c,
+        dati: { ...c.dati, imageBase64: undefined },
+      };
+      const res = await approveContributo(adminPin, contributoAlleggerito);
       setProcessingId(null);
       if (!res.ok) { toast.error(res.error?.message ?? 'Errore approvazione'); return; }
       toast.success('QR hotel caricato e approvato');
@@ -246,14 +277,24 @@ export default function AdminContributiScreen({ adminPin }: Props) {
       return;
     }
 
-    const res = await approveContributo(adminPin, c);
+    // Nuova attività (es. Hotel) con QR check-in allegato: stesso principio.
+    // Si carica il QR PRIMA di approvare, ma per caricarlo serve l'id
+    // dell'attività — che per una nuova attività non esiste ancora finché
+    // approveContributo non la crea. Si approva quindi subito ma SENZA il
+    // base64 nel payload (tolto qui), e si usa la copia locale qrAllegato,
+    // già in memoria, per l'upload subito dopo.
+    const qrAllegato = c.tipo === 'attivita' ? (c.dati as any)?.qr_checkin_new : null;
+    const contributoAlleggerito = qrAllegato
+      ? { ...c, dati: { ...c.dati, qr_checkin_new: undefined } }
+      : c;
+
+    const res = await approveContributo(adminPin, contributoAlleggerito);
     setProcessingId(null);
     if (!res.ok) { toast.error(res.error?.message ?? 'Errore approvazione'); return; }
 
     // QR check-in allegato a una nuova attività Hotel: facoltativo e non bloccante.
     // L'hotel è già stato creato/approvato sopra — se l'upload del QR fallisce,
     // l'admin può comunque ricaricarlo in seguito da AdminAttivitaScreen.
-    const qrAllegato = c.tipo === 'attivita' ? (c.dati as any)?.qr_checkin_new : null;
     if (qrAllegato?.imageBase64 && res.data?.attivita_id) {
       const uploadRes = await uploadQrHotel(
         adminPin,
