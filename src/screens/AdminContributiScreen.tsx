@@ -848,11 +848,11 @@ export default function AdminContributiScreen({ adminPin }: Props) {
 
                 {/* SEZIONE HOTEL — visibile solo se categoria === 'Hotel' */}
                 {editingContributo.dati?.categoria === 'Hotel' && (
-                  <div className="bg-blue-50 border border-blue-100 rounded-2xl p-4 flex flex-col gap-3">
-                    <h3 className="font-semibold text-blue-700">Informazioni Hotel</h3>
+                  <div className="bg-blue-50 dark:bg-blue-950 border border-blue-100 dark:border-blue-900 rounded-2xl p-4 flex flex-col gap-3">
+                    <h3 className="font-semibold text-blue-700 dark:text-blue-400">Informazioni Hotel</h3>
 
                     <div className="flex flex-col gap-1">
-                      <label className="text-xs text-gray-500">Telefono</label>
+                      <label className="text-xs text-gray-500 dark:text-gray-400">Telefono</label>
                       <input
                         value={editingContributo.dati?.dati_extra?.telefono || ''}
                         onChange={(e) => setEditingContributo({
@@ -862,7 +862,7 @@ export default function AdminContributiScreen({ adminPin }: Props) {
                             dati_extra: { ...(editingContributo.dati?.dati_extra ?? {}), telefono: e.target.value },
                           },
                         })}
-                        className="border rounded-xl px-3 py-2 text-base"
+                        className="border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2 text-base bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
                       />
                     </div>
 
@@ -904,7 +904,7 @@ export default function AdminContributiScreen({ adminPin }: Props) {
                       { key: 'navetta',       label: 'Navetta disponibile' },
                       { key: 'ristorante',    label: 'Ristorante interno' },
                     ].map(({ key, label }) => (
-                      <label key={key} className="flex items-center gap-2">
+                      <label key={key} className="flex items-center gap-2 text-gray-700 dark:text-gray-300">
                         <input
                           type="checkbox"
                           checked={Boolean(editingContributo.dati?.dati_extra?.[key])}
@@ -921,7 +921,7 @@ export default function AdminContributiScreen({ adminPin }: Props) {
                     ))}
 
                     <div className="flex flex-col gap-1">
-                      <label className="text-xs text-gray-500">Note equipaggi</label>
+                      <label className="text-xs text-gray-500 dark:text-gray-400">Note equipaggi</label>
                       <textarea
                         rows={3}
                         value={editingContributo.dati?.dati_extra?.note_equipaggi || ''}
@@ -932,7 +932,7 @@ export default function AdminContributiScreen({ adminPin }: Props) {
                             dati_extra: { ...(editingContributo.dati?.dati_extra ?? {}), note_equipaggi: e.target.value },
                           },
                         })}
-                        className="border rounded-xl px-3 py-2 resize-none text-base"
+                        className="border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2 resize-none text-base bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
                       />
                     </div>
                   </div>
@@ -940,8 +940,9 @@ export default function AdminContributiScreen({ adminPin }: Props) {
               </>
             )}
 
-            {/* OPZIONI ALIMENTARI (solo categorie alimentari) */}
-            {editingContributo.tipo === 'attivita' && CATEGORIE_ALIMENTARI.includes(editingContributo.dati?.categoria) && (
+            {/* OPZIONI ALIMENTARI (categorie alimentari + Hotel) */}
+            {editingContributo.tipo === 'attivita' &&
+              (CATEGORIE_ALIMENTARI.includes(editingContributo.dati?.categoria) || editingContributo.dati?.categoria === 'Hotel') && (
               <OpzioniAlimentariSection
                 value={editingContributo.dati?.dati_extra?.opzioni_alimentari ?? []}
                 onChange={(opzioni_alimentari) => setEditingContributo({
