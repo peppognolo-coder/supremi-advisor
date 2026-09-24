@@ -26,7 +26,12 @@ const supabase = createClient(
 );
 
 const BUCKET = 'hotel-qr';
-const MAX_SIZE_BYTES = 5 * 1024 * 1024; // 5MB
+// 4MB, non 5: in base64 un'immagine cresce di circa un terzo, e deve
+// restare sotto il tetto di ~6MB per richiesta/risposta imposto da
+// Netlify sulle sue funzioni sincrone, con margine per l'overhead del
+// JSON che la contiene. Stesso limite lato client in
+// QrCheckinUpload.tsx: vanno tenuti allineati. Vedi conversazione.
+const MAX_SIZE_BYTES = 4 * 1024 * 1024; // 4MB
 
 function json(statusCode: number, body: object) {
   return {
@@ -77,7 +82,7 @@ export const handler: Handler = async (event: HandlerEvent) => {
   const buffer = Buffer.from(base64Data, 'base64');
 
   if (buffer.byteLength > MAX_SIZE_BYTES) {
-    return json(400, { error: 'Immagine troppo grande. Massimo 5MB.' });
+    return json(400, { error: 'Immagine troppo grande. Massimo 4MB.' });
   }
 
   // Nome file fisso per hotel: sovrascrive automaticamente il vecchio QR
