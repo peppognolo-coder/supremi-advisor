@@ -32,8 +32,15 @@ export default function QrCheckinUpload({ onChange }: Props) {
       toast.error('Formato non supportato. Usa JPG, PNG o WebP.');
       return;
     }
-    if (file.size > 5 * 1024 * 1024) {
-      toast.error('Immagine troppo grande. Massimo 5MB.');
+    // Limite a 4MB (non 5): una volta convertita in base64 un'immagine
+    // cresce di circa un terzo (4MB → ~5,3MB di testo), e deve restare
+    // sotto il tetto di ~6MB per richiesta/risposta imposto da Netlify
+    // sulle sue funzioni sincrone (upload-hotel-qr, admin-api) — con un
+    // margine di sicurezza per l'overhead del JSON che la contiene.
+    // Stesso limite anche in upload-hotel-qr.ts: vanno tenuti allineati.
+    // Vedi conversazione.
+    if (file.size > 4 * 1024 * 1024) {
+      toast.error('Immagine troppo grande. Massimo 4MB.');
       return;
     }
 
@@ -69,7 +76,7 @@ export default function QrCheckinUpload({ onChange }: Props) {
           <>
             <Upload className="w-8 h-8 text-gray-300" />
             <span className="text-sm text-gray-500">Tocca per selezionare l'immagine</span>
-            <span className="text-xs text-gray-400">JPG, PNG, WebP — max 5MB</span>
+            <span className="text-xs text-gray-400">JPG, PNG, WebP — max 4MB</span>
           </>
         )}
         <input
